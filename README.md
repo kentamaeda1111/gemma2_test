@@ -162,6 +162,11 @@ For detailed documentation of each component, please refer to the README.md file
 
 ## Setup Requirements
 
+### Basic Requirements
+- Python: 3.10 or higher
+- Operating System: Windows 10/11, macOS, or Linux
+- Package Manager: pip (latest version)
+
 ### For Training
 Note: Training large language models requires significant computational resources. Please refer to the official Gemma documentation for detailed hardware requirements. In our case, we used Google Colab Pro+ with A100 GPU for training.
 
@@ -174,6 +179,31 @@ Note: Training large language models requires significant computational resource
   - Hugging Face (for model access)
 
 Note: For inference, the model can be run with reduced precision (bfloat16) to decrease memory requirements. When loaded in bf16, it consumes approximately 8GB of VRAM for the 2b model.
+
+### Installation Steps
+1. Ensure Python 3.10+ is installed:
+   ```bash
+   python --version
+   ```
+
+2. Install CUDA and cuDNN (if using GPU):
+   - Download and install CUDA: https://developer.nvidia.com/cuda-downloads
+   - Download and install cuDNN: https://developer.nvidia.com/cudnn
+
+3. Create and activate a virtual environment (recommended):
+   ```bash
+   python -m venv venv
+   # On Windows
+   .\venv\Scripts\activate
+   # On macOS/Linux
+   source venv/bin/activate
+   ```
+
+4. Install dependencies:
+   ```bash
+   pip install --upgrade pip
+   pip install -r requirements.txt
+   ```
 
 ## Data and Model Transparency
 
