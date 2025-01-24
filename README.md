@@ -180,31 +180,6 @@ Note: Training large language models requires significant computational resource
 
 Note: For inference, the model can be run with reduced precision (bfloat16) to decrease memory requirements. When loaded in bf16, it consumes approximately 8GB of VRAM for the 2b model.
 
-### Installation Steps
-1. Ensure Python 3.10+ is installed:
-   ```bash
-   python --version
-   ```
-
-2. Install CUDA and cuDNN (if using GPU):
-   - Download and install CUDA: https://developer.nvidia.com/cuda-downloads
-   - Download and install cuDNN: https://developer.nvidia.com/cudnn
-
-3. Create and activate a virtual environment (recommended):
-   ```bash
-   python -m venv venv
-   # On Windows
-   .\venv\Scripts\activate
-   # On macOS/Linux
-   source venv/bin/activate
-   ```
-
-4. Install dependencies:
-   ```bash
-   pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
-
 ## Data and Model Transparency
 
 For transparency and reproducibility purposes, this repository intentionally includes several key files that would typically be excluded:
