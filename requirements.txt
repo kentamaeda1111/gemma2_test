@@ -1,9 +1,17 @@
+# Basic dependencies
 python-dotenv>=0.19.0
 anthropic==0.18.1
 pandas==2.2.1
 matplotlib==3.8.3
+
+# ML dependencies
+torch>=2.1.0
 transformers==4.48.1
 peft==0.7.1
 bitsandbytes==0.43.2
 accelerate==0.26.0
-datasets==3.2.0 
+datasets==3.2.0
+
+# CUDA dependencies
+nvidia-cuda-runtime-cu11>=11.8
+nvidia-cudnn-cu11>=8.9.0 
