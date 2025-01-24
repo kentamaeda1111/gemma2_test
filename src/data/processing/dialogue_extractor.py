@@ -2,7 +2,7 @@ import os
 import json
 
 # Global variables - Output settings
-OUTPUT_FILE = '1gouki.json'       # Output file name
+OUTPUT_FILE = 'test.json'       # Output file name
 PREPEND_KEYWORD = "ソクラテスさん。"  # Keyword to prepend to utterances
 
 # Extraction range settings (skip if both are 0)
