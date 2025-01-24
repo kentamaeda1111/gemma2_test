@@ -28,35 +28,67 @@ This project showcases:
    - Interactive chat interface
    - Performance evaluation metrics
 
-## Setup
+## Environment Setup
 
-1. Clone the repository:
-   ```bash
-   git clone [repository-url]
-   cd [repository-name]
-   ```
+### API Key Configuration
 
-2. Configure environment:
+The project uses a flexible configuration system (`src/utils/config.py`) that supports multiple ways to manage API keys:
+
+1. **Local Environment**:
    ```bash
+   # Clone the repository
+   git clone https://github.com/kentamaeda1111/gemma2_test.git
+   cd gemma2_test
+
+   # Set up environment variables
    cp .env.template .env
    ```
-   Required API keys in `.env`:
+   Edit `.env` with your API keys:
    ```
    CLAUDE_API_KEY_1=your_first_claude_key_here        # For dialogue generation
    CLAUDE_API_KEY_2=your_second_claude_key_here       # For dialogue generation
    CLAUDE_API_KEY_QUALITY=your_quality_check_key_here # For quality assessment
    HUGGINGFACE_API_KEY=your_huggingface_token_here   # For model access
    ```
-   
-   Note: API keys are managed centrally through `src/utils/config.py`. All modules access these keys via this utility to ensure consistent configuration management.
 
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
+2. **Kaggle Environment**:
+   - **Method A**: Using Kaggle Secrets (Recommended)
+     1. Go to Kaggle Account Settings
+     2. Add secrets with these exact names:
+        - CLAUDE_API_KEY_1
+        - CLAUDE_API_KEY_2
+        - CLAUDE_API_KEY_QUALITY
+        - HUGGINGFACE_API_KEY
+
+   - **Method B**: Direct Setting in Notebook
+     ```python
+     import os
+     os.environ['CLAUDE_API_KEY_1'] = "your_claude_key_1"
+     os.environ['CLAUDE_API_KEY_2'] = "your_claude_key_2"
+     os.environ['CLAUDE_API_KEY_QUALITY'] = "your_claude_key_quality"
+     os.environ['HUGGINGFACE_API_KEY'] = "your_huggingface_key"
+     ```
+
+3. **Google Colab**:
+   ```python
+   import os
+   os.environ['CLAUDE_API_KEY_1'] = "your_claude_key_1"
+   os.environ['CLAUDE_API_KEY_2'] = "your_claude_key_2"
+   os.environ['CLAUDE_API_KEY_QUALITY'] = "your_claude_key_quality"
+   os.environ['HUGGINGFACE_API_KEY'] = "your_huggingface_key"
    ```
+
+The configuration system will automatically:
+1. Try loading from `.env` file (local environment)
+2. Check Kaggle Secrets if in Kaggle environment
+3. Use directly set environment variables
+4. Provide clear error messages if keys are missing
+
+For more details on configuration management, see [src/utils/README.md](src/utils/README.md).
 
 ## Usage
 
+### Local Environment
 ```bash
 # From project root directory:
 
@@ -74,6 +106,23 @@ python -m src.models.training.train
 
 # 5. Run interactive chat
 python -m src.models.inference.test
+```
+
+### Google Colab / Kaggle
+```python
+# 1. Clone the Git repository
+!git clone https://github.com/kentamaeda1111/gemma2_test
+%cd gemma2_test
+
+# 2. Install required packages
+!pip install -r requirements.txt
+
+# 3. Run each script
+!python -m src.data.generation.automation
+!python -m src.data.processing.dialogue_quality_check
+!python -m src.data.processing.dialogue_extractor
+!python -m src.models.training.train
+!python -m src.models.inference.test
 ```
 
 ## Repository Structure

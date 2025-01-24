@@ -1,6 +1,9 @@
 # Basic dependencies
-python-dotenv>=0.19.0
+python-dotenv
 anthropic==0.45.0
+
+
+
 pandas==2.2.1
 matplotlib==3.8.3
 ipython>=8.12.0
