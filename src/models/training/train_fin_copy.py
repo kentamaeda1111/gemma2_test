@@ -19,6 +19,7 @@ import warnings
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+from src.utils.config import get_api_keys
 
 # Global Setting
 DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
@@ -40,6 +41,11 @@ logging.info(f"Max sequence length: {MAX_SEQUENCE_LENGTH}")
 # Environment variables and warning settings
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 warnings.filterwarnings("ignore", category=FutureWarning)
+
+# API keys
+api_keys = get_api_keys()
+os.environ["HUGGINGFACE_TOKEN"] = api_keys['huggingface_api_key']
+
 def validate_message_format(message):
     """Validate message format"""
     if not isinstance(message, dict):
@@ -110,6 +116,7 @@ def prepare_dataset():
 model_name = "google/gemma-2-2b-jpn-it"
 tokenizer = AutoTokenizer.from_pretrained(
     model_name,
+    token=os.environ["HUGGINGFACE_TOKEN"],  
     trust_remote_code=True
 )
 
@@ -125,6 +132,7 @@ bnb_config = BitsAndBytesConfig(
 # Load model with modifications
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
+    token=os.environ["HUGGINGFACE_TOKEN"],  
     quantization_config=bnb_config,
     device_map="auto",
     torch_dtype=torch.bfloat16,
