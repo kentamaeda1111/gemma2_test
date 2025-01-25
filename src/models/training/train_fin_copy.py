@@ -707,6 +707,9 @@ try:
     checkpoint_dir = MODEL_OUTPUT_DIR  
     resume_from_checkpoint = None
     
+    # Check if running in Kaggle environment
+    is_kaggle = os.path.exists('/kaggle/working')
+    
     # Checkpoint status and processing
     if os.path.exists(checkpoint_dir):
         print("\nChecking checkpoint status...")  
@@ -731,7 +734,7 @@ try:
                 if current_epoch >= training_args.num_train_epochs - 0.1:
                     print("\n" + "="*50)
                     print("IMPORTANT NOTICE:")
-                    print(f"Training has already been completed at epoch {current_epoch}!")  # Modified
+                    print(f"Training has already been completed at epoch {current_epoch}!")
                     print(f"Target epochs was {training_args.num_train_epochs}")  
                     print(f"Trained model is available at: {checkpoint_dir}")
                     print("="*50 + "\n")
@@ -741,16 +744,18 @@ try:
             else:
                 logging.warning("Invalid checkpoint state found. Please check manually.")
                 logging.warning(f"Checkpoint directory: {checkpoint_dir}")
-                user_input = input("Do you want to continue and overwrite? (yes/no): ")
+                if not is_kaggle:  
+                    user_input = input("Do you want to continue and overwrite? (yes/no): ")
+                    if user_input.lower() != 'yes':
+                        logging.info("Aborting to protect existing data.")
+                        exit(0)
+        else:
+            logging.warning("Checkpoint directory exists but no checkpoints found.")
+            if not is_kaggle:  
+                user_input = input("Do you want to continue and overwrite the directory? (yes/no): ")
                 if user_input.lower() != 'yes':
                     logging.info("Aborting to protect existing data.")
                     exit(0)
-        else:
-            logging.warning("Checkpoint directory exists but no checkpoints found.")
-            user_input = input("Do you want to continue and overwrite the directory? (yes/no): ")
-            if user_input.lower() != 'yes':
-                logging.info("Aborting to protect existing data.")
-                exit(0)
 
     # Start training (or resume)
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
