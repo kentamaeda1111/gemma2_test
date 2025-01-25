@@ -187,17 +187,20 @@ def tokenize_function(examples):
 tokenized_dataset = dataset.map(
     tokenize_function,
     batched=True,
-    batch_size=32,  # Reduced from 64
-    num_proc=4,     # Increased from 2
+    batch_size=16,      # 32 → 16に削減
+    num_proc=1,         # 4 → 1に削減（並列処理を無効化）
     load_from_cache_file=True,
     desc="Tokenizing datasets",
     remove_columns=dataset.column_names,
 )
+
 # Add memory usage monitoring log
 def log_memory_usage():
     import psutil
     process = psutil.Process()
-    logging.info(f"Memory usage: {process.memory_info().rss / 1024 / 1024:.2f} MB")
+    memory_info = process.memory_info()
+    logging.info(f"Memory usage: {memory_info.rss / 1024 / 1024:.2f} MB")
+    logging.info(f"Memory percent: {process.memory_percent()}%")
 
 # Log dataset size
 logging.info(f"Total dataset size: {len(dataset)}")
