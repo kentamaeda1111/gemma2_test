@@ -12,13 +12,14 @@ MAX_TOKENS = 256  # トークン数の上限
 def process_dialogue_file(target_file=TARGET_FILE, max_tokens=MAX_TOKENS):
     """
     対話データのトークン長をチェックし、制限を超えるペアを除外した新しいファイルを作成します。
+    制限を超えるペアが見つからない場合は、新しいファイルは作成しません。
     
     Args:
         target_file (str): 処理対象のファイル名（拡張子なし）
         max_tokens (int): トークン数の制限（デフォルト: グローバル設定値）
     
     Returns:
-        str: 作成された新しいファイルのパス
+        str or None: 作成された新しいファイルのパス。ファイルが作成されなかった場合はNone
     """
     # 入力ファイルパスの構築
     json_path = Path(DIALOGUE_DIR) / f"{target_file}.json"
@@ -101,6 +102,10 @@ def process_dialogue_file(target_file=TARGET_FILE, max_tokens=MAX_TOKENS):
     logging.info(f"Total dialogue pairs analyzed: {total_pairs}")
     logging.info(f"Pairs exceeding {max_tokens} tokens: {len(over_limit_pairs)}")
     
+    if not over_limit_pairs:
+        logging.info("\nNo dialogues exceeding token limit found. No new file will be created.")
+        return None
+    
     if over_limit_pairs:
         logging.info("\nDetailed report of pairs exceeding token limit:")
         for i, pair in enumerate(over_limit_pairs, 1):
@@ -109,19 +114,24 @@ def process_dialogue_file(target_file=TARGET_FILE, max_tokens=MAX_TOKENS):
             logging.info(f"User message preview: {pair['user_msg']}")
             logging.info(f"Model message preview: {pair['model_msg']}")
 
-    # 新しいファイルの作成
-    output_path = json_path.parent / f"{target_file}_processed.json"
-    
-    try:
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(valid_dialogues, f, ensure_ascii=False, indent=2)
-        logging.info(f"\nProcessed file saved as: {output_path}")
-        logging.info(f"Valid dialogues saved: {len(valid_dialogues)}")
-    except Exception as e:
-        logging.error(f"Failed to save processed file: {str(e)}")
-        raise
+        # 新しいファイルの作成
+        output_path = json_path.parent / f"{target_file}_processed.json"
+        
+        try:
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(valid_dialogues, f, ensure_ascii=False, indent=2)
+            logging.info(f"\nProcessed file saved as: {output_path}")
+            logging.info(f"Valid dialogues saved: {len(valid_dialogues)}")
+            return str(output_path)
+        except Exception as e:
+            logging.error(f"Failed to save processed file: {str(e)}")
+            raise
 
-    return str(output_path)
+    return None
 
 if __name__ == "__main__":
-    process_dialogue_file() 
+    result = process_dialogue_file()
+    if result:
+        logging.info(f"Processing completed. New file created: {result}")
+    else:
+        logging.info("Processing completed. No new file was needed.") 

@@ -22,7 +22,7 @@ from pathlib import Path
 from src.utils.config import get_api_keys  # 追加
 
 # グローバル設定を更新
-DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model_processed.json"  # 対話データのパスを更新
+DIALOGUE_JSON_PATH = "data/dialogue/processed/7gouki.json"  # 対話データのパスを更新
 MODEL_OUTPUT_DIR = "models/gemma_refined"  # モデル出力ディレクトリを更新
 LOG_DIR = f"{MODEL_OUTPUT_DIR}/logs"  # ログディレクトリを更新
 MAX_SEQUENCE_LENGTH = 256  # 1つの対話の最大トークン数
@@ -342,6 +342,7 @@ training_args = TrainingArguments(
     eval_accumulation_steps=4,
     load_best_model_at_end=True,
     metric_for_best_model="combined_score",
+    report_to="none",  # ここを追加
 )
 
 # Disable wandb via environment variable (add before training_args)
@@ -685,6 +686,7 @@ trainer = CustomTrainer(
     data_collator=data_collator,
     compute_metrics=compute_metrics,
     callbacks=[StyleCallback(), TrainingMonitorCallback()],
+    report_to="none"  # ここを変更
 )
 
 # Start training
