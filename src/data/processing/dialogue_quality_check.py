@@ -381,12 +381,12 @@ def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
             header = [col.replace('\ufeff', '') for col in header]
             print(f"CSV Headers after BOM removal: {header}")
             
-            # ヘッダーの検証
-            required_columns = ['dialogue']
-            for col in required_columns:
-                if col not in header:
-                    print(f"Warning: Required column '{col}' not found in headers")
-                    return
+            # ヘッダーの検証とdialogue_indexの取得
+            try:
+                dialogue_index = header.index('dialogue')
+            except ValueError:
+                print("Warning: Required column 'dialogue' not found in headers")
+                return
             
             # データ行の確認
             rows = list(reader)
@@ -400,15 +400,13 @@ def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
             next(reader)  # ヘッダー行をスキップ
             
             for row in rows:
-                # 警告メッセージを削除（実際には必要な長さだけあれば良い）
-                if len(row) < dialogue_index + 1:  # dialogueカラムが存在することだけを確認
+                # 行の長さチェック
+                if len(row) < dialogue_index + 1:
                     print(f"Warning: Row too short, missing dialogue column: {row}")
                     continue
                 
-                # インデックスでアクセス
                 try:
-                    dialogue_index = header.index('dialogue')
-                    dialogue_file = row[dialogue_index] if dialogue_index < len(row) else None
+                    dialogue_file = row[dialogue_index]
                     
                     if not dialogue_file:
                         print("Warning: Missing dialogue filename in row")
