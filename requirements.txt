@@ -10,9 +10,5 @@ bitsandbytes==0.43.2
 accelerate==0.26.0
 datasets
 
-# CUDA dependencies
-nvidia-cuda-runtime-cu11
-nvidia-cudnn-cu11
-
 # Development dependencies
 flake8>=6.1.0 

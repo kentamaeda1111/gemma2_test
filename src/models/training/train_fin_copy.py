@@ -46,7 +46,6 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 api_keys = get_api_keys()
 os.environ["HUGGINGFACE_TOKEN"] = api_keys['huggingface_api_key']
 
-# メモリクリア関数を先に定義
 def clear_memory():
     import gc
     gc.collect()
@@ -70,13 +69,10 @@ def prepare_dataset():
     conversations = []
     
     try:
-        # 一度にJSONを読み込むのではなく、ストリーミング処理を実装
         def conversation_generator():
             with open(DIALOGUE_JSON_PATH, 'r', encoding='utf-8') as f:
-                # ファイル全体を1つのJSONとして読み込む
                 dialogue_data = json.load(f)
                 
-                # 対話データを1つずつ処理
                 for dialogue in dialogue_data:
                     messages = dialogue.get('messages', [])
                     
@@ -106,26 +102,32 @@ def prepare_dataset():
                         if len(tokens) <= MAX_SEQUENCE_LENGTH:
                             yield {"text": formatted_text}
                     
-                    # メモリ管理
                     del messages, current_conversation
                     if len(dialogue_data) % 100 == 0:
                         clear_memory()
                 
-                # 大きなデータを解放
                 del dialogue_data
                 clear_memory()
         
-        # データセットの作成
         dataset = Dataset.from_generator(
             conversation_generator,
-            cache_dir=None  # キャッシュを無効化
+            cache_dir=None  
         )
         
     except Exception as e:
         logging.error(f"Error processing dialogue file: {str(e)}")
         raise
     
-    return dataset
+    train_test_split = dataset.train_test_split(
+        test_size=0.1,  
+        shuffle=True,
+        seed=42
+    )
+    
+    train_dataset = train_test_split['train']
+    eval_dataset = train_test_split['test']
+    
+    return train_dataset, eval_dataset
 
 # Model and tokenizer preparation
 model_name = "google/gemma-2-2b-jpn-it"
@@ -160,10 +162,10 @@ model.config.use_cache = False
 
 # Adjust LoRA configuration
 lora_config = LoraConfig(
-    r=8,                # 元々は16
-    lora_alpha=16,      # 元々は32
+    r=8,                
+    lora_alpha=16,      #
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
-    lora_dropout=0.05,  # 元々は0.1
+    lora_dropout=0.05,  
     bias="none",
     task_type="CAUSAL_LM",
 )
@@ -175,16 +177,17 @@ model = get_peft_model(model, lora_config)
 model.config.use_cache = False
 
 # Dataset preparation
-dataset = prepare_dataset()
+train_dataset, eval_dataset = prepare_dataset()
 
 # Check dataset structure
 print("Dataset structure:")
-print(dataset[0])  # Display first element
+print(train_dataset[0])  # Display first element
 print("\nDataset features:")
-print(dataset.features)
+print(train_dataset.features)
 
 # Optimize dataset batch processing
-dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
+train_dataset = train_dataset.select(range(len(train_dataset))).shuffle(seed=42)
+eval_dataset = eval_dataset.select(range(len(eval_dataset))).shuffle(seed=42)
 
 # Optimize tokenize function
 def tokenize_function(examples):
@@ -195,18 +198,28 @@ def tokenize_function(examples):
         padding=False,
         return_tensors=None,
     )
-    clear_memory()  # メモリクリア
+    clear_memory()  
     return outputs
 
 # Optimize dataset processing
-tokenized_dataset = dataset.map(
+tokenized_train_dataset = train_dataset.map(
     tokenize_function,
     batched=True,
-    batch_size=4,  # バッチサイズをさらに小さく
+    batch_size=4,  
     num_proc=1,
-    remove_columns=dataset.column_names,
-    desc="Tokenizing datasets",
+    remove_columns=train_dataset.column_names,
+    desc="Tokenizing train datasets",
 )
+
+tokenized_eval_dataset = eval_dataset.map(
+    tokenize_function,
+    batched=True,
+    batch_size=4,  
+    num_proc=1,
+    remove_columns=eval_dataset.column_names,
+    desc="Tokenizing eval datasets",
+)
+
 # Add memory usage monitoring log
 def log_memory_usage():
     import psutil
@@ -214,7 +227,8 @@ def log_memory_usage():
     logging.info(f"Memory usage: {process.memory_info().rss / 1024 / 1024:.2f} MB")
 
 # Log dataset size
-logging.info(f"Total dataset size: {len(dataset)}")
+logging.info(f"Total train dataset size: {len(train_dataset)}")
+logging.info(f"Total eval dataset size: {len(eval_dataset)}")
 log_memory_usage()
 
 # Add dataset validation
@@ -227,7 +241,8 @@ def validate_dataset(dataset):
     print(f"input_ids length: {len(first_item['input_ids'])}")
     return dataset
 
-tokenized_dataset = validate_dataset(tokenized_dataset)
+tokenized_train_dataset = validate_dataset(tokenized_train_dataset)
+tokenized_eval_dataset = validate_dataset(tokenized_eval_dataset)
 
 # Add dataset preprocessing
 def preprocess_function(examples):
@@ -318,10 +333,16 @@ tokenizer.add_special_tokens({
 })
 
 
-tokenized_dataset = tokenized_dataset.map(
+tokenized_train_dataset = tokenized_train_dataset.map(
     preprocess_function,
     batched=True,
-    desc="Applying attention masking"
+    desc="Applying attention masking to train dataset",
+)
+
+tokenized_eval_dataset = tokenized_eval_dataset.map(
+    preprocess_function,
+    batched=True,
+    desc="Applying attention masking to eval dataset",
 )
 
 # Create log directory
@@ -341,18 +362,18 @@ logging.basicConfig(
 training_args = TrainingArguments(
     output_dir=MODEL_OUTPUT_DIR,
     num_train_epochs=30,
-    per_device_train_batch_size=1,      # バッチサイズを最小に
-    per_device_eval_batch_size=1,       # 評価用バッチサイズも最小に
-    gradient_accumulation_steps=32,     # 代わりに勾配累積を増やす
-    eval_steps=100,                     # 評価頻度を減らす
-    save_steps=100,                     # 保存頻度を減らす
-    logging_steps=50,                   # ログ頻度を減らす
+    per_device_train_batch_size=1,
+    per_device_eval_batch_size=1,
+    gradient_accumulation_steps=32,
+    eval_steps=100,
+    save_steps=100,
+    logging_steps=50,
     evaluation_strategy="steps",
     save_strategy="steps",
     fp16=True,
     gradient_checkpointing=True,
     optim="adamw_torch_fused",
-    save_total_limit=1,                # 保存するチェックポイントを制限
+    save_total_limit=1,                
     load_best_model_at_end=True,
     metric_for_best_model="loss",
     greater_is_better=False,
@@ -370,10 +391,8 @@ data_collator = DataCollatorForLanguageModeling(
 def compute_metrics(eval_preds):
     logits, labels = eval_preds
     
-    # 基本的な評価のみを実行
     predictions = np.argmax(logits, axis=-1)
     
-    # メモリ解放
     del logits
     clear_memory()
     
@@ -523,14 +542,7 @@ class TrainingMonitorCallback(TrainerCallback):
         else:
             logging.info("Best combined score: Not available")
 
-# トレーニングデータセットのサイズを制限
-train_size = min(1000, int(len(tokenized_dataset) * 0.8))  # 最大1000サンプル
-eval_size = min(50, len(tokenized_dataset) - train_size)   # 最大50サンプル
 
-train_dataset = tokenized_dataset.select(range(train_size))
-eval_dataset = tokenized_dataset.select(range(train_size, train_size + eval_size))
-
-# データセットをメモリに保持せずにイテレーションする
 train_dataset.set_format(type='torch', columns=['input_ids', 'attention_mask'])
 eval_dataset.set_format(type='torch', columns=['input_ids', 'attention_mask'])
 
@@ -546,13 +558,24 @@ def clear_memory():
 class MemoryEfficientTrainer(Trainer):
     def training_step(self, *args, **kwargs):
         loss = super().training_step(*args, **kwargs)
-        if self.state.global_step % 10 == 0:  # より頻繁にメモリクリア
+        if self.state.global_step % 10 == 0: 
             clear_memory()
         return loss
         
     def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
-        eval_dataset = eval_dataset.select(range(min(50, len(eval_dataset))))  # 評価データセットを制限
-        return super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
+        if eval_dataset is None:
+            eval_dataset = self.eval_dataset
+        
+        if eval_dataset is None:
+            logging.warning("No evaluation dataset provided")
+            return {}
+            
+        eval_dataset = eval_dataset.select(range(min(50, len(eval_dataset))))
+        return super().evaluate(
+            eval_dataset=eval_dataset,
+            ignore_keys=ignore_keys,
+            metric_key_prefix=metric_key_prefix
+        )
 
 # Update trainer settings
 trainer = MemoryEfficientTrainer(

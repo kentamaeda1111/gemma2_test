@@ -102,7 +102,6 @@ def save_extracted_dialogue(utterances, original_filename, start, end):
     if start == 0 or end == 0:
         return
     
-    # 出力ディレクトリを固定
     output_dir = os.path.join('data', 'dialogue', 'processed')
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -170,6 +169,5 @@ def process_dialogue_files(input_dir):
 
 # Main process
 if __name__ == "__main__":
-    # 入力ディレクトリを新しい構造に合わせる
     input_directory = os.path.join('data', 'dialogue', 'raw')
     process_dialogue_files(input_directory) 
