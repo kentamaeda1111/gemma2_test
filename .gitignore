@@ -14,6 +14,7 @@ data/dialogue/low_rated/
 data/dialogue/processed/*
 !data/dialogue/processed/kaggle_model.json
 !data/dialogue/processed/7gouki.json
+!data/dialogue/processed/kaggle_model_processed.json
 
 # IDE 
 .idea/
