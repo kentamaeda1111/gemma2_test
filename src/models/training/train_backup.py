@@ -23,7 +23,7 @@ from src.utils.config import get_api_keys
 
 # Global Setting
 DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
-MAX_SEQUENCE_LENGTH = 256
+MAX_SEQUENCE_LENGTH = 512
 
 # Setup output directory paths
 BASE_OUTPUT_DIR = "models/test"  # Can be changed based on model name
@@ -46,14 +46,6 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 api_keys = get_api_keys()
 os.environ["HUGGINGFACE_TOKEN"] = api_keys['huggingface_api_key']
 
-# メモリクリア関数を先に定義
-def clear_memory():
-    import gc
-    gc.collect()
-    torch.cuda.empty_cache()
-    if torch.cuda.is_available():
-        torch.cuda.synchronize()
-
 def validate_message_format(message):
     """Validate message format"""
     if not isinstance(message, dict):
@@ -70,62 +62,55 @@ def prepare_dataset():
     conversations = []
     
     try:
-        # 一度にJSONを読み込むのではなく、ストリーミング処理を実装
-        def conversation_generator():
-            with open(DIALOGUE_JSON_PATH, 'r', encoding='utf-8') as f:
-                # ファイル全体を1つのJSONとして読み込む
-                dialogue_data = json.load(f)
+        with open(DIALOGUE_JSON_PATH, 'r', encoding='utf-8') as f:
+            dialogue_data = json.load(f)
+            
+        for dialogue in dialogue_data:
+            messages = dialogue.get('messages', [])
+            
+            # Validate message format
+            if not all(validate_message_format(msg) for msg in messages):
+                logging.warning(f"Skipped dialogue due to invalid message format")
+                continue
                 
-                # 対話データを1つずつ処理
-                for dialogue in dialogue_data:
-                    messages = dialogue.get('messages', [])
-                    
-                    if not all(validate_message_format(msg) for msg in messages):
-                        continue
-                        
-                    current_conversation = []
-                    valid_sequence = True
-                    
-                    for i in range(0, len(messages)-1, 2):
-                        if (i+1 < len(messages) and 
-                            messages[i]['role'] == 'user' and 
-                            messages[i+1]['role'] == 'model'):
-                            current_conversation.extend([messages[i], messages[i+1]])
-                        else:
-                            valid_sequence = False
-                            break
-                    
-                    if valid_sequence and current_conversation:
-                        formatted_text = tokenizer.apply_chat_template(
-                            current_conversation,
-                            tokenize=False,
-                            add_generation_prompt=True
-                        )
-                        
-                        tokens = tokenizer.encode(formatted_text)
-                        if len(tokens) <= MAX_SEQUENCE_LENGTH:
-                            yield {"text": formatted_text}
-                    
-                    # メモリ管理
-                    del messages, current_conversation
-                    if len(dialogue_data) % 100 == 0:
-                        clear_memory()
+            # Build conversation checking user->model sequence
+            current_conversation = []
+            valid_sequence = True
+            
+            for i in range(0, len(messages)-1, 2):
+                if (i+1 < len(messages) and 
+                    messages[i]['role'] == 'user' and 
+                    messages[i+1]['role'] == 'model'):
+                    current_conversation.extend([messages[i], messages[i+1]])
+                else:
+                    valid_sequence = False
+                    break
+            
+            # Add only valid conversations
+            if valid_sequence and current_conversation:
+                # Apply Gemma chat template
+                formatted_text = tokenizer.apply_chat_template(
+                    current_conversation,
+                    tokenize=False,
+                    add_generation_prompt=True
+                )
                 
-                # 大きなデータを解放
-                del dialogue_data
-                clear_memory()
-        
-        # データセットの作成
-        dataset = Dataset.from_generator(
-            conversation_generator,
-            cache_dir=None  # キャッシュを無効化
-        )
-        
+                # Check token count
+                tokens = tokenizer.encode(formatted_text)
+                if len(tokens) <= MAX_SEQUENCE_LENGTH:
+                    conversations.append({"text": formatted_text})
+                else:
+                    logging.warning(f"Skipped conversation due to length: {len(tokens)} tokens")
+            
     except Exception as e:
         logging.error(f"Error processing dialogue file: {str(e)}")
         raise
     
-    return dataset
+    if not conversations:
+        raise ValueError("No valid conversations found in the dialogue file")
+        
+    logging.info(f"Processed {len(conversations)} valid conversations")
+    return Dataset.from_list(conversations)
 
 # Model and tokenizer preparation
 model_name = "google/gemma-2-2b-jpn-it"
@@ -160,10 +145,10 @@ model.config.use_cache = False
 
 # Adjust LoRA configuration
 lora_config = LoraConfig(
-    r=8,                # 元々は16
-    lora_alpha=16,      # 元々は32
+    r=16,
+    lora_alpha=32,
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
-    lora_dropout=0.05,  # 元々は0.1
+    lora_dropout=0.1,
     bias="none",
     task_type="CAUSAL_LM",
 )
@@ -188,24 +173,25 @@ dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
 
 # Optimize tokenize function
 def tokenize_function(examples):
-    outputs = tokenizer(
+    result = tokenizer(
         examples['text'],
         truncation=True,
-        max_length=MAX_SEQUENCE_LENGTH,
-        padding=False,
+        max_length=256,      # Improve memory efficiency
+        padding='max_length',
+        add_special_tokens=True,
         return_tensors=None,
     )
-    clear_memory()  # メモリクリア
-    return outputs
+    return result
 
 # Optimize dataset processing
 tokenized_dataset = dataset.map(
     tokenize_function,
     batched=True,
-    batch_size=4,  # バッチサイズをさらに小さく
-    num_proc=1,
-    remove_columns=dataset.column_names,
+    batch_size=32,  # Reduced from 64
+    num_proc=4,     # Increased from 2
+    load_from_cache_file=True,
     desc="Tokenizing datasets",
+    remove_columns=dataset.column_names,
 )
 # Add memory usage monitoring log
 def log_memory_usage():
@@ -339,25 +325,42 @@ logging.basicConfig(
 
 # Update training arguments
 training_args = TrainingArguments(
-    output_dir=MODEL_OUTPUT_DIR,
-    num_train_epochs=30,
-    per_device_train_batch_size=1,      # バッチサイズを最小に
-    per_device_eval_batch_size=1,       # 評価用バッチサイズも最小に
-    gradient_accumulation_steps=32,     # 代わりに勾配累積を増やす
-    eval_steps=100,                     # 評価頻度を減らす
-    save_steps=100,                     # 保存頻度を減らす
-    logging_steps=50,                   # ログ頻度を減らす
+    output_dir=MODEL_OUTPUT_DIR,  
+    num_train_epochs=30,     # Set to 30 epochs for smaller datasets
+    learning_rate=8e-5,      # Slightly reduced from 1e-4
+    weight_decay=0.06,       # Slightly increased
+    warmup_ratio=0.25,       # Longer warmup period
+    lr_scheduler_type="cosine_with_restarts",  # Changed to scheduler with restarts
     evaluation_strategy="steps",
+    eval_steps=20,          # Changed from 25 to 20 for more frequent evaluation
     save_strategy="steps",
-    fp16=True,
+    save_steps=20,
+    gradient_accumulation_steps=8,   # Reduced accumulation steps
+    max_steps=-1,
+    disable_tqdm=False,
+    logging_dir=LOG_OUTPUT_DIR,   
+    logging_strategy="steps",
+    logging_steps=50,
+    no_cuda=False,
+    dataloader_num_workers=2,
+    report_to=[],
+    run_name=None,
+    per_device_train_batch_size=4,  # Increase if memory allows
+    per_device_eval_batch_size=2,   # Set to half of training batch size
     gradient_checkpointing=True,
+    max_grad_norm=0.5,       # Set to 0.5 based on gradient clipping guidelines
+    dataloader_pin_memory=True,
+    save_total_limit=3,
+    fp16=True,
     optim="adamw_torch_fused",
-    save_total_limit=1,                # 保存するチェックポイントを制限
+    eval_accumulation_steps=8,
     load_best_model_at_end=True,
-    metric_for_best_model="loss",
-    greater_is_better=False,
-    report_to=["none"],
+    metric_for_best_model="combined_score",  # Using new evaluation metric
 )
+
+# Disable wandb via environment variable (add before training_args)
+import os
+os.environ["WANDB_DISABLED"] = "true"
 
 # Modify data collator
 data_collator = DataCollatorForLanguageModeling(
@@ -368,18 +371,148 @@ data_collator = DataCollatorForLanguageModeling(
 
 # Update evaluation metrics
 def compute_metrics(eval_preds):
-    logits, labels = eval_preds
+    logits, labels = eval_preds  # Get logits and labels from eval_preds
     
-    # 基本的な評価のみを実行
-    predictions = np.argmax(logits, axis=-1)
+    # Relax size limit for evaluation dataset
+    max_samples = 100
     
-    # メモリ解放
-    del logits
-    clear_memory()
-    
-    return {
-        "accuracy": np.mean(predictions == labels)
-    }
+    # Improve decoding process
+    with torch.no_grad():
+        logits = torch.tensor(logits).cpu()
+        predictions = torch.argmax(logits, dim=-1)
+        
+        # Decode batch
+        decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+        
+        # Add more detailed logging
+        logging.info(f"Sample prediction: {decoded_preds[0][:100]}...")
+        
+        del logits, predictions  # Memory release
+        torch.cuda.empty_cache()
+        
+        # Define sentence ending patterns more flexibly
+        sentence_end_patterns = {
+            'question_patterns': [
+                'かね', 'だろうか', 'ではないか',
+                'のか', 'と思わないか', '考えてみよう',
+            ],
+            'statement_patterns': [
+                'だね', 'なるほど', '興味深い',
+                'といえよう', 'というべきだ'
+            ],
+            'reflection_patterns': [
+                'かもしれない', 'のではないか',
+                'と考えられる', 'といえそうだ'
+            ]
+        }
+        
+        # Auxiliary verb patterns
+        auxiliary_patterns = [
+            'である', 'だ', 'です', 'ます',
+            'のだ', 'のです', 'のである'
+        ]
+        
+        def calculate_style_consistency(text):
+            sentences = text.split('。')
+            if not sentences:
+                return 0.0
+                
+            # Evaluate sentence ending style consistency
+            end_style_scores = []
+            for sent in sentences:
+                if not sent.strip():
+                    continue
+                    
+                # Evaluate sentence ending patterns (partial match allowed)
+                pattern_found = False
+                for pattern_type, patterns in sentence_end_patterns.items():
+                    if any(p in sent[-10:] for p in patterns):  # Search within 10 characters at the end
+                        pattern_found = True
+                        break
+                end_style_scores.append(1.0 if pattern_found else 0.0)
+            
+            # Evaluate auxiliary verb consistency
+            aux_style_scores = []
+            for sent in sentences:
+                if not sent.strip():
+                    continue
+                    
+                # Evaluate auxiliary verb usage in the sentence
+                aux_found = any(p in sent for p in auxiliary_patterns)
+                aux_style_scores.append(1.0 if aux_found else 0.0)
+            
+            # Evaluate sentence length consistency
+            lengths = [len(s.strip()) for s in sentences if s.strip()]
+            length_variance = np.var(lengths) if lengths else 0
+            length_score = 1.0 / (1.0 + length_variance/100)  # Higher score if variance is small
+            
+            # Overall evaluation
+            end_style_avg = np.mean(end_style_scores) if end_style_scores else 0
+            aux_style_avg = np.mean(aux_style_scores) if aux_style_scores else 0
+            
+            # Weighting
+            weights = {
+                'end_style': 0.5,
+                'aux_style': 0.3,
+                'length_consistency': 0.2
+            }
+            
+            return (
+                weights['end_style'] * end_style_avg +
+                weights['aux_style'] * aux_style_avg +
+                weights['length_consistency'] * length_score
+            )
+        
+        # Evaluate style consistency for each prediction
+        style_scores = [calculate_style_consistency(pred) for pred in decoded_preds]
+        
+        # Evaluate dialogue flow
+        def calculate_dialogue_flow(text):
+            sentences = text.split('。')
+            if not sentences:
+                return 0.0
+            
+            # Add more detailed evaluation criteria
+            scores = []
+            
+            # 1. Balance between questions and statements
+            questions = sum(1 for s in sentences if any(p in s for p in sentence_end_patterns['question_patterns']))
+            ratio = questions / len(sentences) if sentences else 0
+            balance_score = max(0.0, 1.0 - min(abs(0.3 - ratio), 0.2) * 2)
+            scores.append(balance_score)
+            
+            # 2. Sentence length change
+            lengths = [len(s.strip()) for s in sentences if s.strip()]
+            length_variance = np.var(lengths) if len(lengths) > 1 else 0
+            length_score = 1.0 / (1.0 + length_variance/500)  # Higher score if variance is small
+            scores.append(length_score)
+            
+            # 3. Use of conjunctions
+            conjunctions = ['しかし', 'だから', 'また', 'そして', 'したがって']
+            conj_count = sum(1 for s in sentences if any(c in s for c in conjunctions))
+            conj_ratio = conj_count / len(sentences)
+            conj_score = min(1.0, conj_ratio * 2)  # Evaluate moderate usage
+            scores.append(conj_score)
+            
+            # Weighted average of scores
+            weights = [0.5, 0.25, 0.25]  # Balance, length, conjunction weights
+            final_score = sum(s * w for s, w in zip(scores, weights))
+            
+            return max(0.1, min(1.0, final_score))  # Limit to range 0.1 to 1.0
+        
+        flow_scores = [calculate_dialogue_flow(pred) for pred in decoded_preds]
+        
+        style_score = np.mean(style_scores)
+        flow_score = np.mean(flow_scores)
+        
+        # Add overall evaluation score
+        combined_score = (style_score * 0.6 + flow_score * 0.4)  # Increase flow_score weight
+        
+        return {
+            'style_consistency': style_score,
+            'dialogue_flow': flow_score,
+            'combined_score': combined_score
+        }
 
 # Update custom callbacks
 class StyleCallback(TrainerCallback):
@@ -523,16 +656,14 @@ class TrainingMonitorCallback(TrainerCallback):
         else:
             logging.info("Best combined score: Not available")
 
-# トレーニングデータセットのサイズを制限
-train_size = min(1000, int(len(tokenized_dataset) * 0.8))  # 最大1000サンプル
-eval_size = min(50, len(tokenized_dataset) - train_size)   # 最大50サンプル
+# Split dataset into training and evaluation sets
+dataset_size = len(tokenized_dataset)
+indices = np.random.permutation(dataset_size)
+split_idx = int(dataset_size * 0.8)
 
-train_dataset = tokenized_dataset.select(range(train_size))
-eval_dataset = tokenized_dataset.select(range(train_size, train_size + eval_size))
-
-# データセットをメモリに保持せずにイテレーションする
-train_dataset.set_format(type='torch', columns=['input_ids', 'attention_mask'])
-eval_dataset.set_format(type='torch', columns=['input_ids', 'attention_mask'])
+train_dataset = tokenized_dataset.select(indices[:split_idx])
+# Limit evaluation dataset size
+eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+100])  # Maximum 100 samples
 
 logging.info(f"Training dataset size: {len(train_dataset)}")
 logging.info(f"Evaluation dataset size: {len(eval_dataset)}")
@@ -543,19 +674,24 @@ def clear_memory():
     gc.collect()
     torch.cuda.empty_cache()
     
-class MemoryEfficientTrainer(Trainer):
+class CustomTrainer(Trainer):
     def training_step(self, *args, **kwargs):
         loss = super().training_step(*args, **kwargs)
-        if self.state.global_step % 10 == 0:  # より頻繁にメモリクリア
+        if self.state.global_step % 100 == 0:
             clear_memory()
         return loss
-        
+
+# Create custom Trainer class for evaluation
+class CustomTrainer(Trainer):
     def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
-        eval_dataset = eval_dataset.select(range(min(50, len(eval_dataset))))  # 評価データセットを制限
+        eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
+        if eval_dataset is not None:
+            # Limit evaluation dataset to 100 samples
+            eval_dataset = eval_dataset.select(range(min(100, len(eval_dataset))))
         return super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
 
 # Update trainer settings
-trainer = MemoryEfficientTrainer(
+trainer = CustomTrainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
