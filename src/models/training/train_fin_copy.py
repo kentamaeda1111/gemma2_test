@@ -65,6 +65,21 @@ def validate_message_format(message):
         return False
     return True
 
+def tokenize_function(examples):
+    """データセットのトークン化を行う関数"""
+    try:
+        outputs = tokenizer(
+            examples["text"],
+            truncation=True,
+            max_length=MAX_SEQUENCE_LENGTH,
+            padding=False,
+            return_tensors=None,
+        )
+        return outputs
+    except Exception as e:
+        logging.error(f"Tokenization error: {str(e)}")
+        raise
+
 def prepare_dataset():
     try:
         def conversation_generator():
