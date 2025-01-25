@@ -22,7 +22,7 @@ from pathlib import Path
 from src.utils.config import get_api_keys
 
 # Global Setting
-DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
+DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model_processed.json"  
 MAX_SEQUENCE_LENGTH = 256
 
 # Setup output directory paths
