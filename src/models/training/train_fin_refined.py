@@ -19,10 +19,21 @@ import warnings
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+from src.utils.config import get_api_keys  # 追加
 
-# グローバル設定
-DIALOGUE_JSON_PATH = "logs/dialogue/9gouki.json"  # 対話データのJSONファイルパス
+# グローバル設定を更新
+DIALOGUE_JSON_PATH = "data/dialogue/processed/9gouki.json"  # 対話データのパスを更新
+MODEL_OUTPUT_DIR = "models/gemma_refined"  # モデル出力ディレクトリを更新
+LOG_DIR = f"{MODEL_OUTPUT_DIR}/logs"  # ログディレクトリを更新
 MAX_SEQUENCE_LENGTH = 512  # 1つの対話の最大トークン数
+
+# API keyの取得を追加
+try:
+    api_keys = get_api_keys()
+    huggingface_token = api_keys['huggingface_api_key']
+except Exception as e:
+    logging.error(f"Failed to get API keys: {str(e)}")
+    raise
 
 # 設定のログ出力
 logging.info(f"Using dialogue file: {DIALOGUE_JSON_PATH}")
@@ -101,7 +112,8 @@ def prepare_dataset():
 model_name = "google/gemma-2-2b-jpn-it"
 tokenizer = AutoTokenizer.from_pretrained(
     model_name,
-    trust_remote_code=True
+    trust_remote_code=True,
+    token=huggingface_token  # トークンを追加
 )
 
 # Optimize BitsAndBytesConfig settings
@@ -119,7 +131,8 @@ model = AutoModelForCausalLM.from_pretrained(
     quantization_config=bnb_config,
     device_map="auto",
     torch_dtype=torch.bfloat16,
-    attn_implementation='eager'
+    attn_implementation='eager',
+    token=huggingface_token  # トークンを追加
 )
 
 # Prepare model for LoRA and disable cache
@@ -293,25 +306,21 @@ tokenized_dataset = tokenized_dataset.map(
     desc="Applying attention masking"
 )
 
-# Update logging settings
-import os
-
 # ログディレクトリを作成
-log_dir = "model/logs"
-os.makedirs(log_dir, exist_ok=True)
+os.makedirs(LOG_DIR, exist_ok=True)
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(f'{log_dir}/training_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
+        logging.FileHandler(f'{LOG_DIR}/training_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
         logging.StreamHandler()
     ]
 )
 
 # Update training arguments
 training_args = TrainingArguments(
-    output_dir="./model",
+    output_dir=MODEL_OUTPUT_DIR,  # モデル出力ディレクトリを更新
     num_train_epochs=30,     # Set to 30 epochs for smaller datasets
     learning_rate=8e-5,      # Slightly reduced from 1e-4
     weight_decay=0.06,       # Slightly increased
@@ -324,7 +333,7 @@ training_args = TrainingArguments(
     gradient_accumulation_steps=8,   # Reduced accumulation steps
     max_steps=-1,
     disable_tqdm=False,
-    logging_dir="./model/logs",
+    logging_dir=f"{MODEL_OUTPUT_DIR}/logs",  # ログディレクトリを更新
     logging_strategy="steps",
     logging_steps=50,
     no_cuda=False,
@@ -538,7 +547,7 @@ class TrainingMonitorCallback(TrainerCallback):
             'learning_rate': [],
             'epoch': []
         }
-        self.output_dir = Path("model/training_progress")
+        self.output_dir = Path(f"{MODEL_OUTPUT_DIR}/training_progress")  # 出力ディレクトリを更新
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
     def on_train_begin(self, args, state, control, **kwargs):
@@ -690,7 +699,7 @@ trainer = CustomTrainer(
 # Start training
 logging.info("Starting training...")
 try:
-    checkpoint_dir = "./model"
+    checkpoint_dir = MODEL_OUTPUT_DIR  # チェックポイントディレクトリを更新
     resume_from_checkpoint = None
     
     # Checkpoint status and processing
@@ -743,41 +752,14 @@ try:
     logging.info("Training completed successfully!")
     
     # Save settings (as JSON)
-    import json
-
-    def convert_to_serializable(obj):
-        if isinstance(obj, set):
-            return list(obj)
-        elif isinstance(obj, dict):
-            return {k: convert_to_serializable(v) for k, v in obj.items()}
-        elif isinstance(obj, (list, tuple)):
-            return [convert_to_serializable(x) for x in obj]
-        return obj
-
-    # Convert each setting
-    training_args_dict = convert_to_serializable(training_args.to_dict())
-    lora_config_dict = convert_to_serializable(lora_config.to_dict())
-
-    config_dict = {
-        "model_name": model_name,
-        "training_args": training_args_dict,
-        "lora_config": lora_config_dict,
-        "bnb_config": {
-            "load_in_4bit": bnb_config.load_in_4bit,
-            "bnb_4bit_use_double_quant": bnb_config.bnb_4bit_use_double_quant,
-            "bnb_4bit_quant_type": bnb_config.bnb_4bit_quant_type,
-            "bnb_4bit_compute_dtype": str(bnb_config.bnb_4bit_compute_dtype),
-        }
-    }
-    
-    with open(os.path.join(training_args.output_dir, "training_config.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(MODEL_OUTPUT_DIR, "training_config.json"), "w", encoding="utf-8") as f:  # 設定ファイルの保存先を更新
         json.dump(config_dict, f, indent=2, ensure_ascii=False)
     
     # Save model
     trainer.save_model()
     # Save settings
-    model.config.save_pretrained(training_args.output_dir)
-    tokenizer.save_pretrained(training_args.output_dir)
+    model.config.save_pretrained(MODEL_OUTPUT_DIR)  # モデル設定の保存先を更新
+    tokenizer.save_pretrained(MODEL_OUTPUT_DIR)  # トークナイザーの保存先を更新
     logging.info("Model and configuration saved successfully!")
 
 except Exception as e:
