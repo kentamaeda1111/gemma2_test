@@ -740,7 +740,19 @@ try:
     logging.info("Training completed successfully!")
     
     # Save settings (as JSON)
-    with open(os.path.join(MODEL_OUTPUT_DIR, "training_config.json"), "w", encoding="utf-8") as f:  # 設定ファイルの保存先を更新
+    config_dict = {
+        "model_name": model_name,
+        "max_sequence_length": MAX_SEQUENCE_LENGTH,
+        "training_args": training_args.to_dict(),
+        "lora_config": {
+            "r": lora_config.r,
+            "alpha": lora_config.lora_alpha,
+            "dropout": lora_config.lora_dropout,
+            "target_modules": lora_config.target_modules,
+        }
+    }
+    config_path = os.path.join(MODEL_OUTPUT_DIR, "training_config.json")
+    with open(config_path, "w", encoding="utf-8") as f:
         json.dump(config_dict, f, indent=2, ensure_ascii=False)
     
     # Save model
