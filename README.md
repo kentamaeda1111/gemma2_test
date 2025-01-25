@@ -146,7 +146,7 @@ project_root/
 │   │
 │   ├── models/                
 │   │   ├── training/
-│   │   │   ├── train.py
+│   │   │   ├── train_fin_copy.py
 │   │   │   └── README.md
 │   │   │
 │   │   └── inference/
