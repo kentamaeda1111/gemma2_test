@@ -342,7 +342,7 @@ training_args = TrainingArguments(
     eval_accumulation_steps=4,
     load_best_model_at_end=True,
     metric_for_best_model="combined_score",
-    report_to="none",  # ここを追加
+    report_to="none",  # wandbを無効化
 )
 
 # Disable wandb via environment variable (add before training_args)
@@ -686,7 +686,6 @@ trainer = CustomTrainer(
     data_collator=data_collator,
     compute_metrics=compute_metrics,
     callbacks=[StyleCallback(), TrainingMonitorCallback()],
-    report_to="none"  # ここを変更
 )
 
 # Start training
