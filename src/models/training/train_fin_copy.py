@@ -183,16 +183,60 @@ def tokenize_function(examples):
     )
     return result
 
-# Optimize dataset processing
-tokenized_dataset = dataset.map(
-    tokenize_function,
-    batched=True,
-    batch_size=16,      # 32 → 16に削減
-    num_proc=1,         # 4 → 1に削減（並列処理を無効化）
-    load_from_cache_file=True,
-    desc="Tokenizing datasets",
-    remove_columns=dataset.column_names,
-)
+# データセットを小さなチャンクに分割して処理する関数
+def process_dataset_in_chunks(dataset, chunk_size=500):
+    """Process dataset in smaller chunks to manage memory usage"""
+    logging.info(f"Processing dataset in chunks of {chunk_size}")
+    all_processed = []
+    
+    for i in range(0, len(dataset), chunk_size):
+        chunk = dataset.select(range(i, min(i + chunk_size, len(dataset))))
+        
+        # Process chunk
+        processed_chunk = chunk.map(
+            tokenize_function,
+            batched=True,
+            batch_size=16,
+            num_proc=1,
+            load_from_cache_file=True,
+            desc=f"Processing chunk {i//chunk_size + 1}/{(len(dataset)-1)//chunk_size + 1}",
+            remove_columns=dataset.column_names
+        )
+        
+        all_processed.append(processed_chunk)
+        
+        # Clear memory after each chunk
+        clear_memory()
+        log_memory_usage()
+    
+    # Concatenate all processed chunks
+    return concatenate_datasets(all_processed)
+
+# メモリクリア関数を強化
+def clear_memory():
+    import gc
+    import torch
+    gc.collect()
+    torch.cuda.empty_cache()
+    
+    # より積極的なメモリ解放
+    for obj in gc.get_objects():
+        try:
+            if torch.is_tensor(obj):
+                del obj
+        except:
+            pass
+    gc.collect()
+
+# データセット処理を変更
+logging.info("Starting dataset processing...")
+log_memory_usage()
+
+# チャンク処理を使用
+tokenized_dataset = process_dataset_in_chunks(dataset, chunk_size=500)
+
+logging.info("Dataset processing completed")
+log_memory_usage()
 
 # Add memory usage monitoring log
 def log_memory_usage():
@@ -356,7 +400,7 @@ training_args = TrainingArguments(
     save_total_limit=3,
     fp16=True,
     optim="adamw_torch_fused",
-    eval_accumulation_steps=8,
+    eval_accumulation_steps=4,
     load_best_model_at_end=True,
     metric_for_best_model="combined_score",  # Using new evaluation metric
 )
