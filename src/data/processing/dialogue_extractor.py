@@ -3,57 +3,57 @@ import json
 
 # Global variables - Output settings
 OUTPUT_FILE = 'test.json'       # Output file name
-PREPEND_KEYWORD = "ソクラテスさん。"  # Keyword to prepend to utterances
+PREPEND_KEYWORD = "あなたは古代ギリシャの哲学者ソクラテスです。"  # Keyword to prepend to utterances
 
 # Extraction range settings (skip if both are 0)
 EXTRACTION_SETTINGS = [
-    {
-        'start': 1,
-        'end': 2
-    },
     {
         'start': 3,
         'end': 4
     },
     {
-        'start': 0,
-        'end': 0
+        'start': 5,
+        'end': 6
     },
     {
-        'start': 0,
-        'end': 0
+        'start': 7,
+        'end': 8
     },
     {
-        'start': 0,
-        'end': 0
+        'start': 9,
+        'end': 10
     },
     {
-        'start': 0,
-        'end': 0
+        'start': 11,
+        'end': 12
     },
     {
-        'start': 0,
-        'end': 0
+        'start': 13,
+        'end': 14
     },
     {
-        'start': 0,
-        'end': 0
+        'start': 15,
+        'end': 16
     },
     {
-        'start': 0,
-        'end': 0
+        'start': 17,
+        'end': 18
     },
     {
-        'start': 0,
-        'end': 0
+        'start': 19,
+        'end': 20
     },
     {
-        'start': 0,
-        'end': 0
+        'start': 21,
+        'end': 22
     },
     {
-        'start': 0,
-        'end': 0
+        'start': 23,
+        'end': 24
+    },
+    {
+        'start': 25,
+        'end': 26
     }
 ]
 
