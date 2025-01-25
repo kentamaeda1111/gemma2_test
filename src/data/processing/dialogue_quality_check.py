@@ -362,22 +362,24 @@ def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
     """Move low-rated dialogue files to separate directory"""
     try:
         # CSVファイルの内容を確認
-        with open(csv_path, 'r', encoding='utf-8') as f:
+        with open(csv_path, 'r', encoding='utf-8-sig') as f:  # BOM付きUTF-8として開く
             content = f.read()
             print("=== CSV File Content Preview ===")
-            print(content[:500])  # 最初の500文字を表示
+            print(content[:1000])  # より多くの内容を表示
             print("===============================")
             
-        with open(csv_path, 'r', encoding='utf-8') as f:
+        with open(csv_path, 'r', encoding='utf-8-sig') as f:  # BOM付きUTF-8として開く
             # まずヘッダーを確認
             reader = csv.reader(f)
-            header = next(reader, None)  # Noneをデフォルト値として設定
+            header = next(reader, None)
             
             if not header:
                 print("Warning: CSV file is empty or has no header")
                 return
                 
-            print(f"CSV Headers: {header}")  # デバッグ用
+            # BOMマークを除去
+            header = [col.replace('\ufeff', '') for col in header]
+            print(f"CSV Headers after BOM removal: {header}")
             
             # ヘッダーの検証
             required_columns = ['dialogue']
@@ -386,48 +388,62 @@ def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
                     print(f"Warning: Required column '{col}' not found in headers")
                     return
             
-            # DictReaderを使う前にファイルポインタを戻す
-            f.seek(0)
-            reader = csv.DictReader(f)
+            # データ行の確認
+            rows = list(reader)
+            print(f"Number of data rows: {len(rows)}")
+            if len(rows) == 0:
+                print("Warning: No data rows found in CSV")
+                return
             
-            # 以降は既存のコード
-            for row in reader:
-                # Check if dialogue column exists and has a value
-                dialogue_file = row.get('dialogue')
-                if not dialogue_file:
-                    print("Warning: Missing dialogue filename in row")
+            # DictReaderを使うために再度ファイルを開く
+            f.seek(0)
+            next(reader)  # ヘッダー行をスキップ
+            
+            for row in rows:
+                if len(row) < len(header):
+                    print(f"Warning: Incomplete row detected: {row}")
                     continue
+                
+                # インデックスでアクセス
+                try:
+                    dialogue_index = header.index('dialogue')
+                    dialogue_file = row[dialogue_index] if dialogue_index < len(row) else None
+                    
+                    if not dialogue_file:
+                        print("Warning: Missing dialogue filename in row")
+                        continue
 
-                source_path = os.path.join(dialogue_dir, dialogue_file)
-                
-                # Check if file exists
-                if not os.path.exists(source_path):
-                    print(f"File not found: {source_path}")
+                    source_path = os.path.join(dialogue_dir, dialogue_file)
+                    
+                    if not os.path.exists(source_path):
+                        print(f"File not found: {source_path}")
+                        continue
+                    
+                    # スコアの計算
+                    scores = []
+                    for i, col in enumerate(header):
+                        if col.startswith(('tone_pair', 'logic_pair')):
+                            if i < len(row) and row[i]:
+                                try:
+                                    score = row[i].strip()
+                                    if score and score.isdigit():
+                                        scores.append(int(score))
+                                except (AttributeError, ValueError) as e:
+                                    print(f"Warning: Invalid score value for {col}: {row[i]}")
+                                    continue
+                    
+                    if scores:
+                        avg_score = sum(scores) / len(scores)
+                        if avg_score <= 2:
+                            dest_path = os.path.join(low_rated_dir, dialogue_file)
+                            shutil.move(source_path, dest_path)
+                            print(f"Moved low-rated file: {dialogue_file} (avg_score: {avg_score:.2f})")
+                    else:
+                        print(f"Warning: No valid scores found for {dialogue_file}")
+                        
+                except Exception as e:
+                    print(f"Error processing row: {e}")
                     continue
-                
-                # Calculate average score
-                scores = []
-                for key in header:  # ヘッダーを使用してキーを反復
-                    if key and isinstance(key, str) and (key.startswith('tone_pair') or key.startswith('logic_pair')):
-                        value = row.get(key)
-                        if value is None:
-                            continue
-                        try:
-                            score = value.strip()
-                            if score and score.isdigit():
-                                scores.append(int(score))
-                        except (AttributeError, ValueError) as e:
-                            print(f"Warning: Invalid score value for {key}: {value}")
-                            continue
-                
-                if scores:  # Only process if we have valid scores
-                    avg_score = sum(scores) / len(scores)
-                    if avg_score <= 2:  # Low score threshold
-                        dest_path = os.path.join(low_rated_dir, dialogue_file)
-                        shutil.move(source_path, dest_path)
-                        print(f"Moved low-rated file: {dialogue_file} (avg_score: {avg_score:.2f})")
-                else:
-                    print(f"Warning: No valid scores found for {dialogue_file}")
     
     except Exception as e:
         print(f"Error moving low-rated files: {str(e)}")
