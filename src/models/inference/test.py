@@ -232,18 +232,15 @@ def _create_widget_ui(chatai: ChatAI):
             
         with chat_output:
             clear_output(wait=True)
-            # メッセージ履歴を表示（初回のユーザー入力のみ非表示）
             for i, msg in enumerate(chatai.message_history.queue):
                 if msg["role"] == "user":
                     if i == 0:
-                        # 最初のユーザー入力だけ非表示
                         pass
                     else:
                         print(f"\nYou: {msg['content']}")
                 else:
                     print(f"\nSocrates: {msg['content']}")
             
-            # 新規ユーザー入力
             print(f"\nYou: {user_input}")
             response = chatai.generate_response(user_input)
             print(f"\nSocrates: {response}")
@@ -252,12 +249,11 @@ def _create_widget_ui(chatai: ChatAI):
     
     send_button.on_click(on_send_button_clicked)
     
-    # 初回画面描画時の出力
     with chat_output:
         for i, msg in enumerate(chatai.message_history.queue):
             if msg["role"] == "user":
                 if i == 0:
-                    pass  # 最初のユーザー入力だけ表示しない
+                    pass  
                 else:
                     print(f"\nYou: {msg['content']}")
             else:
@@ -302,7 +298,6 @@ def _create_console_ui(chatai: ChatAI):
             print(f"\nError: {str(e)}")
             break
 
-# メインの実行部分を環境に応じて変更
 IS_KAGGLE_SUBMISSION = os.path.exists('/kaggle/working')
 
 if not os.path.exists(MODEL_PATH):
@@ -310,7 +305,7 @@ if not os.path.exists(MODEL_PATH):
 else:
     try:
         if IS_KAGGLE_SUBMISSION:
-            chatai = ChatAI()  # デフォルト値を使用
+            chatai = ChatAI() 
         else:
             chatai = ChatAI(
                 model_path=MODEL_PATH,

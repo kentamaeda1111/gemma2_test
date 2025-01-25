@@ -64,12 +64,10 @@ class AutomationSettings:
 class DialogueLogger:
     """Class for logging dialogue content to files"""
     def __init__(self, settings: AutomationSettings):
-        # 生成されたダイアログの保存先を data/dialogue/raw に変更
         if not os.path.exists('data/dialogue/raw'):
             os.makedirs('data/dialogue/raw')
         
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        # パスを変更
         self.log_file = f'data/dialogue/raw/dialogue_{settings.DIALOGUE_KEYWORD}_{timestamp}_{settings.MAX_TURNS}.txt'
         self.settings = settings
         
@@ -398,12 +396,10 @@ class AutomationManager:
         try:
             with open(self.csv_path, 'r', encoding='utf-8-sig') as f:
                 reader = csv.DictReader(f)
-                # デバッグ用にカラム名を出力
                 print(f"CSV columns: {reader.fieldnames}")
                 for row in reader:
                     if any(row.values()):
                         settings_list.append(row)
-                        # デバッグ用に各行の内容を出力
                         print(f"Row values: {row}")
         except Exception as e:
             print(f"Error loading CSV file: {str(e)}")
@@ -429,7 +425,6 @@ class AutomationManager:
 
     def get_latest_dialogue_file(self, keyword: str, max_turns: int) -> str:
         """Get the latest dialogue log filename"""
-        # ログディレクトリのパスを変更
         log_dir = 'data/dialogue/raw'
         try:
             matching_files = [
@@ -454,12 +449,10 @@ class AutomationManager:
             
             for i, settings_dict in enumerate(settings_list, 1):
                 try:
-                    # インデックスとカラム数のチェック
                     if i >= len(reader) or len(reader[i]) <= 13:
                         print(f"Skipping row {i} (invalid row format)")
                         continue
                     
-                    # dialogue列が存在するかチェック
                     if reader[i][13].strip():
                         print(f"\nSkipping row {i} (already processed)")
                         continue

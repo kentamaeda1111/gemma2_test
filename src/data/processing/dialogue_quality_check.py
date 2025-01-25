@@ -361,15 +361,13 @@ def process_files_in_batches(dialogue_dir: str, ai_config: AIConfig, csv_path: s
 def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
     """Move low-rated dialogue files to separate directory"""
     try:
-        # CSVファイルの内容を確認
-        with open(csv_path, 'r', encoding='utf-8-sig') as f:  # BOM付きUTF-8として開く
+        with open(csv_path, 'r', encoding='utf-8-sig') as f: 
             content = f.read()
             print("=== CSV File Content Preview ===")
-            print(content[:1000])  # より多くの内容を表示
+            print(content[:1000])  
             print("===============================")
             
-        with open(csv_path, 'r', encoding='utf-8-sig') as f:  # BOM付きUTF-8として開く
-            # まずヘッダーを確認
+        with open(csv_path, 'r', encoding='utf-8-sig') as f:  
             reader = csv.reader(f)
             header = next(reader, None)
             
@@ -377,30 +375,25 @@ def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
                 print("Warning: CSV file is empty or has no header")
                 return
                 
-            # BOMマークを除去
             header = [col.replace('\ufeff', '') for col in header]
             print(f"CSV Headers after BOM removal: {header}")
             
-            # ヘッダーの検証とdialogue_indexの取得
             try:
                 dialogue_index = header.index('dialogue')
             except ValueError:
                 print("Warning: Required column 'dialogue' not found in headers")
                 return
             
-            # データ行の確認
             rows = list(reader)
             print(f"Number of data rows: {len(rows)}")
             if len(rows) == 0:
                 print("Warning: No data rows found in CSV")
                 return
             
-            # DictReaderを使うために再度ファイルを開く
             f.seek(0)
-            next(reader)  # ヘッダー行をスキップ
+            next(reader) 
             
             for row in rows:
-                # 行の長さチェック
                 if len(row) < dialogue_index + 1:
                     print(f"Warning: Row too short, missing dialogue column: {row}")
                     continue
@@ -418,19 +411,17 @@ def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
                         print(f"File not found: {source_path}")
                         continue
                     
-                    # スコアの計算
                     scores = []
-                    # ファイル名から実際のターン数を取得
                     try:
                         actual_turns = int(dialogue_file.split('_')[-1].split('.')[0])
-                        expected_pairs = actual_turns  # 期待されるペア数
+                        expected_pairs = actual_turns  
                     except (IndexError, ValueError):
                         print(f"Warning: Could not extract turn count from filename: {dialogue_file}")
                         expected_pairs = None
                     
                     for i, col in enumerate(header):
                         if col.startswith(('tone_pair', 'logic_pair')):
-                            if i < len(row) and row[i]:  # 実際にデータがある部分のみ処理
+                            if i < len(row) and row[i]:  
                                 try:
                                     score = row[i].strip()
                                     if score and score.isdigit():
@@ -442,7 +433,7 @@ def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
                     if scores:
                         avg_score = sum(scores) / len(scores)
                         if expected_pairs:
-                            actual_pairs = len(scores) // 2  # tone と logic で2つで1ペア
+                            actual_pairs = len(scores) // 2  
                             if actual_pairs < expected_pairs:
                                 print(f"Warning: Missing scores for {dialogue_file}. Expected {expected_pairs} pairs, got {actual_pairs} pairs")
                         
