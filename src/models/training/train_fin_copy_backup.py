@@ -324,26 +324,23 @@ logging.basicConfig(
 training_args = TrainingArguments(
     output_dir=MODEL_OUTPUT_DIR,
     num_train_epochs=30,
-    per_device_train_batch_size=2,    # メモリ制約があるため維持
-    per_device_eval_batch_size=1,     # 元々は2
-    gradient_accumulation_steps=16,    # 実効的なバッチサイズ: 2 * 16 = 32
-    eval_steps=50,                    # 約1エポックあたり2-3回の評価
-    save_steps=50,                    # チェックポイントも同じ頻度で保存
-    logging_steps=25,                 # ログ頻度を減らす
+    per_device_train_batch_size=2,
+    per_device_eval_batch_size=1,
+    gradient_accumulation_steps=16,
+    eval_steps=50,
+    save_steps=50,
+    logging_steps=25,
     evaluation_strategy="steps",
     save_strategy="steps",
-    fp16=True,                        # 混合精度トレーニングを有効化
-    gradient_checkpointing=True,      # 勾配チェックポイントを有効化
-    optim="adamw_torch_fused",        # 最適化された最適化器を使用
-    save_total_limit=2,               # 保存するチェックポイント数を制限
+    fp16=True,
+    gradient_checkpointing=True,
+    optim="adamw_torch_fused",
+    save_total_limit=2,
     load_best_model_at_end=True,
     metric_for_best_model="loss",
     greater_is_better=False,
+    report_to=["none"],
 )
-
-# Disable wandb via environment variable (add before training_args)
-import os
-os.environ["WANDB_DISABLED"] = "true"
 
 # Modify data collator
 data_collator = DataCollatorForLanguageModeling(

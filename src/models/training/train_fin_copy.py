@@ -62,54 +62,54 @@ def prepare_dataset():
     conversations = []
     
     try:
-        # メモリ効率化のためにジェネレータパターンを使用
+        # バッチサイズを小さくして処理
         def conversation_generator():
             with open(DIALOGUE_JSON_PATH, 'r', encoding='utf-8') as f:
-                dialogue_data = json.load(f)
-                
-            for dialogue in dialogue_data:
-                messages = dialogue.get('messages', [])
-                
-                if not all(validate_message_format(msg) for msg in messages):
-                    continue
+                for line in f:
+                    dialogue = json.loads(line)  # 1行ずつ読み込み
                     
-                current_conversation = []
-                valid_sequence = True
-                
-                for i in range(0, len(messages)-1, 2):
-                    if (i+1 < len(messages) and 
-                        messages[i]['role'] == 'user' and 
-                        messages[i+1]['role'] == 'model'):
-                        current_conversation.extend([messages[i], messages[i+1]])
-                    else:
-                        valid_sequence = False
-                        break
-                
-                if valid_sequence and current_conversation:
-                    formatted_text = tokenizer.apply_chat_template(
-                        current_conversation,
-                        tokenize=False,
-                        add_generation_prompt=True
-                    )
+                    messages = dialogue.get('messages', [])
+                    if not all(validate_message_format(msg) for msg in messages):
+                        continue
+                        
+                    current_conversation = []
+                    valid_sequence = True
                     
-                    tokens = tokenizer.encode(formatted_text)
-                    if len(tokens) <= MAX_SEQUENCE_LENGTH:
-                        yield {"text": formatted_text}
+                    for i in range(0, len(messages)-1, 2):
+                        if (i+1 < len(messages) and 
+                            messages[i]['role'] == 'user' and 
+                            messages[i+1]['role'] == 'model'):
+                            current_conversation.extend([messages[i], messages[i+1]])
+                        else:
+                            valid_sequence = False
+                            break
+                    
+                    if valid_sequence and current_conversation:
+                        formatted_text = tokenizer.apply_chat_template(
+                            current_conversation,
+                            tokenize=False,
+                            add_generation_prompt=True
+                        )
+                        
+                        tokens = tokenizer.encode(formatted_text)
+                        if len(tokens) <= MAX_SEQUENCE_LENGTH:
+                            yield {"text": formatted_text}
+                            
+                    # メモリクリア
+                    del dialogue, messages, current_conversation
+                    if len(conversations) % 100 == 0:
+                        clear_memory()
         
-        # ジェネレータからデータセットを作成
+        # より小さいチャンクでデータセットを作成
         dataset = Dataset.from_generator(
             conversation_generator,
-            cache_dir=".cache/huggingface/datasets"  # キャッシュディレクトリを指定
+            cache_dir=None  # キャッシュを無効化
         )
         
     except Exception as e:
         logging.error(f"Error processing dialogue file: {str(e)}")
         raise
     
-    if not dataset:
-        raise ValueError("No valid conversations found in the dialogue file")
-        
-    logging.info(f"Processed dataset created")
     return dataset
 
 # Model and tokenizer preparation
@@ -173,20 +173,22 @@ dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
 
 # Optimize tokenize function
 def tokenize_function(examples):
-    return tokenizer(
+    outputs = tokenizer(
         examples['text'],
         truncation=True,
         max_length=MAX_SEQUENCE_LENGTH,
-        padding=False,  # 動的パディングを使用するため、ここではFalse
+        padding=False,
         return_tensors=None,
     )
+    clear_memory()  # メモリクリア
+    return outputs
 
 # Optimize dataset processing
 tokenized_dataset = dataset.map(
     tokenize_function,
     batched=True,
-    batch_size=16,  # バッチサイズを小さく
-    num_proc=2,     # プロセス数を減らす
+    batch_size=8,  # バッチサイズを小さく
+    num_proc=1,    # シングルプロセスに
     remove_columns=dataset.column_names,
     desc="Tokenizing datasets",
 )
@@ -324,18 +326,18 @@ logging.basicConfig(
 training_args = TrainingArguments(
     output_dir=MODEL_OUTPUT_DIR,
     num_train_epochs=30,
-    per_device_train_batch_size=2,
-    per_device_eval_batch_size=1,
-    gradient_accumulation_steps=16,
-    eval_steps=50,
-    save_steps=50,
-    logging_steps=25,
+    per_device_train_batch_size=1,      # バッチサイズを最小に
+    per_device_eval_batch_size=1,       # 評価用バッチサイズも最小に
+    gradient_accumulation_steps=32,     # 代わりに勾配累積を増やす
+    eval_steps=100,                     # 評価頻度を減らす
+    save_steps=100,                     # 保存頻度を減らす
+    logging_steps=50,                   # ログ頻度を減らす
     evaluation_strategy="steps",
     save_strategy="steps",
     fp16=True,
     gradient_checkpointing=True,
     optim="adamw_torch_fused",
-    save_total_limit=2,
+    save_total_limit=1,                # 保存するチェックポイントを制限
     load_best_model_at_end=True,
     metric_for_best_model="loss",
     greater_is_better=False,
@@ -506,12 +508,16 @@ class TrainingMonitorCallback(TrainerCallback):
         else:
             logging.info("Best combined score: Not available")
 
-# Split dataset into training and evaluation sets
-train_size = int(2662 * 0.8)  # 約2,130対話
-eval_size = min(50, 2662 - train_size)  # 評価用は50対話に制限
+# トレーニングデータセットのサイズを制限
+train_size = min(1000, int(len(tokenized_dataset) * 0.8))  # 最大1000サンプル
+eval_size = min(50, len(tokenized_dataset) - train_size)   # 最大50サンプル
 
 train_dataset = tokenized_dataset.select(range(train_size))
 eval_dataset = tokenized_dataset.select(range(train_size, train_size + eval_size))
+
+# データセットをメモリに保持せずにイテレーションする
+train_dataset.set_format(type='torch', columns=['input_ids', 'attention_mask'])
+eval_dataset.set_format(type='torch', columns=['input_ids', 'attention_mask'])
 
 logging.info(f"Training dataset size: {len(train_dataset)}")
 logging.info(f"Evaluation dataset size: {len(eval_dataset)}")
@@ -537,24 +543,19 @@ def clear_memory():
     gc.collect()
     torch.cuda.empty_cache()
     
-class CustomTrainer(Trainer):
+class MemoryEfficientTrainer(Trainer):
     def training_step(self, *args, **kwargs):
         loss = super().training_step(*args, **kwargs)
-        if self.state.global_step % 100 == 0:
+        if self.state.global_step % 10 == 0:  # より頻繁にメモリクリア
             clear_memory()
         return loss
-
-# Create custom Trainer class for evaluation
-class CustomTrainer(Trainer):
+        
     def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
-        eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
-        if eval_dataset is not None:
-            # Limit evaluation dataset to 100 samples
-            eval_dataset = eval_dataset.select(range(min(100, len(eval_dataset))))
+        eval_dataset = eval_dataset.select(range(min(50, len(eval_dataset))))  # 評価データセットを制限
         return super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
 
 # Update trainer settings
-trainer = CustomTrainer(
+trainer = MemoryEfficientTrainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
