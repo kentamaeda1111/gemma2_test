@@ -22,7 +22,7 @@ from pathlib import Path
 from src.utils.config import get_api_keys  # 追加
 
 # グローバル設定を更新
-DIALOGUE_JSON_PATH = "data/dialogue/processed/9gouki.json"  # 対話データのパスを更新
+DIALOGUE_JSON_PATH = "data/dialogue/processed/7gouki.json"  # 対話データのパスを更新
 MODEL_OUTPUT_DIR = "models/gemma_refined"  # モデル出力ディレクトリを更新
 LOG_DIR = f"{MODEL_OUTPUT_DIR}/logs"  # ログディレクトリを更新
 MAX_SEQUENCE_LENGTH = 512  # 1つの対話の最大トークン数
