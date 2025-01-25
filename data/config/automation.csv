@@ -1,3 +1,3 @@
-﻿AI1_TEMPERATURE,AI2_TEMPERATURE,MAX_MESSAGE_PAIRS,MAX_TURNS,INITIAL_QUESTION_ID,USER_PROMPT_ID,OTHERS_ID,PERSONA_ID,TRANSFORM_ID,ASSISTANT_PROMPT_ID,RESPONSE_ID,UPDATE_ID,DIALOGUE_KEYWORD,dialogue,
-0.3,0.6,2,2,2,14,1,9,1,6,1,1,test1,
-0.3,0.6,10,12,3,14,1,10,1,6,1,1,test2,
+﻿AI1_TEMPERATURE,AI2_TEMPERATURE,MAX_MESSAGE_PAIRS,MAX_TURNS,INITIAL_QUESTION_ID,USER_PROMPT_ID,OTHERS_ID,PERSONA_ID,TRANSFORM_ID,ASSISTANT_PROMPT_ID,RESPONSE_ID,UPDATE_ID,DIALOGUE_KEYWORD,dialogue,tone_pair1,logic_pair1,tone_pair2,logic_pair2,tone_pair3,logic_pair3,tone_pair4,logic_pair4,tone_pair5,logic_pair5,tone_pair6,logic_pair6,tone_pair7,logic_pair7,tone_pair8,logic_pair8,tone_pair9,logic_pair9,tone_pair10,logic_pair10,tone_pair11,logic_pair11,tone_pair12,logic_pair12
+0.3,0.6,2,2,2,14,1,9,1,6,1,1,test1,dialogue_test1_20250124_195510_2.txt,4,3,3,4
+0.3,0.6,10,12,3,14,1,10,1,6,1,1,test2,dialogue_test2_20250124_195524_12.txt,4,4,4,4,3,4,3,4,4,4,4,4,4,3,3,4,3,4,4,4,4,4,4,4
