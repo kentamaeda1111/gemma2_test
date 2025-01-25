@@ -183,6 +183,30 @@ def tokenize_function(examples):
     )
     return result
 
+# Add memory usage monitoring log
+def log_memory_usage():
+    import psutil
+    process = psutil.Process()
+    memory_info = process.memory_info()
+    logging.info(f"Memory usage: {memory_info.rss / 1024 / 1024:.2f} MB")
+    logging.info(f"Memory percent: {process.memory_percent()}%")
+
+# メモリクリア関数を強化
+def clear_memory():
+    import gc
+    import torch
+    gc.collect()
+    torch.cuda.empty_cache()
+    
+    # より積極的なメモリ解放
+    for obj in gc.get_objects():
+        try:
+            if torch.is_tensor(obj):
+                del obj
+        except:
+            pass
+    gc.collect()
+
 # データセットを小さなチャンクに分割して処理する関数
 def process_dataset_in_chunks(dataset, chunk_size=500):
     """Process dataset in smaller chunks to manage memory usage"""
@@ -212,22 +236,6 @@ def process_dataset_in_chunks(dataset, chunk_size=500):
     # Concatenate all processed chunks
     return concatenate_datasets(all_processed)
 
-# メモリクリア関数を強化
-def clear_memory():
-    import gc
-    import torch
-    gc.collect()
-    torch.cuda.empty_cache()
-    
-    # より積極的なメモリ解放
-    for obj in gc.get_objects():
-        try:
-            if torch.is_tensor(obj):
-                del obj
-        except:
-            pass
-    gc.collect()
-
 # データセット処理を変更
 logging.info("Starting dataset processing...")
 log_memory_usage()
@@ -237,14 +245,6 @@ tokenized_dataset = process_dataset_in_chunks(dataset, chunk_size=500)
 
 logging.info("Dataset processing completed")
 log_memory_usage()
-
-# Add memory usage monitoring log
-def log_memory_usage():
-    import psutil
-    process = psutil.Process()
-    memory_info = process.memory_info()
-    logging.info(f"Memory usage: {memory_info.rss / 1024 / 1024:.2f} MB")
-    logging.info(f"Memory percent: {process.memory_percent()}%")
 
 # Log dataset size
 logging.info(f"Total dataset size: {len(dataset)}")
