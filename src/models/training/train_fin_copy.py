@@ -66,8 +66,6 @@ def validate_message_format(message):
     return True
 
 def prepare_dataset():
-    conversations = []
-    
     try:
         def conversation_generator():
             with open(DIALOGUE_JSON_PATH, 'r', encoding='utf-8') as f:
@@ -109,25 +107,34 @@ def prepare_dataset():
                 del dialogue_data
                 clear_memory()
         
+        # データセットの作成
         dataset = Dataset.from_generator(
             conversation_generator,
-            cache_dir=None  
+            cache_dir=None
         )
+        
+        # データセットをトークン化
+        tokenized_dataset = dataset.map(
+            tokenize_function,
+            batched=True,
+            batch_size=4,
+            num_proc=1,
+            remove_columns=dataset.column_names,
+            desc="Tokenizing datasets",
+        )
+        
+        # データセットを訓練用と評価用に分割
+        train_test_split = tokenized_dataset.train_test_split(
+            test_size=0.1,
+            shuffle=True,
+            seed=42
+        )
+        
+        return train_test_split['train'], train_test_split['test']
         
     except Exception as e:
         logging.error(f"Error processing dialogue file: {str(e)}")
         raise
-    
-    train_test_split = dataset.train_test_split(
-        test_size=0.1,  
-        shuffle=True,
-        seed=42
-    )
-    
-    train_dataset = train_test_split['train']
-    eval_dataset = train_test_split['test']
-    
-    return train_dataset, eval_dataset
 
 # Model and tokenizer preparation
 model_name = "google/gemma-2-2b-jpn-it"
@@ -556,26 +563,34 @@ def clear_memory():
     torch.cuda.empty_cache()
     
 class MemoryEfficientTrainer(Trainer):
-    def training_step(self, *args, **kwargs):
-        loss = super().training_step(*args, **kwargs)
-        if self.state.global_step % 10 == 0: 
-            clear_memory()
-        return loss
-        
-    def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
+    def evaluate(
+        self,
+        eval_dataset=None,
+        ignore_keys=None,
+        metric_key_prefix="eval"
+    ):
+        # 評価用データセットのチェック
         if eval_dataset is None:
             eval_dataset = self.eval_dataset
         
         if eval_dataset is None:
             logging.warning("No evaluation dataset provided")
             return {}
-            
-        eval_dataset = eval_dataset.select(range(min(50, len(eval_dataset))))
+        
+        # 評価用データセットのサイズを制限
+        limited_eval_dataset = eval_dataset.select(range(min(50, len(eval_dataset))))
+        
         return super().evaluate(
-            eval_dataset=eval_dataset,
+            eval_dataset=limited_eval_dataset,
             ignore_keys=ignore_keys,
             metric_key_prefix=metric_key_prefix
         )
+    
+    def training_step(self, *args, **kwargs):
+        loss = super().training_step(*args, **kwargs)
+        if self.state.global_step % 10 == 0:
+            clear_memory()
+        return loss
 
 # Update trainer settings
 trainer = MemoryEfficientTrainer(
