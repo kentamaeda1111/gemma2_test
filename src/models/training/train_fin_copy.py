@@ -62,13 +62,16 @@ def prepare_dataset():
     conversations = []
     
     try:
-        # バッチサイズを小さくして処理
+        # 一度にJSONを読み込むのではなく、ストリーミング処理を実装
         def conversation_generator():
             with open(DIALOGUE_JSON_PATH, 'r', encoding='utf-8') as f:
-                for line in f:
-                    dialogue = json.loads(line)  # 1行ずつ読み込み
-                    
+                # ファイル全体を1つのJSONとして読み込む
+                dialogue_data = json.load(f)
+                
+                # 対話データを1つずつ処理
+                for dialogue in dialogue_data:
                     messages = dialogue.get('messages', [])
+                    
                     if not all(validate_message_format(msg) for msg in messages):
                         continue
                         
@@ -94,13 +97,17 @@ def prepare_dataset():
                         tokens = tokenizer.encode(formatted_text)
                         if len(tokens) <= MAX_SEQUENCE_LENGTH:
                             yield {"text": formatted_text}
-                            
-                    # メモリクリア
-                    del dialogue, messages, current_conversation
-                    if len(conversations) % 100 == 0:
+                    
+                    # メモリ管理
+                    del messages, current_conversation
+                    if len(dialogue_data) % 100 == 0:
                         clear_memory()
+                
+                # 大きなデータを解放
+                del dialogue_data
+                clear_memory()
         
-        # より小さいチャンクでデータセットを作成
+        # データセットの作成
         dataset = Dataset.from_generator(
             conversation_generator,
             cache_dir=None  # キャッシュを無効化
@@ -187,8 +194,8 @@ def tokenize_function(examples):
 tokenized_dataset = dataset.map(
     tokenize_function,
     batched=True,
-    batch_size=8,  # バッチサイズを小さく
-    num_proc=1,    # シングルプロセスに
+    batch_size=4,  # バッチサイズをさらに小さく
+    num_proc=1,
     remove_columns=dataset.column_names,
     desc="Tokenizing datasets",
 )
