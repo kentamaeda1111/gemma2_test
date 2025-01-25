@@ -22,10 +22,10 @@ from pathlib import Path
 from src.utils.config import get_api_keys  # 追加
 
 # グローバル設定を更新
-DIALOGUE_JSON_PATH = "data/dialogue/processed/7gouki.json"  # 対話データのパスを更新
+DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model_processed.json"  # 対話データのパスを更新
 MODEL_OUTPUT_DIR = "models/gemma_refined"  # モデル出力ディレクトリを更新
 LOG_DIR = f"{MODEL_OUTPUT_DIR}/logs"  # ログディレクトリを更新
-MAX_SEQUENCE_LENGTH = 512  # 1つの対話の最大トークン数
+MAX_SEQUENCE_LENGTH = 256  # 1つの対話の最大トークン数
 
 # API keyの取得を追加
 try:
@@ -172,7 +172,7 @@ def tokenize_function(examples):
     result = tokenizer(
         examples['text'],
         truncation=True,
-        max_length=256,      # Improve memory efficiency
+        max_length=256,        # 最大長を256に制限
         padding='max_length',
         add_special_tokens=True,
         return_tensors=None,
@@ -183,8 +183,8 @@ def tokenize_function(examples):
 tokenized_dataset = dataset.map(
     tokenize_function,
     batched=True,
-    batch_size=32,  # Reduced from 64
-    num_proc=4,     # Increased from 2
+    batch_size=16,  
+    num_proc=2,     
     load_from_cache_file=True,
     desc="Tokenizing datasets",
     remove_columns=dataset.column_names,
@@ -320,37 +320,28 @@ logging.basicConfig(
 
 # Update training arguments
 training_args = TrainingArguments(
-    output_dir=MODEL_OUTPUT_DIR,  # モデル出力ディレクトリを更新
-    num_train_epochs=30,     # Set to 30 epochs for smaller datasets
-    learning_rate=8e-5,      # Slightly reduced from 1e-4
-    weight_decay=0.06,       # Slightly increased
-    warmup_ratio=0.25,       # Longer warmup period
-    lr_scheduler_type="cosine_with_restarts",  # Changed to scheduler with restarts
-    evaluation_strategy="steps",
-    eval_steps=20,          # Changed from 25 to 20 for more frequent evaluation
-    save_strategy="steps",
-    save_steps=20,
-    gradient_accumulation_steps=8,   # Reduced accumulation steps
-    max_steps=-1,
-    disable_tqdm=False,
-    logging_dir=f"{MODEL_OUTPUT_DIR}/logs",  # ログディレクトリを更新
-    logging_strategy="steps",
-    logging_steps=50,
-    no_cuda=False,
-    dataloader_num_workers=2,
-    report_to=[],
-    run_name=None,
-    per_device_train_batch_size=4,  # Increase if memory allows
-    per_device_eval_batch_size=2,   # Set to half of training batch size
-    gradient_checkpointing=True,
-    max_grad_norm=0.5,       # Set to 0.5 based on gradient clipping guidelines
+    output_dir=MODEL_OUTPUT_DIR,
+    num_train_epochs=3,  # エポック数を減らす
+    logging_dir=LOG_DIR,
+    logging_steps=10,
+    save_strategy="epoch",
+    evaluation_strategy="epoch",
+    learning_rate=2e-4,
+    weight_decay=0.01,
+    warmup_ratio=0.03,
+    lr_scheduler_type="cosine",
+    per_device_train_batch_size=1,  # バッチサイズを1に削減
+    per_device_eval_batch_size=1,   # 評価用バッチサイズも1に削減
+    gradient_accumulation_steps=4,  # 勾配蓄積を追加
+    gradient_checkpointing=True,    # 勾配チェックポイントを有効化
+    max_grad_norm=0.5,
     dataloader_pin_memory=True,
-    save_total_limit=3,
+    save_total_limit=2,            # 保存するチェックポイント数を制限
     fp16=True,
     optim="adamw_torch_fused",
-    eval_accumulation_steps=8,
+    eval_accumulation_steps=4,
     load_best_model_at_end=True,
-    metric_for_best_model="combined_score",  # Using new evaluation metric
+    metric_for_best_model="combined_score",
 )
 
 # Disable wandb via environment variable (add before training_args)
@@ -658,7 +649,7 @@ split_idx = int(dataset_size * 0.8)
 
 train_dataset = tokenized_dataset.select(indices[:split_idx])
 # Limit evaluation dataset size
-eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+100])  # Maximum 100 samples
+eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])  
 
 logging.info(f"Training dataset size: {len(train_dataset)}")
 logging.info(f"Evaluation dataset size: {len(eval_dataset)}")
@@ -668,21 +659,21 @@ def clear_memory():
     import gc
     gc.collect()
     torch.cuda.empty_cache()
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
     
 class CustomTrainer(Trainer):
     def training_step(self, *args, **kwargs):
         loss = super().training_step(*args, **kwargs)
-        if self.state.global_step % 100 == 0:
+        if self.state.global_step % 50 == 0:  # より頻繁にメモリをクリア
             clear_memory()
         return loss
 
-# Create custom Trainer class for evaluation
-class CustomTrainer(Trainer):
     def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
         eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
         if eval_dataset is not None:
-            # Limit evaluation dataset to 100 samples
-            eval_dataset = eval_dataset.select(range(min(100, len(eval_dataset))))
+            eval_dataset = eval_dataset.select(range(min(50, len(eval_dataset))))  
+        clear_memory()  
         return super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
 
 # Update trainer settings

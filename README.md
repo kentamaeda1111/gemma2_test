@@ -63,25 +63,29 @@ The project uses a flexible configuration system (`src/utils/config.py`) that su
    - **Method B**: Direct Setting in Notebook
      ```python
      import os
-     os.environ['CLAUDE_API_KEY_1'] = "your_claude_key_1"
-     os.environ['CLAUDE_API_KEY_2'] = "your_claude_key_2"
-     os.environ['CLAUDE_API_KEY_QUALITY'] = "your_claude_key_quality"
-     os.environ['HUGGINGFACE_API_KEY'] = "your_huggingface_key"
+     from kaggle_secrets import UserSecretsClient
+     
+     user_secrets = UserSecretsClient()
+     os.environ['CLAUDE_API_KEY_1'] = user_secrets.get_secret("CLAUDE_API_KEY_1")
+     os.environ['CLAUDE_API_KEY_2'] = user_secrets.get_secret("CLAUDE_API_KEY_2")
+     os.environ['CLAUDE_API_KEY_QUALITY'] = user_secrets.get_secret("CLAUDE_API_KEY_QUALITY")
+     os.environ['HUGGINGFACE_API_KEY'] = user_secrets.get_secret("HUGGINGFACE_API_KEY")
      ```
 
 3. **Google Colab**:
+   The system will automatically display a secure password form for entering API keys when running in Colab:
    ```python
-   import os
-   os.environ['CLAUDE_API_KEY_1'] = "your_claude_key_1"
-   os.environ['CLAUDE_API_KEY_2'] = "your_claude_key_2"
-   os.environ['CLAUDE_API_KEY_QUALITY'] = "your_claude_key_quality"
-   os.environ['HUGGINGFACE_API_KEY'] = "your_huggingface_key"
+   from src.utils.config import get_api_keys
+   
+   # This will display a form to enter your API keys
+   api_keys = get_api_keys()
    ```
+   Note: You'll need to re-enter the keys if the Colab session restarts.
 
 The configuration system will automatically:
 1. Try loading from `.env` file (local environment)
 2. Check Kaggle Secrets if in Kaggle environment
-3. Use directly set environment variables
+3. Display input form if in Colab environment
 4. Provide clear error messages if keys are missing
 
 For more details on configuration management, see [src/utils/README.md](src/utils/README.md).
