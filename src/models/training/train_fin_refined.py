@@ -740,10 +740,17 @@ try:
     logging.info("Training completed successfully!")
     
     # Save settings (as JSON)
+    training_args_dict = training_args.to_dict()
+    
+    # setオブジェクトをリストに変換
+    for key, value in training_args_dict.items():
+        if isinstance(value, set):
+            training_args_dict[key] = list(value)
+    
     config_dict = {
         "model_name": model_name,
         "max_sequence_length": MAX_SEQUENCE_LENGTH,
-        "training_args": training_args.to_dict(),
+        "training_args": training_args_dict,  # 変換済みの辞書を使用
         "lora_config": {
             "r": lora_config.r,
             "alpha": lora_config.lora_alpha,
@@ -751,6 +758,7 @@ try:
             "target_modules": lora_config.target_modules,
         }
     }
+    
     config_path = os.path.join(MODEL_OUTPUT_DIR, "training_config.json")
     with open(config_path, "w", encoding="utf-8") as f:
         json.dump(config_dict, f, indent=2, ensure_ascii=False)
