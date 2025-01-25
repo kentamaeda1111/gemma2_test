@@ -400,8 +400,9 @@ def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
             next(reader)  # ヘッダー行をスキップ
             
             for row in rows:
-                if len(row) < len(header):
-                    print(f"Warning: Incomplete row detected: {row}")
+                # 警告メッセージを削除（実際には必要な長さだけあれば良い）
+                if len(row) < dialogue_index + 1:  # dialogueカラムが存在することだけを確認
+                    print(f"Warning: Row too short, missing dialogue column: {row}")
                     continue
                 
                 # インデックスでアクセス
@@ -421,9 +422,17 @@ def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
                     
                     # スコアの計算
                     scores = []
+                    # ファイル名から実際のターン数を取得
+                    try:
+                        actual_turns = int(dialogue_file.split('_')[-1].split('.')[0])
+                        expected_pairs = actual_turns  # 期待されるペア数
+                    except (IndexError, ValueError):
+                        print(f"Warning: Could not extract turn count from filename: {dialogue_file}")
+                        expected_pairs = None
+                    
                     for i, col in enumerate(header):
                         if col.startswith(('tone_pair', 'logic_pair')):
-                            if i < len(row) and row[i]:
+                            if i < len(row) and row[i]:  # 実際にデータがある部分のみ処理
                                 try:
                                     score = row[i].strip()
                                     if score and score.isdigit():
@@ -434,6 +443,11 @@ def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
                     
                     if scores:
                         avg_score = sum(scores) / len(scores)
+                        if expected_pairs:
+                            actual_pairs = len(scores) // 2  # tone と logic で2つで1ペア
+                            if actual_pairs < expected_pairs:
+                                print(f"Warning: Missing scores for {dialogue_file}. Expected {expected_pairs} pairs, got {actual_pairs} pairs")
+                        
                         if avg_score <= 2:
                             dest_path = os.path.join(low_rated_dir, dialogue_file)
                             shutil.move(source_path, dest_path)
