@@ -726,8 +726,8 @@ try:
                 if current_epoch >= training_args.num_train_epochs - 0.1:
                     print("\n" + "="*50)
                     print("IMPORTANT NOTICE:")
-                    print(f"Training has already been completed at epoch {current_epoch}!")  # Modified
-                    print(f"Target epochs was {training_args.num_train_epochs}")  # Added
+                    print(f"Training has already been completed at epoch {current_epoch}!")
+                    print(f"Target epochs was {training_args.num_train_epochs}")
                     print(f"Trained model is available at: {checkpoint_dir}")
                     print("="*50 + "\n")
                     logging.info("Training has already been completed. Exiting to protect existing model.")
@@ -736,16 +736,12 @@ try:
             else:
                 logging.warning("Invalid checkpoint state found. Please check manually.")
                 logging.warning(f"Checkpoint directory: {checkpoint_dir}")
-                user_input = input("Do you want to continue and overwrite? (yes/no): ")
-                if user_input.lower() != 'yes':
-                    logging.info("Aborting to protect existing data.")
-                    exit(0)
+                # 自動的にyesを選択
+                logging.info("Automatically continuing with training...")
         else:
             logging.warning("Checkpoint directory exists but no checkpoints found.")
-            user_input = input("Do you want to continue and overwrite the directory? (yes/no): ")
-            if user_input.lower() != 'yes':
-                logging.info("Aborting to protect existing data.")
-                exit(0)
+            # 自動的にyesを選択
+            logging.info("Automatically continuing with training...")
 
     # Start training (or resume)
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
