@@ -361,12 +361,41 @@ def process_files_in_batches(dialogue_dir: str, ai_config: AIConfig, csv_path: s
 def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
     """Move low-rated dialogue files to separate directory"""
     try:
+        # CSVファイルの内容を確認
         with open(csv_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            print("=== CSV File Content Preview ===")
+            print(content[:500])  # 最初の500文字を表示
+            print("===============================")
+            
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            # まずヘッダーを確認
+            reader = csv.reader(f)
+            header = next(reader, None)  # Noneをデフォルト値として設定
+            
+            if not header:
+                print("Warning: CSV file is empty or has no header")
+                return
+                
+            print(f"CSV Headers: {header}")  # デバッグ用
+            
+            # ヘッダーの検証
+            required_columns = ['dialogue']
+            for col in required_columns:
+                if col not in header:
+                    print(f"Warning: Required column '{col}' not found in headers")
+                    return
+            
+            # DictReaderを使う前にファイルポインタを戻す
+            f.seek(0)
             reader = csv.DictReader(f)
+            
+            # 以降は既存のコード
             for row in reader:
                 # Check if dialogue column exists and has a value
                 dialogue_file = row.get('dialogue')
                 if not dialogue_file:
+                    print("Warning: Missing dialogue filename in row")
                     continue
 
                 source_path = os.path.join(dialogue_dir, dialogue_file)
@@ -378,8 +407,8 @@ def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
                 
                 # Calculate average score
                 scores = []
-                for key in row.keys():
-                    if key.startswith(('tone_pair', 'logic_pair')):
+                for key in header:  # ヘッダーを使用してキーを反復
+                    if key and isinstance(key, str) and (key.startswith('tone_pair') or key.startswith('logic_pair')):
                         value = row.get(key)
                         if value is None:
                             continue
@@ -387,7 +416,8 @@ def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
                             score = value.strip()
                             if score and score.isdigit():
                                 scores.append(int(score))
-                        except AttributeError:
+                        except (AttributeError, ValueError) as e:
+                            print(f"Warning: Invalid score value for {key}: {value}")
                             continue
                 
                 if scores:  # Only process if we have valid scores
@@ -396,6 +426,8 @@ def move_low_rated_files(csv_path: str, dialogue_dir: str, low_rated_dir: str):
                         dest_path = os.path.join(low_rated_dir, dialogue_file)
                         shutil.move(source_path, dest_path)
                         print(f"Moved low-rated file: {dialogue_file} (avg_score: {avg_score:.2f})")
+                else:
+                    print(f"Warning: No valid scores found for {dialogue_file}")
     
     except Exception as e:
         print(f"Error moving low-rated files: {str(e)}")
