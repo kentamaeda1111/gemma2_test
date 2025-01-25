@@ -1,3 +1,50 @@
+import subprocess
+import sys
+import pkg_resources
+
+def check_and_install_requirements():
+    """Check and install required packages with specific versions"""
+    requirements = {
+        'transformers': 'from_github',
+        'peft': '0.7.1',
+        'bitsandbytes': '0.43.2',
+        'accelerate': '0.26.0',
+        'datasets': 'latest'
+    }
+    
+    needs_install = False
+    
+    for package, version in requirements.items():
+        try:
+            if version == 'from_github':
+                continue
+            elif version == 'latest':
+                pkg_resources.require(package)
+            else:
+                pkg_resources.require(f'{package}>={version}')
+        except (pkg_resources.VersionConflict, pkg_resources.DistributionNotFound):
+            needs_install = True
+            break
+    
+    if needs_install:
+        print("Installing required packages...")
+        subprocess.check_call([
+            sys.executable, 
+            "-m", 
+            "pip", 
+            "install", 
+            "-q",
+            "git+https://github.com/huggingface/transformers.git",
+            f"peft=={requirements['peft']}",
+            f"bitsandbytes>={requirements['bitsandbytes']}",
+            f"accelerate>={requirements['accelerate']}",
+            "datasets"
+        ])
+        print("Package installation completed.")
+
+# Check and install requirements
+check_and_install_requirements()
+
 import torch
 from transformers import (
     AutoModelForCausalLM,
@@ -8,6 +55,7 @@ from transformers import (
     TrainerCallback,
     BitsAndBytesConfig,
 )
+from huggingface_hub import login
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from datasets import Dataset
 import json
@@ -19,18 +67,41 @@ import warnings
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+from src.utils.config import get_api_keys
 
-# グローバル設定
-DIALOGUE_JSON_PATH = "logs/dialogue/9gouki.json"  # 対話データのJSONファイルパス
-MAX_SEQUENCE_LENGTH = 512  # 1つの対話の最大トークン数
+# Global settings
+DIALOGUE_JSON_PATH = "1gouki.json"  # Name of dialogue data JSON file
+MAX_SEQUENCE_LENGTH = 512  # Maximum token count per dialogue
 
-# 設定のログ出力
+# Hugging Face API token
+api_keys = get_api_keys()
+HF_TOKEN = api_keys['huggingface_api_key']
+
+# Hugging Face login
+login(token=HF_TOKEN)
+
+# Extract model name from dialogue file
+model_folder_name = os.path.splitext(os.path.basename(DIALOGUE_JSON_PATH))[0]
+BASE_OUTPUT_DIR = f"models/{model_folder_name}"
+MODEL_DIR = os.path.join(BASE_OUTPUT_DIR, "model")
+LOG_DIR = os.path.join(BASE_OUTPUT_DIR, "logs")  # Changed from MODEL_DIR/logs to BASE_OUTPUT_DIR/logs
+
+# Create necessary directories
+os.makedirs(MODEL_DIR, exist_ok=True)
+os.makedirs(LOG_DIR, exist_ok=True)
+
+# Log settings
 logging.info(f"Using dialogue file: {DIALOGUE_JSON_PATH}")
+logging.info(f"Output directory: {BASE_OUTPUT_DIR}")
 logging.info(f"Max sequence length: {MAX_SEQUENCE_LENGTH}")
 
 # Environment variables and warning settings
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 warnings.filterwarnings("ignore", category=FutureWarning)
+
+# Update file path with directory
+DIALOGUE_JSON_PATH = os.path.join("logs", "dialogue", DIALOGUE_JSON_PATH)
+
 def validate_message_format(message):
     """Validate message format"""
     if not isinstance(message, dict):
@@ -176,7 +247,12 @@ tokenized_dataset = dataset.map(
     desc="Tokenizing datasets",
     remove_columns=dataset.column_names,
 )
-# メモリ使用量を監視するログを追加
+
+# Create log directory
+log_dir = "model/logs"
+os.makedirs(log_dir, exist_ok=True)
+
+# Add memory usage monitoring log
 def log_memory_usage():
     import psutil
     process = psutil.Process()
@@ -296,22 +372,18 @@ tokenized_dataset = tokenized_dataset.map(
 # Update logging settings
 import os
 
-# ログディレクトリを作成
-log_dir = "model/logs"
-os.makedirs(log_dir, exist_ok=True)
-
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(f'{log_dir}/training_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
+        logging.FileHandler(f'{LOG_DIR}/training_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
         logging.StreamHandler()
     ]
 )
 
 # Update training arguments
 training_args = TrainingArguments(
-    output_dir="./model",
+    output_dir=MODEL_DIR,
     num_train_epochs=30,     # Set to 30 epochs for smaller datasets
     learning_rate=8e-5,      # Slightly reduced from 1e-4
     weight_decay=0.06,       # Slightly increased
@@ -324,7 +396,7 @@ training_args = TrainingArguments(
     gradient_accumulation_steps=8,   # Reduced accumulation steps
     max_steps=-1,
     disable_tqdm=False,
-    logging_dir="./model/logs",
+    logging_dir=LOG_DIR,
     logging_strategy="steps",
     logging_steps=50,
     no_cuda=False,
@@ -538,7 +610,7 @@ class TrainingMonitorCallback(TrainerCallback):
             'learning_rate': [],
             'epoch': []
         }
-        self.output_dir = Path("model/training_progress")
+        self.output_dir = Path(LOG_DIR)  # Use the LOG_DIR we defined earlier
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
     def on_train_begin(self, args, state, control, **kwargs):
@@ -690,7 +762,7 @@ trainer = CustomTrainer(
 # Start training
 logging.info("Starting training...")
 try:
-    checkpoint_dir = "./model"
+    checkpoint_dir = MODEL_DIR
     resume_from_checkpoint = None
     
     # Checkpoint status and processing
