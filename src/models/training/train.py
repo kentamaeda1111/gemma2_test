@@ -749,8 +749,13 @@ class TrainingMonitorCallback(TrainerCallback):
             
         logging.info("Training Complete!")
         logging.info(f"Training duration: {summary['training_duration']}")
-        logging.info(f"Final moving average loss: {summary['loss_summary']['final_moving_avg']:.4f}")
-        logging.info(f"Best loss achieved: {summary['loss_summary']['best_loss']:.4f}")
+        
+        # Noneチェックを追加
+        if summary['loss_summary']['final_moving_avg'] is not None:
+            logging.info(f"Final moving average loss: {summary['loss_summary']['final_moving_avg']:.4f}")
+        if summary['loss_summary']['best_loss'] is not None:
+            logging.info(f"Best loss achieved: {summary['loss_summary']['best_loss']:.4f}")
+        
         logging.info(f"Peak CPU RAM usage: {summary['resource_usage']['peak_cpu_ram_gb']:.2f} GB")
         logging.info(f"Peak GPU VRAM usage: {summary['resource_usage']['peak_gpu_vram_gb']:.2f} GB")
         logging.info(f"Peak GPU utilization: {summary['resource_usage']['peak_gpu_utilization']:.1f}%")
