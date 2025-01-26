@@ -20,6 +20,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 from src.utils.config import get_api_keys
+import psutil
 
 # Global Setting
 DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
@@ -563,6 +564,8 @@ class StyleCallback(TrainerCallback):
 # Extend custom callbacks
 class TrainingMonitorCallback(TrainerCallback):
     def __init__(self):
+        # Import psutil here as well for safety
+        import psutil
         self.train_start_time = None
         self.metrics_history = {
             'step': [],
@@ -572,7 +575,6 @@ class TrainingMonitorCallback(TrainerCallback):
             'loss': [],
             'learning_rate': [],
             'epoch': [],
-            # 新しいメトリクス
             'cpu_ram_usage': [],
             'gpu_vram_usage': [],
             'gpu_utilization': []
