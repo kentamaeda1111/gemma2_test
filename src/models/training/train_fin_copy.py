@@ -154,14 +154,22 @@ bnb_config = BitsAndBytesConfig(
 )
 
 # Load model with modifications
+model_config = {
+    "device_map": "auto",
+    "torch_dtype": torch.float16,  # 半精度を使用
+    "use_cache": False,  # 推論キャッシュを無効化
+    "max_memory": {0: "10GiB"},  # GPUメモリ使用量を制限
+}
+
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
-    token=os.environ["HUGGINGFACE_TOKEN"],  
+    config=model_config,
     quantization_config=bnb_config,
-    device_map="auto",
-    torch_dtype=torch.bfloat16,
-    attn_implementation='eager'
+    **model_config
 )
+
+# メモリ効率化のための設定
+model.gradient_checkpointing_enable()  # 勾配チェックポイントを有効化
 
 # Prepare model for LoRA and disable cache
 model = prepare_model_for_kbit_training(model)
@@ -339,21 +347,24 @@ training_args = TrainingArguments(
     output_dir=MODEL_OUTPUT_DIR,
     num_train_epochs=30,
     per_device_train_batch_size=1,
-    per_device_eval_batch_size=1,
+    per_device_eval_batch_size=4,  # 評価時のバッチサイズを小さくする
     gradient_accumulation_steps=32,
-    eval_steps=100,
-    save_steps=100,
-    logging_steps=50,
     evaluation_strategy="steps",
     save_strategy="steps",
-    fp16=True,
-    gradient_checkpointing=True,
-    optim="adamw_torch_fused",
-    save_total_limit=1,                
-    load_best_model_at_end=True,
-    metric_for_best_model="loss",
-    greater_is_better=False,
-    report_to=["none"],
+    eval_steps=50,
+    save_steps=50,
+    logging_steps=10,
+    learning_rate=2e-5,
+    weight_decay=0.01,
+    fp16=True,  # 半精度学習を有効化
+    bf16=False,
+    torch_compile=False,
+    optim="adamw_torch",
+    gradient_checkpointing=True,  # 勾配チェックポイントを有効化
+    max_grad_norm=1.0,
+    warmup_ratio=0.1,
+    report_to=["tensorboard"],
+    save_total_limit=3,
 )
 
 # Modify data collator
