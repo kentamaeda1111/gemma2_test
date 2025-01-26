@@ -8,3 +8,18 @@ requiremtnes最終チェック
 modelのREADMEはもっとかえれる？
 
 gitignoreも最終チェック
+
+
+claudeにREADMeを全部フィードして問題ないかチェック
+
+日本語がないかチェック
+
+
+ブロードウェイ
+
+
+
+pip install ipython
+     pip install ipywidgets
+
+Windows環境では、cpコマンドは使用できません。代わりに、copyコマンドを使用して.env.templateファイルを.envファイルにコピーすることができます。以下の手順で行ってください。

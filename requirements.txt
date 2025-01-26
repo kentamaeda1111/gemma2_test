@@ -1,14 +1,14 @@
 # Basic dependencies
-python-dotenv
+python-dotenv>=0.19.0
 anthropic==0.45.0
 
 # ML dependencies
-torch
+torch>=2.1.0
 transformers==4.48.1
 peft==0.7.1
 bitsandbytes==0.43.2
 accelerate==0.26.0
-datasets
+datasets>=3.0.0
 
 # Development dependencies
 flake8>=6.1.0 
