@@ -75,14 +75,13 @@ python -m src.models.training.train
 ### 3. Output Structure
 ```
 models/
-└── {MODEL_VERSION}/          # Named after input JSON (e.g., "1gouki")
-    ├── model/               # Model files and checkpoints
-    │   ├── checkpoint-{step}/
-    │   └── training_config.json
-    └── logs/               # Training logs and metrics
-        ├── training_metrics.csv
-        ├── training_summary.json
-        └── metrics_plot.png
+└── {MODEL_VERSION}/          # Named after input JSON (e.g., "test_short")
+    ├── model/               # Model files and adapter config
+    │   └── adapter_config.json
+    ├── logs/               # Training logs
+    │   └── training_log_{timestamp}.log
+    └── training_progress/  # Training metrics and summary
+        └── training_summary.json
 ```
 
 ## Features
@@ -97,7 +96,7 @@ models/
 - Custom evaluation metrics
 - Style consistency tracking
 - Dialogue flow monitoring
-- Progress visualization
+- Resource usage monitoring
 
 ### 3. Quality Assessment
 - Socratic pattern evaluation
@@ -107,23 +106,44 @@ models/
 
 ### 4. Progress Tracking
 - Detailed training logs
-- Progress visualizations
+- Resource usage tracking
 - Checkpoint management
 - Training summaries
 
 ## Monitoring
 
 ### Training Progress
-The system generates real-time visualizations and logs:
-- Loss curves
-- Learning rate schedules
+The system logs the following metrics in real-time:
+- Loss values and moving averages
+- Learning rate changes
 - Style consistency scores
 - Dialogue flow metrics
+- CPU/GPU resource usage
+- Batch size tracking
 
 ### Output Files
-- training_metrics.csv: Detailed metrics history
-- training_summary.json: Final training results
-- metrics_plot.png: Training progress visualization
+
+#### 1. Training Logs (logs/training_log_{timestamp}.log)
+- Detailed training progress
+- Step-by-step metrics
+- Evaluation results
+- Resource usage statistics
+- Error and warning messages
+
+#### 2. Training Summary (training_progress/training_summary.json)
+Contains final training results including:
+- Training duration
+- Final loss values
+- Best combined score
+- Total training steps
+- Final epoch number
+- Resource usage peaks:
+  - Peak CPU RAM usage
+  - Peak GPU VRAM usage
+  - Peak GPU utilization
+- Hardware specifications
+- Batch size history
+- Moving average loss tracking
 
 ## Note
-This training system is optimized for fine-tuning language models for Socratic dialogue generation. It uses quantization and LoRA techniques to maintain efficiency while achieving high-quality results. 
+This training system is optimized for fine-tuning language models for Socratic dialogue generation. It uses quantization and LoRA techniques to maintain efficiency while achieving high-quality results. The comprehensive logging system helps in monitoring training progress and resource usage for optimization purposes. 

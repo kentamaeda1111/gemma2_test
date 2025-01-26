@@ -1,0 +1,59 @@
+2025-01-26 23:28:06,994 - INFO - Training script started
+2025-01-26 23:28:06,994 - INFO - Using dialogue file: data/dialogue/processed/test_short.json
+2025-01-26 23:28:06,994 - INFO - Max sequence length: 512
+2025-01-26 23:28:06,994 - INFO - Output directory: models/test_short
+2025-01-26 23:28:08,551 - INFO - We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+2025-01-26 23:28:10,509 - INFO - Processed 143 valid conversations
+2025-01-26 23:28:11,144 - INFO - Total dataset size: 143
+2025-01-26 23:28:11,145 - INFO - CPU Memory usage: 1028.62 MB
+2025-01-26 23:28:11,145 - INFO - GPU 0 Memory:
+2025-01-26 23:28:11,145 - INFO -   - Allocated: 3271.44 MB
+2025-01-26 23:28:11,145 - INFO -   - Reserved: 4458.00 MB
+2025-01-26 23:28:11,145 - INFO -   - Max Allocated: 4371.60 MB
+2025-01-26 23:28:12,029 - INFO - Training dataset size: 114
+2025-01-26 23:28:12,029 - INFO - Evaluation dataset size: 29
+2025-01-26 23:28:12,036 - INFO - Starting training...
+2025-01-26 23:28:12,036 - WARNING - Checkpoint directory exists but no checkpoints found.
+2025-01-26 23:28:14,138 - INFO - Training started at: 2025-01-26 23:28:14.138706
+2025-01-26 23:29:18,193 - INFO - Sample prediction: importimportusersUserギリシャの哲学者ソクラテスです
+質問私はは腕は足り先に必要びます
+丁を使いり方まります食材切りばき方まで野菜加減調整まで料理に教えんだ技術積みをの
+料理料理を...
+2025-01-26 23:29:18,794 - INFO - Step 20: {'eval_loss': 3.2150723934173584, 'eval_style_consistency': 0.5172413793103449, 'eval_dialogue_flow': 0.6448275862068967, 'eval_combined_score': 0.5682758620689656, 'eval_runtime': 9.165, 'eval_samples_per_second': 3.164, 'eval_steps_per_second': 1.637, 'epoch': 6.551724137931035}
+2025-01-26 23:29:18,807 - INFO - Step 20:
+2025-01-26 23:29:18,807 - INFO - Style Consistency: 0.517
+2025-01-26 23:29:18,807 - INFO - Dialogue Flow: 0.645
+2025-01-26 23:30:24,608 - INFO - Sample prediction: user
+あなたは古代ギリシャの哲学者ソクラテスですでは考えこの「の腕は足り先に始びます料理丁の使いり方まって食材切りばき方そして加減調整まで日々に丁寧にんだ技術積みがのただ料理料理を習えるだけでなく...
+2025-01-26 23:30:25,225 - INFO - Step 40: {'eval_loss': 2.2008631229400635, 'eval_style_consistency': 0.5344827586206896, 'eval_dialogue_flow': 0.6965517241379312, 'eval_combined_score': 0.5993103448275863, 'eval_runtime': 9.4765, 'eval_samples_per_second': 3.06, 'eval_steps_per_second': 1.583, 'epoch': 13.275862068965518}
+2025-01-26 23:30:25,236 - INFO - Step 40:
+2025-01-26 23:30:25,236 - INFO - Style Consistency: 0.534
+2025-01-26 23:30:25,236 - INFO - Dialogue Flow: 0.697
+2025-01-26 23:30:53,854 - INFO - Step 50: {'loss': 4.287, 'grad_norm': 0.9561974406242371, 'learning_rate': 5.200338540001364e-05, 'epoch': 16.551724137931036}
+2025-01-26 23:31:30,543 - INFO - Sample prediction: user
+あなたは古代ギリシャの哲学者ソクラテスですはい考えそれは「の腕が足り先に思いびます最初は丁を使いり方まって食材切りばき方まで炒め加減調整まで日々から丁寧にんでことを積みがの一ただそれは教を学...
+2025-01-26 23:31:31,144 - INFO - Step 60: {'eval_loss': 2.024322032928467, 'eval_style_consistency': 0.5862068965517241, 'eval_dialogue_flow': 0.6793103448275865, 'eval_combined_score': 0.6234482758620691, 'eval_runtime': 9.2668, 'eval_samples_per_second': 3.129, 'eval_steps_per_second': 1.619, 'epoch': 19.82758620689655}
+2025-01-26 23:31:31,155 - INFO - Step 60:
+2025-01-26 23:31:31,156 - INFO - Style Consistency: 0.586
+2025-01-26 23:31:31,156 - INFO - Dialogue Flow: 0.679
+2025-01-26 23:32:38,167 - INFO - Sample prediction: user
+あなたは古代ギリシャの哲学者ソクラテスですはい考えそれは「の腕が足り先に思いびます最初は丁を使いり方まって食材切りばき方まで炒め加減調整まで日々から丁寧にんでことを積みがの一ただそれは教を学...
+2025-01-26 23:32:38,801 - INFO - Step 80: {'eval_loss': 1.99492609500885, 'eval_style_consistency': 0.5862068965517241, 'eval_dialogue_flow': 0.6793103448275865, 'eval_combined_score': 0.6234482758620691, 'eval_runtime': 9.6208, 'eval_samples_per_second': 3.014, 'eval_steps_per_second': 1.559, 'epoch': 26.551724137931036}
+2025-01-26 23:32:38,814 - INFO - Step 80:
+2025-01-26 23:32:38,814 - INFO - Style Consistency: 0.586
+2025-01-26 23:32:38,814 - INFO - Dialogue Flow: 0.679
+2025-01-26 23:33:08,136 - INFO - Step 90: {'train_runtime': 294.0006, 'train_samples_per_second': 11.633, 'train_steps_per_second': 0.306, 'total_flos': 9707803546484736.0, 'train_loss': 3.4249451531304254, 'epoch': 29.82758620689655}
+2025-01-26 23:33:08,149 - INFO - Training Complete!
+2025-01-26 23:33:08,149 - INFO - Average Style Consistency: 0.556
+2025-01-26 23:33:08,149 - INFO - Average Dialogue Flow: 0.675
+2025-01-26 23:33:08,149 - INFO - Training completed. Total duration: 0:04:54.010630
+2025-01-26 23:33:08,149 - INFO - Peak CPU RAM usage: 8.60 GB
+2025-01-26 23:33:08,149 - INFO - Peak GPU VRAM usage: 3.26 GB
+2025-01-26 23:33:08,149 - INFO - Peak GPU utilization: 0.0%
+2025-01-26 23:33:09,292 - INFO - Training Complete!
+2025-01-26 23:33:09,292 - INFO - Training duration: 0:04:54.010630
+2025-01-26 23:33:09,292 - INFO - Peak CPU RAM usage: 8.60 GB
+2025-01-26 23:33:09,292 - INFO - Peak GPU VRAM usage: 3.26 GB
+2025-01-26 23:33:09,292 - INFO - Peak GPU utilization: 0.0%
+2025-01-26 23:33:09,346 - INFO - Training completed successfully!
+2025-01-26 23:33:10,067 - INFO - Model and configuration saved successfully!
