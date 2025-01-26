@@ -186,7 +186,7 @@ Note: For inference, the model can be run with reduced precision (bfloat16) to d
 
 For transparency and reproducibility purposes, this repository intentionally includes several key files that would typically be excluded:
 
-1. `data/config/automation.csv`: Contains the complete configuration parameters used for dialogue generation, including:
+1. `data/config/automation_kaggle_model.csv`: Contains the complete configuration parameters used for dialogue generation, including:
    - Temperature settings
    - Maximum turns/pairs
    - Prompt IDs
@@ -206,6 +206,5 @@ For transparency and reproducibility purposes, this repository intentionally inc
    - `assistant_system_prompt/`: Prompts for Socrates' role and behavior
    - `user_system_prompt/`: Prompts for the student's persona and responses
    - `questions.json`: The collection of philosophical questions used to initiate dialogues
-   These prompts are crucial for understanding how the dialogues were structured and generated.
 
 Note: All prompt templates are written in Japanese. For detailed English documentation of the prompts, please see [data/prompts/README.md](data/prompts/README.md).
