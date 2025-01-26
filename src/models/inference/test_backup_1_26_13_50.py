@@ -115,46 +115,8 @@ class ChatAI:
             logger.error(f"Error initializing model: {str(e)}")
             raise
 
-    def _initialize_model(self, base_model, model_path, hf_token):
-        """Initialize the model with appropriate device and memory settings"""
-        try:
-            # Check available memory and GPU
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            
-            # Configure model loading parameters based on available resources
-            load_config = {
-                "torch_dtype": torch.bfloat16,
-                "trust_remote_code": True,
-                "token": hf_token
-            }
-            
-            # If running on CPU or limited memory, adjust loading strategy
-            if device == "cpu":
-                load_config["device_map"] = "auto"
-                load_config["offload_folder"] = "offload_folder"  # Add offload directory
-                os.makedirs("offload_folder", exist_ok=True)
-            else:
-                load_config["device_map"] = "balanced"
 
-            # Load base model with configured parameters
-            base_model_obj = AutoModelForCausalLM.from_pretrained(
-                base_model,
-                **load_config
-            )
-
-            # Load fine-tuned model
-            self.model = PeftModel.from_pretrained(
-                base_model_obj,
-                model_path,
-                **load_config
-            )
-
-            logger.info(f"Model loaded successfully on {device}")
-            
-        except Exception as e:
-            logger.error(f"Error initializing model: {str(e)}")
-            raise
-
+class ChatAI(ChatAI):
     def _update_history(self, message: dict) -> None:
         """
         Enqueues new user or model messages and manages removal of old messages
@@ -181,6 +143,9 @@ class ChatAI:
         
         return messages
 
+
+
+class ChatAI(ChatAI):
     def generate_response(self, user_input: str, add_to_history: bool = True) -> str:
         """
         Generates a response from the model
