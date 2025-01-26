@@ -20,6 +20,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 from src.utils.config import get_api_keys
+from huggingface_hub import login
 
 # Global Setting
 DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
@@ -45,6 +46,10 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 # API keys
 api_keys = get_api_keys()
 os.environ["HUGGINGFACE_TOKEN"] = api_keys['huggingface_api_key']
+
+# Hugging Face の認証
+HUGGINGFACE_TOKEN = os.environ["HUGGINGFACE_TOKEN"]  # 環境変数からトークンを取得
+login(token=HUGGINGFACE_TOKEN)  # Hugging Face にログイン
 
 def clear_memory():
     import gc
@@ -140,7 +145,7 @@ def prepare_dataset():
 model_name = "google/gemma-2-2b-jpn-it"
 tokenizer = AutoTokenizer.from_pretrained(
     model_name,
-    token=os.environ["HUGGINGFACE_TOKEN"],  
+    token=HUGGINGFACE_TOKEN,  # トークンを追加
     trust_remote_code=True
 )
 
@@ -163,6 +168,7 @@ model_config = {
 
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
+    token=HUGGINGFACE_TOKEN,  # トークンを追加
     config=model_config,
     quantization_config=bnb_config,
     **model_config

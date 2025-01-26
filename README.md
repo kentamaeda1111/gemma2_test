@@ -40,21 +40,13 @@ Keys can be configured via:
 - Kaggle: Using Kaggle Secrets or environment variables
 - Colab: Using environment variables or built-in secure form prompt
 
-Example for Kaggle/Colab environment variables:
-```python
-import os
-os.environ['CLAUDE_API_KEY_1'] = 'your_key_here'
-os.environ['CLAUDE_API_KEY_2'] = 'your_key_here'
-os.environ['CLAUDE_API_KEY_QUALITY'] = 'your_key_here'
-os.environ['HUGGINGFACE_API_KEY'] = 'your_key_here'
-```
-
 ### Quick Start
 
 **Local Environment**
 ```bash
 git clone https://github.com/kentamaeda1111/gemma2_test.git
 cd gemma2_test
+pip install -r requirements.txt
 cp .env.template .env  # Configure API keys
 
 # Run pipeline
@@ -74,8 +66,6 @@ python -m src.models.inference.test
 # Configure keys via respective platform's method
 # Run same pipeline as above
 ```
-
-Detailed configuration management in [src/utils/README.md](src/utils/README.md).
 
 ## Repository Structure
 
