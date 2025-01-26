@@ -27,7 +27,7 @@ DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"
 MAX_SEQUENCE_LENGTH = 512
 
 # Setup output directory paths
-BASE_OUTPUT_DIR = "models/test"  # Can be changed based on model name
+BASE_OUTPUT_DIR = "test"  # Changed from "models/test"
 MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
 LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
 
@@ -332,15 +332,12 @@ tokenized_dataset = tokenized_dataset.map(
     desc="Applying attention masking"
 )
 
-# Create log directory
-log_dir = "model/logs"
-os.makedirs(log_dir, exist_ok=True)
-
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(f'{log_dir}/training_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
+        logging.FileHandler(f'{LOG_OUTPUT_DIR}/training_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
         logging.StreamHandler()
     ]
 )
