@@ -7,6 +7,9 @@ from transformers import (
     DataCollatorForLanguageModeling,
     TrainerCallback,
     BitsAndBytesConfig,
+    Features,
+    Sequence,
+    Value,
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from datasets import Dataset
@@ -111,9 +114,15 @@ def prepare_dataset():
                             add_generation_prompt=True
                         )
                         
-                        tokens = tokenizer.encode(formatted_text)
-                        if len(tokens) <= MAX_SEQUENCE_LENGTH:
-                            yield {"text": formatted_text}
+                        # トークン化して返す
+                        tokens = tokenizer(
+                            formatted_text,
+                            truncation=True,
+                            max_length=MAX_SEQUENCE_LENGTH,
+                            padding=False,
+                            return_tensors=None
+                        )
+                        yield tokens
                     
                     del messages, current_conversation
                     if len(dialogue_data) % 100 == 0:
@@ -125,21 +134,15 @@ def prepare_dataset():
         # データセットの作成
         dataset = Dataset.from_generator(
             conversation_generator,
+            features=Features({
+                'input_ids': Sequence(feature=Value(dtype='int32')),
+                'attention_mask': Sequence(feature=Value(dtype='int8'))
+            }),
             cache_dir=None
         )
         
-        # データセットをトークン化
-        tokenized_dataset = dataset.map(
-            tokenize_function,
-            batched=True,
-            batch_size=4,
-            num_proc=1,
-            remove_columns=dataset.column_names,
-            desc="Tokenizing datasets",
-        )
-        
         # データセットを訓練用と評価用に分割
-        train_test_split = tokenized_dataset.train_test_split(
+        train_test_split = dataset.train_test_split(
             test_size=0.1,
             shuffle=True,
             seed=42
