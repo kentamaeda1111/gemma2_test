@@ -158,16 +158,27 @@ For detailed documentation of each component, please refer to the README.md file
 - Operating System: Windows 10/11, macOS, or Linux
 - Package Manager: pip (latest version)
 
-### For Training
-Note: Training large language models requires significant computational resources. Please refer to the official Gemma documentation for detailed hardware requirements. In our case, we used Google Colab Pro+ with A100 GPU for training.
+### Hardware Requirements
 
-### For Inference
+#### For Training
+- GPU: NVIDIA GPU with at least 24GB VRAM (e.g., A5000, A6000, or A100)
+  - Peak VRAM usage during training: ~20GB
+  - Additional VRAM buffer recommended: 4GB
+- RAM: 32GB minimum
+  - Peak RAM usage during training: ~24GB
+  - Additional RAM buffer recommended: 8GB
+- Storage: 50GB+ free space for model checkpoints and training data
+
+Note: These requirements are based on using LoRA for fine-tuning and 4-bit quantization (QLoRA). 
+
+#### For Inference
 - GPU: NVIDIA GPU with 8GB+ VRAM
+  - Peak VRAM usage during inference: ~6GB
+  - Additional VRAM buffer recommended: 2GB
 - RAM: 16GB+
+  - Peak RAM usage during inference: ~8GB
+  - Additional RAM buffer recommended: 8GB
 - Storage: 20GB+ free space
-- API access:
-  - Claude API (for dialogue generation)
-  - Hugging Face (for model access)
 
 Note: For inference, the model can be run with reduced precision (bfloat16) to decrease memory requirements. When loaded in bf16, it consumes approximately 8GB of VRAM for the 2b model.
 
