@@ -65,21 +65,6 @@ def validate_message_format(message):
         return False
     return True
 
-def tokenize_function(examples):
-    """データセットのトークン化を行う関数"""
-    try:
-        outputs = tokenizer(
-            examples["text"],
-            truncation=True,
-            max_length=MAX_SEQUENCE_LENGTH,
-            padding=False,
-            return_tensors=None,
-        )
-        return outputs
-    except Exception as e:
-        logging.error(f"Tokenization error: {str(e)}")
-        raise
-
 def prepare_dataset():
     try:
         def conversation_generator():
@@ -211,37 +196,6 @@ print(train_dataset.features)
 train_dataset = train_dataset.select(range(len(train_dataset))).shuffle(seed=42)
 eval_dataset = eval_dataset.select(range(len(eval_dataset))).shuffle(seed=42)
 
-# Optimize tokenize function
-def tokenize_function(examples):
-    outputs = tokenizer(
-        examples['text'],
-        truncation=True,
-        max_length=MAX_SEQUENCE_LENGTH,
-        padding=False,
-        return_tensors=None,
-    )
-    clear_memory()  
-    return outputs
-
-# Optimize dataset processing
-tokenized_train_dataset = train_dataset.map(
-    tokenize_function,
-    batched=True,
-    batch_size=4,  
-    num_proc=1,
-    remove_columns=train_dataset.column_names,
-    desc="Tokenizing train datasets",
-)
-
-tokenized_eval_dataset = eval_dataset.map(
-    tokenize_function,
-    batched=True,
-    batch_size=4,  
-    num_proc=1,
-    remove_columns=eval_dataset.column_names,
-    desc="Tokenizing eval datasets",
-)
-
 # Add memory usage monitoring log
 def log_memory_usage():
     import psutil
@@ -263,8 +217,8 @@ def validate_dataset(dataset):
     print(f"input_ids length: {len(first_item['input_ids'])}")
     return dataset
 
-tokenized_train_dataset = validate_dataset(tokenized_train_dataset)
-tokenized_eval_dataset = validate_dataset(tokenized_eval_dataset)
+tokenized_train_dataset = validate_dataset(train_dataset)
+tokenized_eval_dataset = validate_dataset(eval_dataset)
 
 # Add dataset preprocessing
 def preprocess_function(examples):
