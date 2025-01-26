@@ -1,50 +1,3 @@
-import subprocess
-import sys
-import pkg_resources
-
-def check_and_install_requirements():
-    """Check and install required packages with specific versions"""
-    requirements = {
-        'transformers': 'from_github',
-        'peft': '0.7.1',
-        'bitsandbytes': '0.43.2',
-        'accelerate': '0.26.0',
-        'datasets': 'latest'
-    }
-    
-    needs_install = False
-    
-    for package, version in requirements.items():
-        try:
-            if version == 'from_github':
-                continue
-            elif version == 'latest':
-                pkg_resources.require(package)
-            else:
-                pkg_resources.require(f'{package}>={version}')
-        except (pkg_resources.VersionConflict, pkg_resources.DistributionNotFound):
-            needs_install = True
-            break
-    
-    if needs_install:
-        print("Installing required packages...")
-        subprocess.check_call([
-            sys.executable, 
-            "-m", 
-            "pip", 
-            "install", 
-            "-q",
-            "git+https://github.com/huggingface/transformers.git",
-            f"peft=={requirements['peft']}",
-            f"bitsandbytes>={requirements['bitsandbytes']}",
-            f"accelerate>={requirements['accelerate']}",
-            "datasets"
-        ])
-        print("Package installation completed.")
-
-# Check and install requirements
-check_and_install_requirements()
-
 import torch
 from transformers import (
     AutoModelForCausalLM,
@@ -55,7 +8,6 @@ from transformers import (
     TrainerCallback,
     BitsAndBytesConfig,
 )
-from huggingface_hub import login
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from datasets import Dataset
 import json
@@ -69,38 +21,30 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from src.utils.config import get_api_keys
 
-# Global settings
-DIALOGUE_JSON_PATH = "1gouki.json"  # Name of dialogue data JSON file
-MAX_SEQUENCE_LENGTH = 512  # Maximum token count per dialogue
+# Global Setting
+DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
+MAX_SEQUENCE_LENGTH = 512
 
-# Hugging Face API token
-api_keys = get_api_keys()
-HF_TOKEN = api_keys['huggingface_api_key']
+# Setup output directory paths
+BASE_OUTPUT_DIR = "models/test"  # Can be changed based on model name
+MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
+LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
 
-# Hugging Face login
-login(token=HF_TOKEN)
+# Create directories
+for dir_path in [BASE_OUTPUT_DIR, MODEL_OUTPUT_DIR, LOG_OUTPUT_DIR]:
+    os.makedirs(dir_path, exist_ok=True)
 
-# Extract model name from dialogue file
-model_folder_name = os.path.splitext(os.path.basename(DIALOGUE_JSON_PATH))[0]
-BASE_OUTPUT_DIR = f"models/{model_folder_name}"
-MODEL_DIR = os.path.join(BASE_OUTPUT_DIR, "model")
-LOG_DIR = os.path.join(BASE_OUTPUT_DIR, "logs")  # Changed from MODEL_DIR/logs to BASE_OUTPUT_DIR/logs
-
-# Create necessary directories
-os.makedirs(MODEL_DIR, exist_ok=True)
-os.makedirs(LOG_DIR, exist_ok=True)
-
-# Log settings
+# Output configuration logs
 logging.info(f"Using dialogue file: {DIALOGUE_JSON_PATH}")
-logging.info(f"Output directory: {BASE_OUTPUT_DIR}")
 logging.info(f"Max sequence length: {MAX_SEQUENCE_LENGTH}")
 
 # Environment variables and warning settings
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-# Update file path with directory
-DIALOGUE_JSON_PATH = os.path.join("logs", "dialogue", DIALOGUE_JSON_PATH)
+# API keys
+api_keys = get_api_keys()
+os.environ["HUGGINGFACE_TOKEN"] = api_keys['huggingface_api_key']
 
 def validate_message_format(message):
     """Validate message format"""
@@ -172,6 +116,7 @@ def prepare_dataset():
 model_name = "google/gemma-2-2b-jpn-it"
 tokenizer = AutoTokenizer.from_pretrained(
     model_name,
+    token=os.environ["HUGGINGFACE_TOKEN"],  
     trust_remote_code=True
 )
 
@@ -187,6 +132,7 @@ bnb_config = BitsAndBytesConfig(
 # Load model with modifications
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
+    token=os.environ["HUGGINGFACE_TOKEN"],  
     quantization_config=bnb_config,
     device_map="auto",
     torch_dtype=torch.bfloat16,
@@ -247,16 +193,32 @@ tokenized_dataset = dataset.map(
     desc="Tokenizing datasets",
     remove_columns=dataset.column_names,
 )
-
-# Create log directory
-log_dir = "model/logs"
-os.makedirs(log_dir, exist_ok=True)
-
 # Add memory usage monitoring log
 def log_memory_usage():
     import psutil
+    import torch
+    
+    # CPU memory
     process = psutil.Process()
-    logging.info(f"Memory usage: {process.memory_info().rss / 1024 / 1024:.2f} MB")
+    cpu_memory = process.memory_info().rss / 1024 / 1024  # MB
+    
+    # GPU memory
+    gpu_memory = []
+    if torch.cuda.is_available():
+        for i in range(torch.cuda.device_count()):
+            gpu_memory.append({
+                'device': i,
+                'allocated': torch.cuda.memory_allocated(i) / 1024 / 1024,  # MB
+                'reserved': torch.cuda.memory_reserved(i) / 1024 / 1024,    # MB
+                'max_allocated': torch.cuda.max_memory_allocated(i) / 1024 / 1024  # MB
+            })
+    
+    logging.info(f"CPU Memory usage: {cpu_memory:.2f} MB")
+    for gpu in gpu_memory:
+        logging.info(f"GPU {gpu['device']} Memory:")
+        logging.info(f"  - Allocated: {gpu['allocated']:.2f} MB")
+        logging.info(f"  - Reserved: {gpu['reserved']:.2f} MB")
+        logging.info(f"  - Max Allocated: {gpu['max_allocated']:.2f} MB")
 
 # Log dataset size
 logging.info(f"Total dataset size: {len(dataset)}")
@@ -362,28 +324,29 @@ tokenizer.add_special_tokens({
     ]
 })
 
-# "LAM enables the model to capture essential information while mitigating redundant computations"
+
 tokenized_dataset = tokenized_dataset.map(
     preprocess_function,
     batched=True,
     desc="Applying attention masking"
 )
 
-# Update logging settings
-import os
+# Create log directory
+log_dir = "model/logs"
+os.makedirs(log_dir, exist_ok=True)
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(f'{LOG_DIR}/training_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
+        logging.FileHandler(f'{log_dir}/training_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
         logging.StreamHandler()
     ]
 )
 
 # Update training arguments
 training_args = TrainingArguments(
-    output_dir=MODEL_DIR,
+    output_dir=MODEL_OUTPUT_DIR,  
     num_train_epochs=30,     # Set to 30 epochs for smaller datasets
     learning_rate=8e-5,      # Slightly reduced from 1e-4
     weight_decay=0.06,       # Slightly increased
@@ -396,7 +359,7 @@ training_args = TrainingArguments(
     gradient_accumulation_steps=8,   # Reduced accumulation steps
     max_steps=-1,
     disable_tqdm=False,
-    logging_dir=LOG_DIR,
+    logging_dir=LOG_OUTPUT_DIR,   
     logging_strategy="steps",
     logging_steps=50,
     no_cuda=False,
@@ -610,7 +573,7 @@ class TrainingMonitorCallback(TrainerCallback):
             'learning_rate': [],
             'epoch': []
         }
-        self.output_dir = Path(LOG_DIR)  # Use the LOG_DIR we defined earlier
+        self.output_dir = Path(f"{BASE_OUTPUT_DIR}/training_progress")  
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
     def on_train_begin(self, args, state, control, **kwargs):
@@ -620,7 +583,6 @@ class TrainingMonitorCallback(TrainerCallback):
     def on_log(self, args, state, control, logs=None, **kwargs):
         if logs is None:
             return
-        
         # Record metrics
         self.metrics_history['step'].append(state.global_step)
         self.metrics_history['epoch'].append(state.epoch)
@@ -763,18 +725,21 @@ trainer = CustomTrainer(
 # Start training
 logging.info("Starting training...")
 try:
-    checkpoint_dir = MODEL_DIR
+    checkpoint_dir = MODEL_OUTPUT_DIR  
     resume_from_checkpoint = None
+    
+    # Check if running in Kaggle environment
+    is_kaggle = os.path.exists('/kaggle/working')
     
     # Checkpoint status and processing
     if os.path.exists(checkpoint_dir):
-        print("\nChecking checkpoint status...")  # Added
+        print("\nChecking checkpoint status...")  
         checkpoints = [f for f in os.listdir(checkpoint_dir) if f.startswith("checkpoint-")]
         if checkpoints:
             # Get latest checkpoint
             latest_checkpoint = max(checkpoints, key=lambda x: int(x.split("-")[1]))
             checkpoint_path = os.path.join(checkpoint_dir, latest_checkpoint)
-            print(f"Found latest checkpoint: {latest_checkpoint}")  # Added
+            print(f"Found latest checkpoint: {latest_checkpoint}") 
             
             # Check checkpoint status
             state_path = os.path.join(checkpoint_path, "trainer_state.json")
@@ -782,16 +747,16 @@ try:
                 with open(state_path, 'r') as f:
                     state = json.load(f)
                 current_epoch = state.get('epoch', 0)
-                print(f"\nCurrent training status:")  # Added
-                print(f"Current epoch: {current_epoch}")  # Added
-                print(f"Target epochs: {training_args.num_train_epochs}")  # Added
+                print(f"\nCurrent training status:")  
+                print(f"Current epoch: {current_epoch}")  
+                print(f"Target epochs: {training_args.num_train_epochs}")  
                 
                 # Exit safely if completed
                 if current_epoch >= training_args.num_train_epochs - 0.1:
                     print("\n" + "="*50)
                     print("IMPORTANT NOTICE:")
-                    print(f"Training has already been completed at epoch {current_epoch}!")  # Modified
-                    print(f"Target epochs was {training_args.num_train_epochs}")  # Added
+                    print(f"Training has already been completed at epoch {current_epoch}!")
+                    print(f"Target epochs was {training_args.num_train_epochs}")  
                     print(f"Trained model is available at: {checkpoint_dir}")
                     print("="*50 + "\n")
                     logging.info("Training has already been completed. Exiting to protect existing model.")
@@ -800,16 +765,18 @@ try:
             else:
                 logging.warning("Invalid checkpoint state found. Please check manually.")
                 logging.warning(f"Checkpoint directory: {checkpoint_dir}")
-                user_input = input("Do you want to continue and overwrite? (yes/no): ")
+                if not is_kaggle:  
+                    user_input = input("Do you want to continue and overwrite? (yes/no): ")
+                    if user_input.lower() != 'yes':
+                        logging.info("Aborting to protect existing data.")
+                        exit(0)
+        else:
+            logging.warning("Checkpoint directory exists but no checkpoints found.")
+            if not is_kaggle:  
+                user_input = input("Do you want to continue and overwrite the directory? (yes/no): ")
                 if user_input.lower() != 'yes':
                     logging.info("Aborting to protect existing data.")
                     exit(0)
-        else:
-            logging.warning("Checkpoint directory exists but no checkpoints found.")
-            user_input = input("Do you want to continue and overwrite the directory? (yes/no): ")
-            if user_input.lower() != 'yes':
-                logging.info("Aborting to protect existing data.")
-                exit(0)
 
     # Start training (or resume)
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)

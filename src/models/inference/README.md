@@ -89,9 +89,16 @@ models/
 - Support for both local and Kaggle environments
 
 ## Initial Conversation
-The system initializes with a predefined conversation context (not displayed to user):
+
+### Design Philosophy
+The system implements a fixed initial dialogue pattern that embodies core Socratic principles:
+- Focuses on the concept of "self" as a universal yet deeply philosophical topic
+- Sets up the Socratic method through a carefully crafted opening question
+- Establishes the appropriate tone and relationship between Socrates and the dialogue partner
+
+### Technical Implementation
+The system initializes with a predefined conversation context:
 ```python
-# Internal initialization
 initial_user_msg = "あなたは古代ギリシャの哲学者ソクラテスです。今日は何について話しますか？"
 initial_model_msg = (
     "やぁ、よく来てくれたね。今日は『自分』という、これ以上ないほど身近な存在でありながら、"
@@ -103,10 +110,10 @@ chatai._update_history({"role": "user", "content": initial_user_msg})
 chatai._update_history({"role": "model", "content": initial_model_msg})
 ```
 
-When you start the chat, you'll see Socrates' first message and can begin the conversation from there. The initial user prompt is used internally to set up the conversation context but is not displayed in the interface.
-
-### What You'll See
-When you start the program, the conversation begins directly with Socrates' opening message about discussing the concept of "self". The internal initialization ensures the model maintains proper context while keeping the interface clean and natural.
+### User Experience
+- The initial user prompt is used internally to set context
+- Users see only Socrates' opening message about exploring the concept of "self"
+- This design creates a natural entry point while maintaining the philosophical depth
 
 ## Note
 This interface is designed to work with the fine-tuned Gemma-2b model trained on Socratic dialogues. Make sure you have the correct model checkpoint and Hugging Face access token before running.

@@ -15,6 +15,43 @@ A system for evaluating the quality of generated Socratic dialogues.
 - Identifies and segregates low-quality dialogues
 - Generates statistical analysis reports
 
+#### Quality Check Prompt
+The system uses a carefully crafted Japanese prompt to evaluate dialogue quality. The prompt implements both quantitative and qualitative evaluation methods to ensure comprehensive quality assessment:
+
+1. Evaluate Socratic Style (Score 0-4):
+   - Checks for Socratic linguistic patterns (e.g., "かね?", "だろうか?")
+   - Evaluates addressing patterns (e.g., "友よ", "君")
+   - Scoring criteria:
+     - 0: Not Socratic at all
+     - 1: No Socratic elements
+     - 2: Generally good with minor issues
+     - 3: Successfully Socratic
+     - 4: Perfect Socratic style
+
+2. Evaluate Logical Consistency (Score 0-4):
+   - Focuses on natural conversation flow
+   - Checks response appropriateness
+   - Scoring criteria:
+     - 0: Incomprehensible responses
+     - 1: Misaligned conversation
+     - 2: Generally good with minor issues
+     - 3: Natural conversation flow
+     - 4: Excellent Socratic responses
+
+3. Provide Brief Comments:
+   - Short feedback on each dialogue pair
+   - Highlights specific strengths or issues
+   - Maintains concise format
+   - Serves as qualitative validation for numerical scores
+   - Enables review of AI's reasoning and evaluation process
+   - Helps identify patterns in high/low quality dialogues
+
+The combination of numerical scores and descriptive feedback ensures:
+- Transparent evaluation process
+- Verifiable reasoning behind scores
+- Ability to identify systematic issues
+- Clear documentation for quality control
+
 #### Model Settings
 ```python
 MODEL_NAME = "claude-3-5-sonnet-20241022"
@@ -53,8 +90,8 @@ A tool for extracting and reformatting dialogue segments for model training.
 Edit these variables in `dialogue_extractor.py`:
 ```python
 # Output settings
-OUTPUT_FILE = '1gouki.json'       # Name of the output JSON file
-PREPEND_KEYWORD = "ソクラテスさん。"  # Text to prepend to each first utterance
+OUTPUT_FILE = 'test.json'       # Name of the output JSON file
+PREPEND_KEYWORD = "あなたは古代ギリシャの哲学者ソクラテスです。"  # Text to prepend to each first utterance
 
 # Extraction range settings
 EXTRACTION_SETTINGS = [
