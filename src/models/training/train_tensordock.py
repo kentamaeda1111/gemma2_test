@@ -575,8 +575,17 @@ class TrainingMonitorCallback(TrainerCallback):
             'learning_rate': [],
             'epoch': []
         }
-        self.output_dir = Path(f"{BASE_OUTPUT_DIR}/training_progress")
+        # 出力ディレクトリのパスを絶対パスで指定
+        self.output_dir = Path(os.path.abspath(f"{BASE_OUTPUT_DIR}/training_progress"))
+        # ディレクトリが存在しない場合は作成
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # ログファイルの設定
+        logging.basicConfig(
+            filename=str(self.output_dir / 'training.log'),
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s'
+        )
         
     def on_train_begin(self, args, state, control, **kwargs):
         self.train_start_time = datetime.now()
@@ -585,22 +594,29 @@ class TrainingMonitorCallback(TrainerCallback):
     def on_log(self, args, state, control, logs=None, **kwargs):
         if logs is None:
             return
-        # Record metrics
-        self.metrics_history['step'].append(state.global_step)
-        self.metrics_history['epoch'].append(state.epoch)
-        self.metrics_history['loss'].append(logs.get('loss', None))
-        self.metrics_history['learning_rate'].append(logs.get('learning_rate', None))
-        self.metrics_history['style_consistency'].append(logs.get('eval_style_consistency', None))
-        self.metrics_history['dialogue_flow'].append(logs.get('eval_dialogue_flow', None))
-        self.metrics_history['combined_score'].append(logs.get('eval_combined_score', None))
-        
-        # Save to CSV file
-        df = pd.DataFrame(self.metrics_history)
-        df.to_csv(self.output_dir / 'training_metrics.csv', index=False)
-        
-        # Update graph every 100 steps
-        if state.global_step % 100 == 0:
-            self._plot_metrics()
+            
+        try:
+            # Record metrics
+            self.metrics_history['step'].append(state.global_step)
+            self.metrics_history['epoch'].append(state.epoch)
+            self.metrics_history['loss'].append(logs.get('loss', None))
+            self.metrics_history['learning_rate'].append(logs.get('learning_rate', None))
+            self.metrics_history['style_consistency'].append(logs.get('eval_style_consistency', None))
+            self.metrics_history['dialogue_flow'].append(logs.get('eval_dialogue_flow', None))
+            self.metrics_history['combined_score'].append(logs.get('eval_combined_score', None))
+            
+            # Save to CSV file
+            df = pd.DataFrame(self.metrics_history)
+            csv_path = self.output_dir / 'training_metrics.csv'
+            df.to_csv(csv_path, index=False)
+            logging.info(f"Saved metrics to {csv_path}")
+            
+            # Update graph every 100 steps
+            if state.global_step % 100 == 0:
+                self._plot_metrics()
+                
+        except Exception as e:
+            logging.error(f"Error in on_log: {str(e)}")
             
     def _plot_metrics(self):
         """Plot learning metrics and save"""
