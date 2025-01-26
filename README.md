@@ -154,20 +154,36 @@ For detailed documentation of each component, please refer to the README.md file
 ## Setup Requirements
 
 ### Basic Requirements
+- Python: 3.10 or higher
+- Operating System: Windows 10/11, macOS, or Linux
+- Package Manager: pip (latest version)
 
+### For Training
+Note: Training large language models requires significant computational resources. Please refer to the official Gemma documentation for detailed hardware requirements. In our case, we used Google Colab Pro+ with A100 GPU for training.
+
+### For Inference
+- GPU: NVIDIA GPU with 8GB+ VRAM
+- RAM: 16GB+
+- Storage: 20GB+ free space
+- API access:
+  - Claude API (for dialogue generation)
+  - Hugging Face (for model access)
+
+Note: For inference, the model can be run with reduced precision (bfloat16) to decrease memory requirements. When loaded in bf16, it consumes approximately 8GB of VRAM for the 2b model.
 
 ### Hardware Requirements
 
+Based on our training logs, the model requires the following minimum specifications:
+
 #### For Training
 - GPU: NVIDIA GPU with at least 24GB VRAM (e.g., A5000, A6000, or A100)
-  - Peak VRAM usage during training: ~20GB
+  - Peak VRAM usage during training: ~20GB (with 4-bit quantization)
   - Additional VRAM buffer recommended: 4GB
 - RAM: 32GB minimum
   - Peak RAM usage during training: ~24GB
   - Additional RAM buffer recommended: 8GB
 - Storage: 50GB+ free space for model checkpoints and training data
-
-Note: These requirements are based on using LoRA for fine-tuning and 4-bit quantization (QLoRA). 
+- Training Time: ~2.5 hours on A100 GPU
 
 #### For Inference
 - GPU: NVIDIA GPU with 8GB+ VRAM
@@ -178,13 +194,13 @@ Note: These requirements are based on using LoRA for fine-tuning and 4-bit quant
   - Additional RAM buffer recommended: 8GB
 - Storage: 20GB+ free space
 
-Note: For inference, the model can be run with reduced precision (bfloat16) to decrease memory requirements. When loaded in bf16, it consumes approximately 8GB of VRAM for the 2b model.
+Note: These requirements are based on using LoRA for fine-tuning and 4-bit quantization (QLoRA). Running the model in full precision or without quantization would require significantly more memory.
 
 ## Data and Model Transparency
 
 For transparency and reproducibility purposes, this repository intentionally includes several key files that would typically be excluded:
 
-1. `data/config/automation_kaggle_model.csv`: Contains the complete configuration parameters used for dialogue generation, including:
+1. `data/config/automation.csv`: Contains the complete configuration parameters used for dialogue generation, including:
    - Temperature settings
    - Maximum turns/pairs
    - Prompt IDs
@@ -204,5 +220,6 @@ For transparency and reproducibility purposes, this repository intentionally inc
    - `assistant_system_prompt/`: Prompts for Socrates' role and behavior
    - `user_system_prompt/`: Prompts for the student's persona and responses
    - `questions.json`: The collection of philosophical questions used to initiate dialogues
+   These prompts are crucial for understanding how the dialogues were structured and generated.
 
 Note: All prompt templates are written in Japanese. For detailed English documentation of the prompts, please see [data/prompts/README.md](data/prompts/README.md).

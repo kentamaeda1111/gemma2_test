@@ -7,7 +7,7 @@ An interactive chat interface for the fine-tuned Socratic dialogue model, suppor
 
 ### Global Settings
 ```python
-MODEL_VERSION = "1gouki"           # Model version name
+MODEL_VERSION = "kaggle_model"           # Model version name
 CHECKPOINT_NUMBER = "1980"         # Checkpoint to load
 MAX_HISTORY = 5                    # Number of conversation turns to remember
 BASE_MODEL = "google/gemma-2-2b-jpn-it"  # Base model name
@@ -28,8 +28,19 @@ generation_config = {
 - torch
 - transformers
 - peft
-- ipywidgets (for Jupyter interface)
+- IPython>=8.0.0 (for both console and Jupyter interfaces)
+- ipywidgets>=8.0.0 (for Jupyter interface)
 - Hugging Face token (set in `.env` as HUGGINGFACE_API_KEY)
+
+### Hardware Requirements
+- **Recommended**: NVIDIA GPU with 8GB+ VRAM
+  - Peak VRAM usage: ~6GB
+  - Additional VRAM buffer: 2GB
+- **Minimum**: 16GB+ RAM for CPU-only execution
+
+**Note**: While the model can run in CPU-only environments, inference speed will be 
+significantly slower (several minutes per response vs. seconds on GPU). 
+GPU execution is strongly recommended for optimal performance.
 
 ## Usage
 
