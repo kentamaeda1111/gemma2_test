@@ -76,6 +76,7 @@ class ChatAI:
         """
         self.max_history = max_history
         self.message_history = Queue(maxsize=max_history)
+        self.hf_token = hf_token
         
         try:
             logger.info("Loading model and tokenizer...")
@@ -89,24 +90,34 @@ class ChatAI:
             # Create offload directory if it doesn't exist
             os.makedirs("offload_folder", exist_ok=True)
             
+            # Load configuration
+            config = AutoConfig.from_pretrained(base_model, trust_remote_code=True)
+            
+            # Set device and loading strategy
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            load_config = {
+                "torch_dtype": torch.float32 if device == "cpu" else torch.bfloat16,
+                "trust_remote_code": True,
+                "token": hf_token,
+                "low_cpu_mem_usage": True,
+                "device_map": "auto",
+                "offload_folder": "offload_folder"
+            }
+            
+            # Load base model with modified configuration
             base_model_obj = AutoModelForCausalLM.from_pretrained(
                 base_model,
-                device_map="auto",
-                offload_folder="offload_folder",
-                torch_dtype=torch.bfloat16,
-                trust_remote_code=True,
-                token=hf_token
+                config=config,
+                **load_config
             )
             
             self.model = PeftModel.from_pretrained(
                 base_model_obj,
                 model_path,
-                device_map="auto",
-                offload_folder="offload_folder",
-                torch_dtype=torch.bfloat16
+                **load_config
             )
             
-            logger.info("Model loaded successfully")
+            logger.info(f"Model loaded successfully on {device}")
             
             self.generation_config = {
                 "max_new_tokens": 256,
