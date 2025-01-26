@@ -27,7 +27,7 @@ DIALOGUE_JSON_PATH = "data/dialogue/processed/test_short.json"
 MAX_SEQUENCE_LENGTH = 512
 
 # Setup output directory paths
-BASE_OUTPUT_DIR = "models/test_short"  # Can be changed based on model name
+BASE_OUTPUT_DIR = "models/test_short"  
 MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
 LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
 
@@ -35,9 +35,21 @@ LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
 for dir_path in [BASE_OUTPUT_DIR, MODEL_OUTPUT_DIR, LOG_OUTPUT_DIR]:
     os.makedirs(dir_path, exist_ok=True)
 
-# Output configuration logs
+# Setup logging configuration immediately after directory creation
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(os.path.join(LOG_OUTPUT_DIR, f'training_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')),
+        logging.StreamHandler()
+    ]
+)
+
+# Initial logging messages to verify logging is working
+logging.info("Training script started")
 logging.info(f"Using dialogue file: {DIALOGUE_JSON_PATH}")
 logging.info(f"Max sequence length: {MAX_SEQUENCE_LENGTH}")
+logging.info(f"Output directory: {BASE_OUTPUT_DIR}")
 
 # Environment variables and warning settings
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -617,28 +629,24 @@ class TrainingMonitorCallback(TrainerCallback):
     
     def on_train_begin(self, args, state, control, **kwargs):
         self.train_start_time = datetime.now()
+        logging.info("Training started at: %s", self.train_start_time)
         self._record_resource_usage()
         
     def on_log(self, args, state, control, logs=None, **kwargs):
-        if logs is None:
-            return
-            
-        # Record existing metrics
-        self.metrics_history['step'].append(state.global_step)
-        self.metrics_history['epoch'].append(state.epoch)
-        self.metrics_history['loss'].append(logs.get('loss', None))
-        self.metrics_history['learning_rate'].append(logs.get('learning_rate', None))
-        self.metrics_history['style_consistency'].append(logs.get('eval_style_consistency', None))
-        self.metrics_history['dialogue_flow'].append(logs.get('eval_dialogue_flow', None))
-        self.metrics_history['combined_score'].append(logs.get('eval_combined_score', None))
-        
-        # Record resource usage
+        if logs:
+            logging.info(f"Step {state.global_step}: {logs}")
         self._record_resource_usage()
         
     def on_train_end(self, args, state, control, **kwargs):
+        training_duration = datetime.now() - self.train_start_time
+        logging.info(f"Training completed. Total duration: {training_duration}")
+        logging.info(f"Peak CPU RAM usage: {self.peak_metrics['cpu_ram']:.2f} GB")
+        logging.info(f"Peak GPU VRAM usage: {self.peak_metrics['gpu_vram']:.2f} GB")
+        logging.info(f"Peak GPU utilization: {self.peak_metrics['gpu_util']:.1f}%")
+        
         # Save final learning result summary
         summary = {
-            'training_duration': str(datetime.now() - self.train_start_time),
+            'training_duration': str(training_duration),
             'final_loss': self.metrics_history['loss'][-1] if self.metrics_history['loss'] else None,
             'best_combined_score': max(filter(None, self.metrics_history['combined_score'])) if self.metrics_history['combined_score'] else None,
             'total_steps': len(self.metrics_history['step']),
