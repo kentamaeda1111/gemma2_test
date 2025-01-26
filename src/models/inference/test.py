@@ -90,33 +90,19 @@ class ChatAI:
             # Check if GPU is available
             device = "cuda" if torch.cuda.is_available() else "cpu"
             
-            # GPU環境用の設定
-            if device == "cuda":
-                base_model_obj = AutoModelForCausalLM.from_pretrained(
-                    base_model,
-                    device_map="balanced",
-                    torch_dtype=torch.bfloat16,
-                    trust_remote_code=True,
-                    token=hf_token
-                )
-            # CPU環境用の設定
-            else:
-                os.makedirs("offload_folder", exist_ok=True)
-                base_model_obj = AutoModelForCausalLM.from_pretrained(
-                    base_model,
-                    device_map="auto",
-                    offload_folder="offload_folder",
-                    torch_dtype=torch.float32,
-                    trust_remote_code=True,
-                    token=hf_token,
-                    low_cpu_mem_usage=True
-                )
+            base_model_obj = AutoModelForCausalLM.from_pretrained(
+                base_model,
+                device_map="cpu",
+                torch_dtype=torch.float32,
+                trust_remote_code=True,
+                token=hf_token,
+                low_cpu_mem_usage=True
+            )
             
             self.model = PeftModel.from_pretrained(
                 base_model_obj,
                 model_path,
-                torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32,
-                device_map="auto" if device == "cpu" else "balanced"
+                torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32
             )
             
             logger.info(f"Model loaded successfully on {device}")
