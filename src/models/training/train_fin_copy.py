@@ -12,7 +12,7 @@ from transformers import (
     Value,
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from datasets import Dataset
+from datasets import Dataset, Features, Sequence, Value
 import json
 import logging
 from datetime import datetime
