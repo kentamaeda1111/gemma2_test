@@ -23,11 +23,11 @@ from src.utils.config import get_api_keys
 import psutil
 
 # Global Setting
-DIALOGUE_JSON_PATH = "data/dialogue/processed/test_short.json"  
+DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
 MAX_SEQUENCE_LENGTH = 512
 
 # Setup output directory paths
-BASE_OUTPUT_DIR = "models/test_short"  # Can be changed based on model name
+BASE_OUTPUT_DIR = "models/test"  # Can be changed based on model name
 MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
 LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
 
@@ -333,14 +333,14 @@ tokenized_dataset = tokenized_dataset.map(
 )
 
 # Create log directory
-log_dir = "model/logs"
+log_dir = f"{BASE_OUTPUT_DIR}/logs"
 os.makedirs(log_dir, exist_ok=True)
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(f'{log_dir}/training_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
+        logging.FileHandler(os.path.join(log_dir, f'training_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')),
         logging.StreamHandler()
     ]
 )
