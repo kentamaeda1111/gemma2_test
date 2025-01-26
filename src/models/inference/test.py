@@ -104,7 +104,7 @@ class ChatAI:
                 os.makedirs("offload_folder", exist_ok=True)
                 base_model_obj = AutoModelForCausalLM.from_pretrained(
                     base_model,
-                    device_map="disk",
+                    device_map="auto",
                     offload_folder="offload_folder",
                     torch_dtype=torch.float32,
                     trust_remote_code=True,
@@ -115,7 +115,8 @@ class ChatAI:
             self.model = PeftModel.from_pretrained(
                 base_model_obj,
                 model_path,
-                torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32
+                torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32,
+                device_map="auto" if device == "cpu" else "balanced"
             )
             
             logger.info(f"Model loaded successfully on {device}")
