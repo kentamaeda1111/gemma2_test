@@ -4,3 +4,7 @@
 
 GPUのメモリとかの必要量を説明
 
+requiremtnes最終チェック
+modelのREADMEはもっとかえれる？
+
+gitignoreも最終チェック
