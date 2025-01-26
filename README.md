@@ -154,9 +154,7 @@ For detailed documentation of each component, please refer to the README.md file
 ## Setup Requirements
 
 ### Basic Requirements
-- Python: 3.10 or higher
-- Operating System: Windows 10/11, macOS, or Linux
-- Package Manager: pip (latest version)
+
 
 ### Hardware Requirements
 
