@@ -23,11 +23,11 @@ from src.utils.config import get_api_keys
 import psutil
 
 # Global Setting
-DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
+DIALOGUE_JSON_PATH = "data/dialogue/processed/test_short.json"  
 MAX_SEQUENCE_LENGTH = 512
 
 # Setup output directory paths
-BASE_OUTPUT_DIR = "models/test"  # Can be changed based on model name
+BASE_OUTPUT_DIR = "models/test_short"  # Can be changed based on model name
 MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
 LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
 
