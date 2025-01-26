@@ -589,7 +589,14 @@ class TrainingMonitorCallback(TrainerCallback):
             'epoch': [],
             'cpu_ram_usage': [],
             'gpu_vram_usage': [],
-            'gpu_utilization': []
+            'gpu_utilization': [],
+            'batch_size': [],
+            'moving_avg_loss': [],
+            # 新しい詳細メトリクス
+            'lr_schedule': [],
+            'batch_metrics': [],
+            'gpu_metrics': [],
+            'grad_norm': []
         }
         self.peak_metrics = {
             'cpu_ram': 0,
@@ -600,16 +607,18 @@ class TrainingMonitorCallback(TrainerCallback):
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
     def _record_resource_usage(self):
-        """Record current resource usage"""
+        """Record current resource usage with timestamp"""
         import psutil
         import torch
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         # CPU RAM
         cpu_ram = psutil.Process().memory_info().rss / (1024 * 1024 * 1024)  # GB
         self.peak_metrics['cpu_ram'] = max(self.peak_metrics['cpu_ram'], cpu_ram)
         
-        # GPU metrics
+        # GPU metrics with timestamp
         if torch.cuda.is_available():
+            gpu_metrics = []
             for i in range(torch.cuda.device_count()):
                 vram_used = torch.cuda.memory_allocated(i) / (1024 * 1024 * 1024)  # GB
                 self.peak_metrics['gpu_vram'] = max(self.peak_metrics['gpu_vram'], vram_used)
@@ -623,9 +632,21 @@ class TrainingMonitorCallback(TrainerCallback):
                 except:
                     gpu_util = 0
                 
-                self.metrics_history['cpu_ram_usage'].append(cpu_ram)
-                self.metrics_history['gpu_vram_usage'].append(vram_used)
-                self.metrics_history['gpu_utilization'].append(gpu_util)
+                gpu_metrics.append({
+                    'device': i,
+                    'vram_used': vram_used,
+                    'utilization': gpu_util
+                })
+                
+            # 時系列データとして保存
+            self.metrics_history['gpu_metrics'].append({
+                'timestamp': current_time,
+                'metrics': gpu_metrics
+            })
+                
+            self.metrics_history['cpu_ram_usage'].append(cpu_ram)
+            self.metrics_history['gpu_vram_usage'].append(vram_used)
+            self.metrics_history['gpu_utilization'].append(gpu_util)
     
     def on_train_begin(self, args, state, control, **kwargs):
         self.train_start_time = datetime.now()
@@ -634,28 +655,87 @@ class TrainingMonitorCallback(TrainerCallback):
         
     def on_log(self, args, state, control, logs=None, **kwargs):
         if logs:
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            # 学習率とスケジューリングの記録
+            if 'learning_rate' in logs:
+                self.metrics_history['lr_schedule'].append({
+                    'timestamp': current_time,
+                    'step': state.global_step,
+                    'learning_rate': logs['learning_rate'],
+                    'schedule_type': args.lr_scheduler_type
+                })
+                self.metrics_history['learning_rate'].append(logs['learning_rate'])
+            
+            # バッチサイズと損失値の関連を記録
+            if 'loss' in logs:
+                self.metrics_history['batch_metrics'].append({
+                    'timestamp': current_time,
+                    'step': state.global_step,
+                    'batch_size': args.per_device_train_batch_size,
+                    'loss': logs['loss'],
+                    'grad_norm': logs.get('grad_norm', None)
+                })
+                self.metrics_history['loss'].append(logs['loss'])
+                self.metrics_history['batch_size'].append(args.per_device_train_batch_size)
+                if 'grad_norm' in logs:
+                    self.metrics_history['grad_norm'].append(logs['grad_norm'])
+            
+            # 移動平均の計算と記録
+            if len(self.metrics_history['loss']) > 10:
+                avg_loss = sum(self.metrics_history['loss'][-10:]) / 10
+                self.metrics_history['moving_avg_loss'].append(avg_loss)
+                logging.info(f"Moving average loss (last 10 steps): {avg_loss:.4f}")
+            
             logging.info(f"Step {state.global_step}: {logs}")
+            if 'grad_norm' in logs:
+                logging.info(f"Gradient norm: {logs['grad_norm']:.4f}")
+            
         self._record_resource_usage()
         
     def on_train_end(self, args, state, control, **kwargs):
         training_duration = datetime.now() - self.train_start_time
+        
+        # 詳細な学習履歴の保存
+        training_history = {
+            'lr_schedule': self.metrics_history['lr_schedule'],
+            'batch_metrics': self.metrics_history['batch_metrics'],
+            'gpu_metrics': self.metrics_history['gpu_metrics'],
+            'moving_avg_loss': self.metrics_history['moving_avg_loss']
+        }
+        
+        # 学習履歴をJSONファイルとして保存
+        history_file = self.output_dir / 'training_history.json'
+        with open(history_file, 'w', encoding='utf-8') as f:
+            json.dump(training_history, f, indent=2, ensure_ascii=False)
+        
+        # 基本的なメトリクスのログ出力
         logging.info(f"Training completed. Total duration: {training_duration}")
         logging.info(f"Peak CPU RAM usage: {self.peak_metrics['cpu_ram']:.2f} GB")
         logging.info(f"Peak GPU VRAM usage: {self.peak_metrics['gpu_vram']:.2f} GB")
         logging.info(f"Peak GPU utilization: {self.peak_metrics['gpu_util']:.1f}%")
         
-        # Save final learning result summary
+        # 最終サマリーの作成と保存
         summary = {
             'training_duration': str(training_duration),
             'final_loss': self.metrics_history['loss'][-1] if self.metrics_history['loss'] else None,
             'best_combined_score': max(filter(None, self.metrics_history['combined_score'])) if self.metrics_history['combined_score'] else None,
             'total_steps': len(self.metrics_history['step']),
             'final_epoch': self.metrics_history['epoch'][-1] if self.metrics_history['epoch'] else None,
-            # Add hardware metrics
-            'peak_cpu_ram_gb': self.peak_metrics['cpu_ram'],
-            'peak_gpu_vram_gb': self.peak_metrics['gpu_vram'],
-            'peak_gpu_utilization': self.peak_metrics['gpu_util'],
-            # Add hardware specifications
+            'learning_rate_summary': {
+                'initial': self.metrics_history['learning_rate'][0] if self.metrics_history['learning_rate'] else None,
+                'final': self.metrics_history['learning_rate'][-1] if self.metrics_history['learning_rate'] else None,
+                'schedule_type': args.lr_scheduler_type
+            },
+            'loss_summary': {
+                'final_moving_avg': self.metrics_history['moving_avg_loss'][-1] if self.metrics_history['moving_avg_loss'] else None,
+                'best_loss': min(self.metrics_history['loss']) if self.metrics_history['loss'] else None
+            },
+            'resource_usage': {
+                'peak_cpu_ram_gb': self.peak_metrics['cpu_ram'],
+                'peak_gpu_vram_gb': self.peak_metrics['gpu_vram'],
+                'peak_gpu_utilization': self.peak_metrics['gpu_util']
+            },
             'hardware_info': {
                 'cpu_info': self._get_cpu_info(),
                 'gpu_info': self._get_gpu_info(),
@@ -663,16 +743,18 @@ class TrainingMonitorCallback(TrainerCallback):
             }
         }
         
-        # Save summary as JSON
+        # サマリーをJSONファイルとして保存
         with open(self.output_dir / 'training_summary.json', 'w', encoding='utf-8') as f:
             json.dump(summary, f, indent=2, ensure_ascii=False)
             
         logging.info("Training Complete!")
         logging.info(f"Training duration: {summary['training_duration']}")
-        logging.info(f"Peak CPU RAM usage: {summary['peak_cpu_ram_gb']:.2f} GB")
-        logging.info(f"Peak GPU VRAM usage: {summary['peak_gpu_vram_gb']:.2f} GB")
-        logging.info(f"Peak GPU utilization: {summary['peak_gpu_utilization']:.1f}%")
-        
+        logging.info(f"Final moving average loss: {summary['loss_summary']['final_moving_avg']:.4f}")
+        logging.info(f"Best loss achieved: {summary['loss_summary']['best_loss']:.4f}")
+        logging.info(f"Peak CPU RAM usage: {summary['resource_usage']['peak_cpu_ram_gb']:.2f} GB")
+        logging.info(f"Peak GPU VRAM usage: {summary['resource_usage']['peak_gpu_vram_gb']:.2f} GB")
+        logging.info(f"Peak GPU utilization: {summary['resource_usage']['peak_gpu_utilization']:.1f}%")
+
     def _get_cpu_info(self):
         import cpuinfo
         try:

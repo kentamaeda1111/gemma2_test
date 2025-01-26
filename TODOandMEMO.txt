@@ -1,34 +1,17 @@
-参考文献について探す
-
-
-
-ローカル環境でtestがうまくいくように改良したので、cloud環境でもうまくいくかはチェック
-
-
-
 GPUのメモリとかの必要量を説明
-
-requiremtnes最終チェック
 modelのREADMEはもっとかえれる？
-
-gitignoreも最終チェック
-
-
+ローカル環境でtestがうまくいくように改良したので、cloud環境でもうまくいくかはチェック
+・Windows環境では、cpコマンドは使用できません。代わりに、copyコマンドを使用して.env.templateファイルを.envファイルにコピーすることができます。以下の手順で行ってください。
+参考文献について探す
 claudeにREADMeを全部フィードして問題ないかチェック
-
+requiremtnes最終チェック
+gitignoreも最終チェック
 日本語がないかチェック
-
-
-ブロードウェイ
-
 kaggleのほうをどれを使うかチェック。
 
-pip install ipython
-     pip install ipywidgets
-
-Windows環境では、cpコマンドは使用できません。代わりに、copyコマンドを使用して.env.templateファイルを.envファイルにコピーすることができます。以下の手順で行ってください。
 
 
+training用の古い奴""""""""""""""""
 - GPU: NVIDIA GPU with at least 24GB VRAM (e.g., A5000, A6000, or A100)
   - Peak VRAM usage during training: ~20GB (with 4-bit quantization)
   - Additional VRAM buffer recommended: 4GB
@@ -37,12 +20,7 @@ Windows環境では、cpコマンドは使用できません。代わりに、co
   - Additional RAM buffer recommended: 8GB
 - Storage: 50GB+ free space for model checkpoints and training data
 - Training Time: ~2.5 hours on A100 GPU
-
-
-
-
-
-
+""""""""""""""""
 
 
 gitignorふるいやつ
