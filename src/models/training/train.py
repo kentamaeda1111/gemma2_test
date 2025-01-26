@@ -571,19 +571,57 @@ class TrainingMonitorCallback(TrainerCallback):
             'combined_score': [],
             'loss': [],
             'learning_rate': [],
-            'epoch': []
+            'epoch': [],
+            # 新しいメトリクス
+            'cpu_ram_usage': [],
+            'gpu_vram_usage': [],
+            'gpu_utilization': []
         }
-        self.output_dir = Path(f"{BASE_OUTPUT_DIR}/training_progress")  
+        self.peak_metrics = {
+            'cpu_ram': 0,
+            'gpu_vram': 0,
+            'gpu_util': 0
+        }
+        self.output_dir = Path(f"{BASE_OUTPUT_DIR}/training_progress")
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
+    def _record_resource_usage(self):
+        """Record current resource usage"""
+        import psutil
+        import torch
+        
+        # CPU RAM
+        cpu_ram = psutil.Process().memory_info().rss / (1024 * 1024 * 1024)  # GB
+        self.peak_metrics['cpu_ram'] = max(self.peak_metrics['cpu_ram'], cpu_ram)
+        
+        # GPU metrics
+        if torch.cuda.is_available():
+            for i in range(torch.cuda.device_count()):
+                vram_used = torch.cuda.memory_allocated(i) / (1024 * 1024 * 1024)  # GB
+                self.peak_metrics['gpu_vram'] = max(self.peak_metrics['gpu_vram'], vram_used)
+                
+                # GPU utilization (requires nvidia-smi)
+                try:
+                    import subprocess
+                    result = subprocess.check_output(['nvidia-smi', '--query-gpu=utilization.gpu', '--format=csv,noheader,nounits'])
+                    gpu_util = float(result.decode('utf-8').strip())
+                    self.peak_metrics['gpu_util'] = max(self.peak_metrics['gpu_util'], gpu_util)
+                except:
+                    gpu_util = 0
+                
+                self.metrics_history['cpu_ram_usage'].append(cpu_ram)
+                self.metrics_history['gpu_vram_usage'].append(vram_used)
+                self.metrics_history['gpu_utilization'].append(gpu_util)
+    
     def on_train_begin(self, args, state, control, **kwargs):
         self.train_start_time = datetime.now()
-        log_memory_usage()
+        self._record_resource_usage()
         
     def on_log(self, args, state, control, logs=None, **kwargs):
         if logs is None:
             return
-        # Record metrics
+            
+        # Record existing metrics
         self.metrics_history['step'].append(state.global_step)
         self.metrics_history['epoch'].append(state.epoch)
         self.metrics_history['loss'].append(logs.get('loss', None))
@@ -592,62 +630,9 @@ class TrainingMonitorCallback(TrainerCallback):
         self.metrics_history['dialogue_flow'].append(logs.get('eval_dialogue_flow', None))
         self.metrics_history['combined_score'].append(logs.get('eval_combined_score', None))
         
-        # Save to CSV file
-        df = pd.DataFrame(self.metrics_history)
-        df.to_csv(self.output_dir / 'training_metrics.csv', index=False)
+        # Record resource usage
+        self._record_resource_usage()
         
-        # Update graph every 100 steps
-        if state.global_step % 100 == 0:
-            self._plot_metrics()
-            
-    def _plot_metrics(self):
-        """Plot learning metrics and save"""
-        plt.figure(figsize=(15, 10))
-        
-        # Loss
-        plt.subplot(2, 2, 1)
-        plt.plot(self.metrics_history['step'], self.metrics_history['loss'], label='Loss')
-        plt.title('Training Loss')
-        plt.xlabel('Step')
-        plt.ylabel('Loss')
-        plt.legend()
-        
-        # Learning Rate
-        plt.subplot(2, 2, 2)
-        plt.plot(self.metrics_history['step'], self.metrics_history['learning_rate'], label='LR')
-        plt.title('Learning Rate')
-        plt.xlabel('Step')
-        plt.ylabel('Learning Rate')
-        plt.legend()
-        
-        # Style and Flow Scores
-        plt.subplot(2, 2, 3)
-        valid_steps = [s for s, v in zip(self.metrics_history['step'], self.metrics_history['style_consistency']) if v is not None]
-        valid_style = [v for v in self.metrics_history['style_consistency'] if v is not None]
-        valid_flow = [v for v in self.metrics_history['dialogue_flow'] if v is not None]
-        
-        if valid_steps:
-            plt.plot(valid_steps, valid_style, label='Style Consistency')
-            plt.plot(valid_steps, valid_flow, label='Dialogue Flow')
-            plt.title('Evaluation Metrics')
-            plt.xlabel('Step')
-            plt.ylabel('Score')
-            plt.legend()
-        
-        # Combined Score
-        plt.subplot(2, 2, 4)
-        valid_combined = [v for v in self.metrics_history['combined_score'] if v is not None]
-        if valid_steps:
-            plt.plot(valid_steps, valid_combined, label='Combined Score')
-            plt.title('Combined Evaluation Score')
-            plt.xlabel('Step')
-            plt.ylabel('Score')
-            plt.legend()
-        
-        plt.tight_layout()
-        plt.savefig(self.output_dir / 'training_progress.png')
-        plt.close()
-    
     def on_train_end(self, args, state, control, **kwargs):
         # Save final learning result summary
         summary = {
@@ -655,27 +640,54 @@ class TrainingMonitorCallback(TrainerCallback):
             'final_loss': self.metrics_history['loss'][-1] if self.metrics_history['loss'] else None,
             'best_combined_score': max(filter(None, self.metrics_history['combined_score'])) if self.metrics_history['combined_score'] else None,
             'total_steps': len(self.metrics_history['step']),
-            'final_epoch': self.metrics_history['epoch'][-1] if self.metrics_history['epoch'] else None
+            'final_epoch': self.metrics_history['epoch'][-1] if self.metrics_history['epoch'] else None,
+            # Add hardware metrics
+            'peak_cpu_ram_gb': self.peak_metrics['cpu_ram'],
+            'peak_gpu_vram_gb': self.peak_metrics['gpu_vram'],
+            'peak_gpu_utilization': self.peak_metrics['gpu_util'],
+            # Add hardware specifications
+            'hardware_info': {
+                'cpu_info': self._get_cpu_info(),
+                'gpu_info': self._get_gpu_info(),
+                'total_ram': self._get_total_ram()
+            }
         }
         
-        # Save summary as JSON file
+        # Save summary as JSON
         with open(self.output_dir / 'training_summary.json', 'w', encoding='utf-8') as f:
             json.dump(summary, f, indent=2, ensure_ascii=False)
-        
-        # Save final graph
-        self._plot_metrics()
-        
+            
         logging.info("Training Complete!")
         logging.info(f"Training duration: {summary['training_duration']}")
-        # None check added
-        if summary['final_loss'] is not None:
-            logging.info(f"Final loss: {summary['final_loss']:.4f}")
-        else:
-            logging.info("Final loss: Not available")
-        if summary['best_combined_score'] is not None:
-            logging.info(f"Best combined score: {summary['best_combined_score']:.4f}")
-        else:
-            logging.info("Best combined score: Not available")
+        logging.info(f"Peak CPU RAM usage: {summary['peak_cpu_ram_gb']:.2f} GB")
+        logging.info(f"Peak GPU VRAM usage: {summary['peak_gpu_vram_gb']:.2f} GB")
+        logging.info(f"Peak GPU utilization: {summary['peak_gpu_utilization']:.1f}%")
+        
+    def _get_cpu_info(self):
+        import cpuinfo
+        try:
+            info = cpuinfo.get_cpu_info()
+            return {
+                'model': info.get('brand_raw', 'Unknown'),
+                'cores': psutil.cpu_count(logical=False),
+                'threads': psutil.cpu_count(logical=True)
+            }
+        except:
+            return "Failed to get CPU info"
+            
+    def _get_gpu_info(self):
+        if not torch.cuda.is_available():
+            return "No GPU available"
+        try:
+            import subprocess
+            result = subprocess.check_output(['nvidia-smi', '--query-gpu=gpu_name,memory.total', '--format=csv,noheader,nounits'])
+            gpus = result.decode('utf-8').strip().split('\n')
+            return [{'model': g.split(',')[0], 'memory': float(g.split(',')[1])/1024} for g in gpus]
+        except:
+            return "Failed to get GPU info"
+            
+    def _get_total_ram(self):
+        return psutil.virtual_memory().total / (1024 * 1024 * 1024)  # GB
 
 # Split dataset into training and evaluation sets
 dataset_size = len(tokenized_dataset)
