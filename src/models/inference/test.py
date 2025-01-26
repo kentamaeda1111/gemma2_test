@@ -86,9 +86,13 @@ class ChatAI:
                 trust_remote_code=True
             )
             
+            # Create offload directory if it doesn't exist
+            os.makedirs("offload_folder", exist_ok=True)
+            
             base_model_obj = AutoModelForCausalLM.from_pretrained(
                 base_model,
-                device_map="balanced",
+                device_map="auto",
+                offload_folder="offload_folder",
                 torch_dtype=torch.bfloat16,
                 trust_remote_code=True,
                 token=hf_token
@@ -97,7 +101,8 @@ class ChatAI:
             self.model = PeftModel.from_pretrained(
                 base_model_obj,
                 model_path,
-                device_map="balanced",
+                device_map="auto",
+                offload_folder="offload_folder",
                 torch_dtype=torch.bfloat16
             )
             
@@ -232,6 +237,27 @@ class ChatAI:
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
             return "There was an error"
+
+    def _get_model_config(self):
+        """Get model configuration based on available hardware"""
+        config = {
+            "torch_dtype": torch.bfloat16,
+            "trust_remote_code": True,
+            "token": self.hf_token
+        }
+        
+        # GPUが利用可能かチェック
+        if torch.cuda.is_available():
+            config["device_map"] = "balanced"
+            logger.info("GPU detected, using balanced device map")
+        else:
+            # CPU環境用の設定
+            config["device_map"] = "auto"
+            config["offload_folder"] = "offload_folder"
+            os.makedirs("offload_folder", exist_ok=True)
+            logger.info("CPU environment detected, using memory offloading")
+        
+        return config
 
 def create_chat_ui(chatai: ChatAI):
     """
