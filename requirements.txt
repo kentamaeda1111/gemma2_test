@@ -16,5 +16,5 @@ py-cpuinfo==9.0.0
 psutil==5.9.5
 
 # for test.py
-IPython>=8.0.0
-ipywidgets>=8.0.0
+IPython
+ipywidgets

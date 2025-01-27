@@ -15,6 +15,12 @@ kaggleのほうをどれを使うかチェック。
 all you need is high quality data
 
 
+# for test.py
+IPython>=8.0.0
+ipywidgets>=8.0.0
+は、kaggleやgoogleではうまくいかない
+
+
 論文はあくまで参考でしかない。という旨をしっかり記述
 あとすごい参考にしたものから全然参考にしてないものまでいろいろある
 
