@@ -11,6 +11,8 @@ models/*
 !models/kaggle_model/**
 data/dialogue/raw/
 data/dialogue/low_rated/
+prompt/*
+DESIGN_DECISIONS/*
 
 
 # IDE 
