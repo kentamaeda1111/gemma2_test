@@ -21,7 +21,6 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from src.utils.config import get_api_keys
 import psutil
-import gc
 
 # Global Setting
 DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
@@ -148,10 +147,9 @@ model = AutoModelForCausalLM.from_pretrained(
     model_name,
     token=os.environ["HUGGINGFACE_TOKEN"],  
     quantization_config=bnb_config,
-    device_map="balanced",
-    torch_dtype=torch.float16,
-    attn_implementation='sdpa',
-    max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}
+    device_map="auto",
+    torch_dtype=torch.bfloat16,
+    attn_implementation='eager'
 )
 
 # Prepare model for LoRA and disable cache
@@ -202,13 +200,12 @@ def tokenize_function(examples):
 tokenized_dataset = dataset.map(
     tokenize_function,
     batched=True,
-    batch_size=16,
-    num_proc=2,
+    batch_size=32,  # Reduced from 64
+    num_proc=4,     # Increased from 2
     load_from_cache_file=True,
     desc="Tokenizing datasets",
     remove_columns=dataset.column_names,
 )
-
 # Add memory usage monitoring log
 def log_memory_usage():
     import psutil
@@ -363,36 +360,36 @@ logging.basicConfig(
 # Update training arguments
 training_args = TrainingArguments(
     output_dir=MODEL_OUTPUT_DIR,  
-    num_train_epochs=30,
-    learning_rate=8e-5,
-    weight_decay=0.06,
-    warmup_ratio=0.25,
-    lr_scheduler_type="cosine_with_restarts",
+    num_train_epochs=30,     # Set to 30 epochs for smaller datasets
+    learning_rate=8e-5,      # Slightly reduced from 1e-4
+    weight_decay=0.06,       # Slightly increased
+    warmup_ratio=0.25,       # Longer warmup period
+    lr_scheduler_type="cosine_with_restarts",  # Changed to scheduler with restarts
     evaluation_strategy="steps",
-    eval_steps=20,
+    eval_steps=20,          # Changed from 25 to 20 for more frequent evaluation
     save_strategy="steps",
     save_steps=20,
-    gradient_accumulation_steps=8,
+    gradient_accumulation_steps=8,   # Reduced accumulation steps
     max_steps=-1,
     disable_tqdm=False,
     logging_dir=LOG_OUTPUT_DIR,   
     logging_strategy="steps",
     logging_steps=50,
     no_cuda=False,
-    dataloader_num_workers=1,
+    dataloader_num_workers=2,
     report_to=[],
     run_name=None,
-    per_device_train_batch_size=2,
-    per_device_eval_batch_size=1,
+    per_device_train_batch_size=4,  # Increase if memory allows
+    per_device_eval_batch_size=2,   # Set to half of training batch size
     gradient_checkpointing=True,
-    max_grad_norm=0.5,
+    max_grad_norm=0.5,       # Set to 0.5 based on gradient clipping guidelines
     dataloader_pin_memory=True,
-    save_total_limit=2,
+    save_total_limit=3,
     fp16=True,
     optim="adamw_torch_fused",
-    eval_accumulation_steps=4,
+    eval_accumulation_steps=8,
     load_best_model_at_end=True,
-    metric_for_best_model="combined_score",
+    metric_for_best_model="combined_score",  # Using new evaluation metric
 )
 
 # Disable wandb via environment variable (add before training_args)
@@ -796,23 +793,22 @@ split_idx = int(dataset_size * 0.8)
 
 train_dataset = tokenized_dataset.select(indices[:split_idx])
 # Limit evaluation dataset size
-eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])  # Maximum 50 samples
+eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+100])  # Maximum 100 samples
 
 logging.info(f"Training dataset size: {len(train_dataset)}")
 logging.info(f"Evaluation dataset size: {len(eval_dataset)}")
 
 # Add memory cleanup
 def clear_memory():
+    import gc
     gc.collect()
     torch.cuda.empty_cache()
     
 class CustomTrainer(Trainer):
     def training_step(self, *args, **kwargs):
         loss = super().training_step(*args, **kwargs)
-        if self.state.global_step % 50 == 0:
+        if self.state.global_step % 100 == 0:
             clear_memory()
-            gc.collect()
-            torch.cuda.empty_cache()
         return loss
 
 # Create custom Trainer class for evaluation

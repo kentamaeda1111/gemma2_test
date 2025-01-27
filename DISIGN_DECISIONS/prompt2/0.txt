@@ -1,0 +1,12 @@
+最後に大前提の話をしたいです。それはLLMの性能向上において、最も重要な要素はハイパーパラメータやモデルアーキテクチャではなく、トレーニングデータの品質である、という点を強調したい、ということです。いうなれば以下の６つは各論を説明するパートに組み込むものであり、大前提となるデータが大事だ、という方針を私はとっている、ということを一番最初に強調したいです。そのため、私としてもデータの生成に非常に時間をかけた、という主張にしてほしいです。
+
+## 1. Training Data Volume and Dialogue Length
+## 2. AI-to-AI Dialogue Generation Validity
+## 3. Quality Control in AI-Generated Dialogues
+## 4. System Prompts in Fine-tuning
+## 5. Fine-tuning Evaluation Metrics
+## 6. LoRA Hyperparameter Optimization
+
+その根拠となる論文も以下から見つけてきてください。
+
+@0.1 @0.2 @0.3 @0.4 @0.5 

@@ -3,6 +3,20 @@
 ## Overview
 A training system for fine-tuning language models on Socratic dialogue data using LoRA (Low-Rank Adaptation) techniques.
 
+## Training Data Analysis
+For the Kaggle competition submission, we used a carefully curated dataset (kaggle_model.json) with the following characteristics:
+
+### Dataset Metrics
+- **Scale**: 2,662 Socratic dialogue pairs
+- **Token Distribution**:
+  - Total tokens: 752,369
+  - Per dialogue average: 282.6 tokens
+    - Student messages: 169.4 tokens (average)
+    - Socrates responses: 113.2 tokens (average)
+  - Length range: 44-552 tokens per dialogue
+
+This dataset was specifically designed to balance comprehensive philosophical discussions with model training efficiency, keeping individual dialogues within manageable token limits while maintaining meaningful Socratic interactions.
+
 ## Configuration Parameters
 
 ### Model Settings
