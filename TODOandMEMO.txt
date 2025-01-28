@@ -1,4 +1,9 @@
 参考文献について探す
+
+実際にtrain.pyで使っているtoken数はkaggle_model.jsonのあるデータよりも少ないよね、おそらく。
+どうやってkaggleでtrainを使えるようにしたか
+
+
 GPUのメモリとかの必要量を説明
 modelのREADMEはもっとかえれる？
 ローカル環境でtestがうまくいくように改良したので、cloud環境でもうまくいくかはチェック
