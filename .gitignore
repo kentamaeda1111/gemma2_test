@@ -12,7 +12,7 @@ models/*
 data/dialogue/raw/
 data/dialogue/low_rated/
 prompt/*
-DISIGN_DECISIONS/*
+DESIGN_DECISIONS/*
 
 
 # IDE 
