@@ -6,9 +6,9 @@ __pycache__/
 *.py[cod]
 
 # Project specific
-models/*
-!models/kaggle_model/
-!models/kaggle_model/**
+# models/*
+# !models/kaggle_model/
+# !models/kaggle_model/**
 data/dialogue/raw/
 data/dialogue/low_rated/
 prompt/*
