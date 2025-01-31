@@ -46,9 +46,10 @@ cp .env.template .env  # Configure API keys
 
 # Run pipeline
 python -m src.data.generation.automation
-python -m src.data.processing.dialogue_quality_check
-python -m src.data.processing.dialogue_extractor
+python -m src.data.quality_check.dialogue_quality_check
+python -m src.data.dataset_preparation.dialogue_extractor
 python -m src.models.training.train
+python -m src.models.inference.test
 ```
 
 **Cloud Environment (Kaggle/Colab)**
@@ -71,8 +72,11 @@ project_root/
 │   │   │   ├── automation.py
 │   │   │   └── README.md
 │   │   │
-│   │   └── processing/         
-│   │       ├── dialogue_quality_check.py
+│   │   ├── quality_check/          
+│   │   │   ├── dialogue_quality_check.py
+│   │   │   └── README.md
+│   │   │
+│   │   └── dataset_preparation/         
 │   │       ├── dialogue_extractor.py
 │   │       └── README.md
 │   │
@@ -111,17 +115,9 @@ project_root/
 │       └── processed/
 │
 ├── models/                  
-│   ├── kaggle_model/
-│   │   ├── model/
-│   │   └── logs/
-│   └── kaggoe_model_ver2/  
+│   └── kaggle_model/
 │       ├── model/
-│       ├── logs/
-│       └── training_progess
-│
-├── docs/                        
-│   ├── DECISION_PROCESS.md      
-│   └── assets/                  
+│       └── logs/            
 │
 ├── .env.template           
 ├── .gitignore   
@@ -133,7 +129,8 @@ project_root/
 ### Key Directories
 
 - `src/data/generation/`: Dialogue generation system using Claude API
-- `src/data/processing/`: Quality assessment and data formatting tools
+- `src/data/quality_check/`: Quality assessment tool
+- `src/data/dataset_preparation/`: Data formatting tools
 - `src/models/training/`: Model fine-tuning implementation
 - `src/models/inference/`: Testing and chat interface
 - `src/utils/`: Configuration utilities and shared functions
