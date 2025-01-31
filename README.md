@@ -1,7 +1,19 @@
 # Japanese-Speaking Socratic Gemma
 
 A Kaggle competition submission demonstrating fine-tuning of Gemma-2b for Japanese Socratic dialogue generation. For the actual competition submission and results, please see the [Kaggle notebook](https://www.kaggle.com/code/kentamaeda/japanese-speaking-socratic-gemma).
+このレポジトリの意義
+・kaggleのほうではinference（test.py）はコードが全て記述していますが、それ以外のコードについては一部のみをあげていたため、
+こちらのレポジトリでは
+inferenceでつかったmodel2のモデルを作るところまでのすべてのプロセスを完全に再現できるようにしました。
 
+・また、kaggleの提出物を提出するまでには間に合いませんでしたが、
+kaggle環境でもtrainができるようにしたので、そのコードもあげています。
+
+・promptで使った内容等も全部いれました。
+
+・kaggleでは触れることができなかったより突っ込んだなぜ？の部分を記述しました。
+
+尚、
 This repository contains the supporting code, shared under the MIT License for reference purposes only. It is not actively maintained.
 
 ## Project Overview
@@ -37,7 +49,6 @@ python -m src.data.generation.automation
 python -m src.data.processing.dialogue_quality_check
 python -m src.data.processing.dialogue_extractor
 python -m src.models.training.train
-python -m src.models.inference.test
 ```
 
 **Cloud Environment (Kaggle/Colab)**
