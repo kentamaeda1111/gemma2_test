@@ -1,0 +1,96 @@
+# Design Decisions
+
+This document outlines key design decisions made during the development of this Japanese-Speaking Socratic Gemma project, along with their academic foundations and practical justifications.
+
+## 1. Validity of AI-AI Dialogue Data for Training
+
+### Decision
+[Your decision about using AI-AI generated dialogue data]
+
+### Academic Foundation
+[Reference to relevant papers/research about AI-AI dialogue generation]
+
+### Practical Considerations
+- [Key points about why this approach was chosen]
+- [Limitations and how they were addressed]
+- [Benefits observed]
+
+## 2. Dataset Size and Dialogue Length
+
+### Decision
+The training dataset was structured with the following specifications:
+- Total dialogues: 2,662
+- Total tokens: 752,369
+- Average tokens per dialogue: 282.6
+- Token range: 44-552 tokens
+- Average user utterance: 169.4 tokens
+- Average model response: 113.2 tokens
+
+### Academic Foundation
+This structure was inspired by the research of Jandaghi et al. (2023) in "Quality and Diversity of Synthetic Dialogue Data", which demonstrated optimal dialogue lengths for maintaining coherent philosophical discussions while ensuring training efficiency.
+
+### Practical Considerations
+- Balanced token distribution ensures consistent model learning
+- Length constraints maintain focus while allowing sufficient depth
+- Asymmetric utterance lengths reflect natural Socratic dialogue patterns
+
+## 3. Quality Control for AI-AI Generated Dialogues
+
+### Decision
+[Your approach to quality control]
+
+### Academic Foundation
+[Reference to papers about dialogue quality assessment]
+
+### Practical Considerations
+- [Quality metrics used]
+- [Filtering criteria]
+- [Validation process]
+
+## 4. Role of System Prompts in Fine-tuning
+
+### Decision
+[Your decision about system prompts]
+
+### Academic Foundation
+[Research supporting prompt engineering in fine-tuning]
+
+### Practical Considerations
+- [Impact on model behavior]
+- [Implementation details]
+- [Trade-offs considered]
+
+## 5. Evaluation Metrics for Fine-tuning
+
+### Decision
+[Chosen evaluation metrics]
+
+### Academic Foundation
+[Research on evaluation metrics for dialogue systems]
+
+### Practical Considerations
+- [Why these metrics were selected]
+- [How they were implemented]
+- [Limitations and workarounds]
+
+## 6. LoRA Hyperparameter Optimization
+
+### Decision
+[LoRA configuration details]
+
+### Academic Foundation
+[Research on LoRA optimization]
+
+### Practical Considerations
+- [Parameter selection process]
+- [Performance impact]
+- [Resource constraints]
+
+## References
+
+1. Jandaghi, P., et al. (2023). Quality and Diversity of Synthetic Dialogue Data. [Link to paper]
+2. [Other references...]
+
+## Appendix: Additional Considerations
+
+[Any other relevant information or decisions that don't fit in the main sections] 

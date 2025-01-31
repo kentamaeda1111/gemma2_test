@@ -1,0 +1,13 @@
+
+train_final_try_in_kaggle.py以下の箇所だけを修正したやつ
+
+    device_map="balanced",
+    torch_dtype=torch.float16,
+    attn_implementation='sdpa',
+    max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}
+
+
+train_final.py→tokenizerの機能がなく、kaggleでも動かないやつ
+train_final_fixed.py→ちなみにtokenizerのほうの機能をglobal設定の上にもってきた
+train_kaggle_model.py２号機のやつ。ただtokenizerの数は512にしている
+train.py　→train_final_fixed.pyと同一のものなはず

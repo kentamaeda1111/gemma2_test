@@ -1,0 +1,128 @@
+
+3. How fine can fine-tuning be? Learning efficient language models
+Evani Radiya-Dixit, Xin Wang
+
+
+
+
+Introduction
+Modern deep neural networks exhibit a trend where increasing model capacity leads to improved generalization rather than adhering to the traditional bias-variance tradeoff. This phenomenon is particularly notable in natural language processing tasks, with models like BERT, GPT-2, and Megatron-LM showcasing enhanced performance as model capacity grows.
+
+Pre-training and Fine-tuning:
+
+Models like BERT undergo pre-training on large text datasets as an unsupervised learning step to establish a robust starting point for subsequent supervised fine-tuning on specific tasks.
+Fine-tuning involves optimizing model parameters alongside a small set of task-specific parameters for efficient task learning.
+Challenges with Larger Models:
+
+While larger models offer better generalization, they come with higher computational costs, especially as the number of learned tasks increases.
+Techniques like network compression, transfer learning, and continual learning are employed to mitigate computational expenses and enhance parameter sharing across tasks.
+Experimental Observation:
+
+Fine-tuning for individual tasks requires minimal adjustments compared to the vast parameter space, signaling a potential for reduced redundancy across tasks during inference.
+Fine-tuned models may reside close to pre-trained models in parameter space, suggesting computational overlap that could be leveraged.
+Sparsification Strategy:
+
+By enforcing L0-closeness and sparsification constraints on pre-trained parameters, fine-tuning can be achieved with practical benefits.
+Aligning fine-tuned parameters closely with pre-trained ones reduces the storage requirements, while sparsity in fine-tuned parameters leads to memory and compute savings.
+The study demonstrates that fine-tuning can be achieved through sparsification, offering efficiencies in parameter storage and computation by maintaining proximity to pre-trained parameters and inducing sparsity in fine-tuned weights.
+
+Related Work
+The literature extensively discusses sparsification of large networks to enhance efficiency in inference. Here are the key points from the related work section:
+
+Motivation for L0-close fine-tuning solutions: The authors are inspired by the varying sensitivities of optimization objectives to different network layers, leading them to search for fine-tuning solutions that are L0-close.
+Supermasks and sparsification: Previous studies have explored sparsification by training sparse connectivity patterns over randomly initialized network parameters, known as supermasks. This approach is seen to complement gradient-based learning in achieving objectives.
+Relation to Network Architecture Search (NAS): The study relates to NAS, with a focus on methods like piggyback and its variations. These approaches involve training task-specific binary masks on shared pre-trained parameters, similar to techniques applied in larger pre-trained language models in this research.
+Sparsity-Accuracy Tradeoff: While adapting similar techniques like adding adapter modules to pre-trained language models to enable parameter sharing across tasks, this work uniquely investigates the tradeoff between sparsity and accuracy in a systematic manner.
+Differentiable parameter sparseness enforcement: Instead of using complex methods for L0-regularization, this study employs the simpler straight-through estimator to impose parameter sparseness differentiably. This approach is akin to binary quantization techniques applied in related works by other researchers.
+Notations and Model Architecture
+The section introduces a pre-trained network Fθ that transforms input sequences into representations, parameterized by θ. It describes the fine-tuning process for tasks in the set T using a task-specific last layer φ. In the context of BERT, the model architecture includes different modules:
+
+E: Embedding layer
+P: Final pooling layer
+B: Transformer block containing learnable parameter matrices
+WQ, WK, WV, WD: Query, key, value, and dense self-attention projection matrices
+WI, WO: Intermediate and output feedforward matrices
+Functions denoted include multi-head scaled dot product attention, dropout, layer normalization, and Gaussian error linear unit activation.
+The BERT BASE model, with L=12 and 109M parameters, is experimented with, with task-specific parameter counts significantly smaller.
+Individual optimization of task-specific parameters alone results in failure to fine-tune the model.
+GLUE Benchmark
+The GLUE benchmark comprises a variety of natural language understanding tasks, including CoLA, SST, MRPC, STS, QQP, MNLI, QNLI, and RTE. The researchers fine-tuned models on these tasks and evaluated their performance metrics. Specifically, they reported F1 scores for QQP and MRPC, Matthews correlation for 4 pre-trained parameters retrieved from a specific source.
+
+Tasks in the GLUE benchmark include:
+CoLA
+SST
+MRPC
+STS
+QQP
+MNLI
+QNLI
+RTE
+The evaluation metrics for different tasks in the GLUE benchmark varied:
+
+F1 scores were reported for QQP and MRPC
+Pearson and Spearman correlations were used for STS-B
+Accuracy measurements were employed for all other tasks in the benchmark
+This benchmark is a comprehensive assessment tool for natural language understanding models, providing a standardized set of tasks for evaluation purposes, with specific metrics tailored to each task.
+
+Constrained Fine-tuning Procedures
+The authors detail various constrained fine-tuning procedures in this section, outlining specific methodologies to refine pre-trained models with additional constraints and controls:
+
+L0-close Fine-tuning:
+
+Fix least sensitive parameter matrices at pre-trained values.
+Optimize in a lower-dimensional parameter space to find solutions L0-close to pre-trained parameters.
+Sparsification as Fine-tuning:
+
+Reparameterize the model using a binary mask (µ) and Hadamard product.
+Introduce a supermask concept: µ as a Bernoulli sampler with a continuous mask parameter (ν).
+Control final sparsity through µ initialization, using soft magnitude-based pruning.
+Effect on Sparsity:
+
+Initial sparsity directly influences final sparsity levels.
+Masks produced exhibit sparsity ranging from 1% to 89% in various experiments.
+Experimental Visualization:
+
+Metrics like L1 and angular distances in parameter subspaces between pre-trained and fine-tuned weights are shown.
+Results for self-attention and feed-forward matrices across encoder stack layers are displayed for MNLI fine-tuning, with similar trends observed in all GLUE tasks.
+Experimental Results
+The experimental results section delves into the closeness between fine-tuned and pre-trained parameters in the context of GLUE tasks. Here are the key points included:
+
+Original fine-tuning procedures for GLUE tasks typically involve 10^2 to 10^4 parameter update steps, which is negligible compared to the 10^8 dimensionality of the parameter space.
+L1-distances and angular distances were measured to assess the proximity of fine-tuned parameters to pre-trained ones, focusing on weight matrices in self-attention layers with a size of 768 × 768.
+Results show substantial L1- and angular-closeness between fine-tuned and pre-trained parameters, surpassing the distance expected between random initializations or between an initialization and the pre-trained parameters.
+Parameter distance scales with the number of fine-tuning iterations, indicating that the model parameters traverse a short distance during fine-tuning.
+Analysis of parameter subspaces for each layer reveals minimal changes during fine-tuning but significant variability across different parameter matrices.
+Deeper blocks in the encoder stack exhibit less L1-closeness but more angular-closeness compared to shallower blocks.
+Value and dense projection matrices (WV and WD) undergo more significant changes than query and key projection matrices (WQ and WK) across all self-attention modules.
+L0-close Fine-Tuning
+The study explores the concept of L0-close fine-tuning, inspired by the varying degrees of parameter changes in each layer during fine-tuning. The researchers investigate whether effective fine-tuning can be achieved by optimizing only a subset of layers while keeping others fixed at pre-trained values, resulting in fine-tuned models that are close in parameter space to the original. Key points included:
+
+Experiment results indicate that fine-tuning with only a subset of layers is indeed viable.
+Through experiments based on different layers' sensitivity to fine-tuning, the researchers progressively excluded key projection layers in self-attention, the penultimate and ultimate encoder stacks, and the word embedding layer.
+Excluding these layers individually or combined did not significantly harm performance, while reducing the parameters requiring fine-tuning by up to 40% (from 109M to 66M).
+Sparsification as Fine-Tuning
+The researchers explore the concept of sparsification to further reduce computational costs in model fine-tuning. Key points included are:
+
+Supermask sparsity levels are illustrated across layers, with control over the final sparsity level by initialization.
+Fine-tuned model performance across different tasks using supermask training shows minimal degradation at sparsity levels between 1% and 40%, outperforming iterative pruning at high sparsity levels.
+Layer-wise sparsity trends show specific layers being sparser across tasks, with shallower encoder stack layers exhibiting higher sparsity.
+Good fine-tuned parameters are found even at high sparsity levels, indicating performance without significant degradation.
+Supermasks up to 40% sparse show good performance for various tasks, with good masks found at any sparsity level below this maximum.
+Low-sparsity supermasks with all-dense initialization demonstrate successful task performance with minimal degradation from baseline.
+Performance degrades significantly when fine-tuning is done on pre-trained parameters with components shuffled, emphasizing the uniqueness of achieving high-performance sparsified versions specifically with pre-trained parameters.
+Task-uniqueness of Fine-tuned Supermasks
+The researchers investigated whether the supermasks created for different tasks shared similarities. They assessed the overlap of zeros in the learned supermasks for various tasks and found that:
+
+The amount of overlapping zeros in supermasks across tasks did not significantly exceed what would be expected by chance.
+This implies that despite having numerous effective supermasks for each task, these masks are mostly distinct from each other and are tailored specifically to the individual task they are trained for.
+Discussion
+Modern deep neural networks exhibit a peculiar trend where overparameterization aids both generalization and optimization. Some key points from the discussion are:
+
+Effective network architectures with proper biases benefit from larger model sizes for better generalization.
+Increasing the parameter space dimensionality through deeper or wider networks does not significantly hinder stochastic gradient-based optimization.
+Larger models, with adequate resources, tend to deliver superior performance, as seen in huge pre-trained language models achieving state-of-the-art results in language tasks.
+Fine-tuning larger pre-trained language models is as easy, if not easier, than smaller models due to the negligible magnitude of fine-tuning steps compared to the parameter space dimensionality.
+Fine-tuned networks maintain substantial similarity to the pre-trained ones in the parameter space, aiding in high generalization performance.
+Techniques such as optimizing sensitive layers and sparsifying pre-trained parameters during fine-tuning are effective for specific language tasks, leading to efficient computation.
+Learning from the close neighborhood of good parameter configurations and sparsified large pre-trained language models can generate efficient fine-tuned networks for language understanding tasks.
+The approach of sparsifying pre-trained networks during fine-tuning serves as an optimization process that learns specific tasks, unlike common post-training sparsification methods that often degrade performance.

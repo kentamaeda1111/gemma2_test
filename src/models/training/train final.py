@@ -189,7 +189,7 @@ def tokenize_function(examples):
     result = tokenizer(
         examples['text'],
         truncation=True,
-        max_length=256,      # Improve memory efficiency
+        max_length=512,      # Improve memory efficiency
         padding='max_length',
         add_special_tokens=True,
         return_tensors=None,

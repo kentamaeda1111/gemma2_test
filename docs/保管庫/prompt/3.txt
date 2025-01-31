@@ -1,0 +1,1 @@
+次は## 3. Quality Control in AI-Generated Dialoguesに進みたいと思うのですが、## 2. AI-to-AI Dialogue Generation Validityで書いたようにAIとAIを使って対話データを大量生成しましたが、そのAIとAIの対話の品質を担保するために@dialogue_quality_check.py というコードを作り、promptも定量と定性のどちらからも品質チェックするような方針をしいたのですが、これを正当化する情報を以下から抜粋してください。繰り返しになりますがフォーマットは統一する必要はなく、私の行動の妥当性や正当性や有効性をうまくわかりやすく面接官に説明する、という点を重視して英語で記述してください。

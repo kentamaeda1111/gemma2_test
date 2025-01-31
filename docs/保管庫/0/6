@@ -1,0 +1,334 @@
+
+6. Rephrasing natural text data with different languages and quality levels for Large Language Model pre-training
+Michael Pieler, Marco Bellagente, Hannah Teufel, Duy Phung, Nathan Cooper, Jonathan Tow, Paulo Rocha, Reshinth Adithyan, Zaid Alyafeai, Nikhil Pinnaparaju, Maksym Zhuravinskyi, Carlos
+
+
+
+Introduction
+The advancements in Large Language Models (LLMs) have significantly impacted natural language processing (NLP), with a shift towards Transformer-based architectures. Differences in training data compositions are now crucial for developing high-performance LLMs, especially as model pre-training scales. To address potential data scarcity issues, synthetic data generation has been suggested as a solution to overcome data limitations and control data properties, thereby reducing biases in models or tasks.
+
+The researchers build upon a text rephrasing approach that uses LLMs to generate large-scale pre-training data through paraphrasing. Initially replicating previous work on rephrasing the English C4 dataset, they expand this method to include datasets in different languages and with varying quality levels. Their key contributions include:
+
+Successful replication of a rephrasing study with a larger LLM trained on C4.
+Extension of the rephrasing pipeline to English, German, Italian, and Spanish subsets of CulturaX (CX).
+Comparison of rephrasing setups on web-based datasets with different quality levels: CX, C4, and FineWeb-Edu (FWE).
+Examination of the impact of different LLM models and sizes, including Mistral 7B Instruct v0.2, Qwen2 7B Instruct, and various Qwen2 models.
+Application of supervised fine-tuning (SFT) to LLMs pre-trained on rephrased data to explore its downstream effects.
+Related Work
+The research on curating and selecting data for Large Language Model (LLM) pre-training encompasses various approaches and techniques:
+
+Different pipelines have been developed to convert web data into training data, using methods such as heuristics-based filtering, classifiers for high educational value content selection, and de-duplication.
+Sang et al. proposed a method to compute weights based on a distributionally robust proxy model within a fixed corpus granularity.
+Pre-trained open source models have been utilized to estimate correlations between benchmark scores and documents.
+Various strategies for text data augmentation in Natural Language Processing (NLP) have been explored, with a focus on paraphrasing.
+Paraphrasing can occur at different levels (words, phrases, sentences, text passages) and through diverse setups like thesaurus-based, rule-based, embedding-based, and LLM-generated.
+Synthetic training data generation using LLMs has gained traction with pipelines for creating synthetic short stories, textbooks, exercises, blog posts, and web-based rephrased text.
+Fine-tuning setups like back translation of instructional data, creating alignment data, generating text based on taxonomies, use cases, skills, or personas have been described.
+Synthetic text data is valuable not just for training but also for inference tasks like test-time augmentation.
+Natural Text Data
+The researchers compared three web-based pre-training datasets in their experiments:
+
+C4
+The Oscar subsets from CulturaX (CX)
+The FineWeb-Edu (FWE) dataset
+Dataset Processing:
+
+The datasets underwent various processing and filtering heuristics.
+This allowed the researchers to validate their method on datasets of different perceived quality.
+It also enabled them to quantify the potential improvements achieved by rephrasing thoroughly cleaned data.
+Details:
+
+All natural text data sources are detailed in a table, showing document and token counts for both the original and rephrased datasets.
+Token counts were determined using the Stable LM 2 tokenizer.
+Ask-LLM subsets were filtered with score thresholds of >0.6 (A>0.6) and >0.97 (A>0.97).
+FWE classifier subsets were filtered with a score threshold of >2.5 (F>2.5).
+Rephrasing natural text data
+The rephrasing pipeline in this research paper comprises several key steps:
+
+Preprocessing Step:
+
+Raw text is initially divided into smaller passages.
+These passages are then incorporated into prompt templates for model inference to generate rephrased text.
+Postprocessing Step:
+
+The rephrased passages undergo cleaning and are aggregated back into full documents.
+Final Utilization:
+
+The rephrased data is employed for Language Model (LM) pre-training.
+The detailed pipeline overview is available in Appendix A, with additional insights provided in Appendix E.
+Preprocessing
+The preprocessing of documents in this study involves several steps to split the documents into smaller passages efficiently:
+
+Passage length extended from 300 to 350 tokens compared to a previous study.
+Introduction of a minimum passage length of 50 tokens.
+Use of a simple and fast preprocessing algorithm for passage generation.
+The preprocessing algorithm includes the following key steps:
+
+Generating smaller passages by splitting documents on line breaks.
+Splitting passages longer than 350 tokens on common sentence-ending characters (. ! ?) followed by white space.
+Merging consecutive passages until the maximum target length of 350 tokens is reached.
+Additional details of the preprocessing method:
+
+New merge process initiated for passages longer than 350 tokens.
+Token counts obtained using a token count per character estimate from a random data subset.
+Utilization of simple regex patterns instead of NLTK sentence splitter.
+Omission of delimiter checks in text to improve efficiency.
+Achieved better results on C4 dataset compared to a previous setup, as discussed in section 4.1.
+These preprocessing steps optimize passage organization and token count estimation for subsequent analysis, demonstrating improved performance over previous methods.
+
+Inference
+The authors use Mistral 7B Instruct v0.2 for inference, differing from a previous setup that utilized Mistral 7B Instruct v0.1. Additionally, to explore performance variations among models of similar sizes and different sizes within the same family, the researchers employ the Qwen2 0.5B, 1.5B, and 7B Instruct models for rephrasing questions in the CX-E dataset.
+
+Key points:
+
+Mistral 7B Instruct v0.2 is the primary tool for inference in the study.
+A comparison is made with a previous setup that relied on Mistral 7B Instruct v0.1.
+Qwen2 models of varying sizes (0.5B, 1.5B, and 7B) are used for questioning answering rephrasing tasks on the CX-E dataset.
+Postprocessing
+In the postprocessing stage, two different transformations are applied based on whether the outputs were generated with prompts following Maini, et al. (2024) or the optimized prompt templates for text extraction. Here are the postprocessing steps for the outputs based on these conditions:
+
+For outputs generated with prompts following Maini, et al. (2024):
+
+Identify and split multiple paraphrases within the output, returning one randomly.
+Remove unwanted elements like "Paraphrase:", "Toddler-friendly paraphrase:", "Erudite paraphrase:", and other patterns.
+Retain only passages ranging from 50 to 5,000 characters.
+Exclude passages with the last character being alphabetic, indicating a truncated output.
+Reassemble passages into complete documents.
+Eliminate documents with fewer than 100 characters.
+For outputs generated with the optimized prompt setup:
+
+Replace steps 1 and 2 from the above process by extracting content between the first tag pair, which offers a simpler and more efficient setup.
+Results
+The authors assessed their pre-training experiments using the Language Model Evaluation Harness on various well-known natural language benchmarks, including:
+
+ARC Challenge (A-C)
+ARC Easy (A-E)
+HellaSwag (HS)
+Lambada (L)
+PIQA (P)
+SciQ (SQ)
+WinoGrande (WG)
+Furthermore, the fine-tuned models were evaluated using the Open LLM 1 and 2 benchmarks.
+
+Rephrasing C4
+The authors rephrased C4 to compare their results with Maini et al.'s previous work:
+
+Their setup outperformed the previous work by 0.2 to 2.5 percentage points, showing larger differences at the benchmark level.
+Scores on A-C and HS were consistently higher in their experiments, while scores on A-E were consistently lower.
+The differences observed are likely due to training setups and models used for rephrasing:
+
+Models trained only on rephrased data consistently scored below their C4 baseline.
+Ask-LLM filtering did not improve the baseline and made most rephrased datasets worse.
+Mixing original C4 data with hard, QA, toddler, and wiki rephrased data led to improvements of up to +1.7 percentage points.
+Previous studies highlighted the importance of mixing synthetic and original data but:
+
+Not all data investigated in this study showed the same trend as previous work.
+Mixing original C4 data with Ask-LLM filtered QA rephrased data did not yield improvements at certain score thresholds.
+Despite this, due to strong QA rephrasing performance, the QA setup was used for other experiments.
+Rephrasing Multilingual CulturaX
+The researchers tested the effectiveness of rephrasing on multilingual data by applying question-answering (QA) rephrasing on English, German, Spanish, and Italian subsets of CulturaX. Here are the key findings:
+
+Only the English subset (CX-E) showed a slightly worse result (-0.2 percentage points) compared to the baseline.
+Other experiments with rephrased QA data and 1:1 mixed data showed gains ranging from +1.5 to +3.7 percentage points.
+German, Spanish, and Italian rephrased data, along with their corresponding mixed data, demonstrated improvements exceeding +3.1 percentage points.
+These significant improvements contrast with results from C4 rephrasing, indicating that rephrasing is particularly beneficial for low-quality datasets like CulturaX, especially in languages other than English.
+Rephrasing Datasets with Different Quality Levels
+The authors rephrase the recently published FineWeb-Edu (FWE) dataset using an optimized prompt setup for Quality Assessment (QA), based on results from section 4.2 indicating potential links between CX results and perceived data quality.
+
+FWE dataset undergoes an optimized filtering pipeline, including classifier filtering, to enhance quality.
+Manual inspection ranks the dataset qualities: CX < C4 < FWE, as shown in Table.
+The rephrased FWE dataset in QA comparisons:
+
+Shows a similar decrease as C4 rephrased data, decreasing by -1.7 percentage points.
+Mixing FWE data 1:1 with QA rephrased data results in reduced performance by -0.1 percentage points, with no improvements.
+Further analyses:
+
+Additional FWE classifier filtering with threshold >2.5 does not enhance results, similar to results with C4 and Ask-LLM classifier filtering.
+CX and C4 1:1 QA rephrased experiments indicate improvements over baseline, with +1.6 and +1.7 percentage points, respectively.
+It appears that rephrasing with the optimized setup benefits low-to medium-quality data when combined.
+
+Different Rephrasing Model Scales
+To explore the scaling behavior of the rephrasing model, the researchers utilized the Qwen2 (Q2) model series, which offers LLMs of various sizes such as 0.5B, 1.5B, and 7B Instruct models for QA rephrasing CX-E. The results, presented in a table, show the performance across these different model scales.
+
+Key points included:
+
+The performance results of the Q2 model scales did not exhibit a clear trend.
+Surprisingly, the 1.5B parameter model outperformed the others, with the 0.5B model following closely, and the 7B model showing the weakest performance.
+A standard rephrasing setup with Mistral 7B Instruct v0.2 demonstrated superior performance, showing a performance increase of +1.0 percentage points compared to Q2 7B Instruct and +0.6 percentage points compared to Q2 1.5B.
+Supervised Fine-Tuning
+The section details the supervised fine-tuning (SFT) process on pre-trained Large Language Models (LLMs) using different datasets and QA rephrased subsets to assess their impact on performance:
+
+SFT on pre-trained LLMs was conducted on the CX-E, C4, and FWE datasets, with and without QA rephrased subsets, using the UltraChat 200k dataset to analyze the effect of QA rephrased data during pre-training.
+Results for Open LLM 1 and Open LLM 2 benchmarks are presented, showing improvements in benchmark scores with QA rephrased data:
+Open LLM 1 benchmarks displayed an increase ranging from +0.5 to +0.8 percentage points with QA rephrased data.
+FWE baseline and FWE 1:1 rephrased QA fine-tuning experiments exhibited the highest benchmark averages.
+Benchmark results varied between datasets:
+For Open LLM 2, the CX-E experiments showed the highest averages with no difference between baseline and rephrased QA experiment.
+In contrast, FWE baseline outperformed C4 and FWE 1:1 rephrased QA experiments in Open LLM 1 benchmarks.
+Despite not training on the "test task," gaps persisted between baseline and 1:1 mixed QA rephrased experiments after fine-tuning in most cases.
+The study concludes that the benefits of incorporating QA rephrased data during fine-tuning depend significantly on the benchmark suite and baseline dataset utilized.
+The fine-tuning process used the UltraChat 200k dataset along with specific training configurations:
+Fine-tuning employed BF16 mixed-precision, a batch size of 16, maximum gradient norm of 1, and a cosine learning rate schedule.
+Training was executed using AdamW optimizer with specific parameters over three epochs on two nodes with 8 H100 GPUs for a single experiment.
+Conclusion
+The researchers in this study have advanced prior work on rephrasing pre-training data by not only replicating existing results but also enhancing them through an optimized rephrasing process. The key findings and implications of this study are:
+
+Demonstrating the effectiveness of incorporating multilingual and low-quality natural language data into the pre-training process, especially when combined with the original dataset.
+The benefits of pre-training on a mixture of question-answering rephrased data persist even after fine-tuning, although the specific dataset used and the setup for evaluation play a role in this persistence.
+The developed pipeline proves to be a valuable asset for improving large language model pre-training datasets, offering a more efficient way to enhance data quality and effectiveness.
+A Rephrasing Pipeline Overview
+The researchers introduce a rephrasing pipeline that involves a preprocessing step where documents are segmented into passages.
+
+Preprocessing Step:
+Documents are split into smaller segments known as passages.
+This segmentation aids in the rephrasing process by breaking down the content into more manageable units.
+This preprocessing stage is crucial for the subsequent stages of the rephrasing pipeline, facilitating the transformation of text for various applications.
+
+Create Prompts: Insert Passages into Prompts
+The authors suggest a technique for creating prompts by inserting passages into prompts, specifically focusing on the generation of rephrased passages. This process involves:
+
+Prompt Creation: Generating prompts by inserting passages.
+Rephrased Passage Generation: Key focus on creating rephrased passages within the prompts.
+Inference: Generation of Rephrased Passages
+This stage involves inferring information and producing rephrased passages, enhancing the understanding and variety of content available through:
+
+Applying inference techniques to generate rephrased passages for improved data diversity.
+Postprocessing: Clean and Merge to Documents
+After inference and passage generation, the researchers undertake postprocessing actions involving:
+
+Cleaning Data: Enhancing data quality through cleaning processes.
+Merging Documents: Combining rephrased passages into cohesive documents for further analysis.
+B Rephrasing Prompt Templates
+The researchers based the toddler, hard, wiki, and QA style prompts on a previous work by Maini et al., making minor modifications for their study. Initially, they utilized an end-of-sequence token in regular characters in the early prompt configurations to facilitate identifying the end of generated content in one of their initial inference pipeline prototypes. This setup was effectively transferred and integrated into their vLLM inference framework. To streamline post-processing of the rephrased output, the authors introduced HTML-style tag pair in their optimized prompt templates.
+
+Key points:
+
+Prompt templates like toddler, hard, wiki, and QA style were derived from Maini et al.'s work.
+An end-of-sequence token in regular characters was used in early prompt setups for easier content identification.
+The end-of-sequence token setup was successfully applied to the vLLM inference configuration.
+HTML-style tags were introduced in optimized prompt templates for improved post-processing of rephrased output.
+B.1 Toddler Prompt Template
+The researchers designed a conversation between a curious user and an AI assistant, where the assistant responds in a helpful and polite manner, providing detailed answers. The assistant concludes each response with an end-of-sequence token "".
+
+Summary:
+
+The researchers created a chat scenario between a curious user and an AI assistant.
+The AI assistant answers questions in a simple and polite way using basic vocabulary understandable to a toddler.
+Each response from the assistant is completed with the "" token.
+B.2 Hard Prompt Template
+The section describes a hard prompt template in a conversational context between a user and an AI assistant, focusing on paraphrasing a paragraph using concise and sophisticated language targeted at erudite scholars. The template aims to challenge the AI to replace common words and phrases with rare, complex alternatives to test its linguistic capability.
+
+Key points:
+
+The prompt involves a chat scenario where the AI provides detailed and polite responses to queries.
+The objective is to generate a paraphrase that is not only terse but also uses abstruse language, catering to a scholarly audience.
+Simple terms in the original text are expected to be substituted with more intricate vocabulary to enhance the sophistication of the paraphrased content.
+B.3 Wiki Prompt Template
+The section presents a dialogue between a user and an artificial intelligence assistant where the assistant provides detailed and polite responses to questions and concludes the paraphrase with an end of sequence token "".
+
+The dialogue showcases the AI assistant's ability to offer diverse and high-quality paraphrases in proper English akin to Wikipedia sentences.
+C Inference Setup
+The researchers employed the vLLM library (Apache 2.0) for high-throughput inference. Here's an overview of the setup:
+
+Text passages are sorted and grouped based on their lengths to maximize device utilization.
+A temperature of 0.7 is used for sampling to ensure diverse outputs.
+One inference process is executed on a single H100 GPU.
+The key details of the inference setup include:
+
+Processing time for one passage varies between 0.04 and 0.08 seconds, depending on the model.
+Input speed ranges from 5,000 to 10,000 tokens per second, while the output speed is between 4,000 and 7,000 tokens per second.
+The setup automatically scales based on idle cluster capacity and efficiently manages compute resources using Slurm to handle preemption.
+D Data Classifier Setup
+The data classifier setup involves the use of the Ask-LLM classifier to filter C4 datasets for identifying potentially better documents for pre-training. Here is an overview of the Ask-LLM classifier setup:
+
+Classifier Used: Ask-LLM classifier
+Tools and Libraries:
+Mistral 7B Instruct v0.2
+vLLM library
+Prompt Modification:
+A slightly modified Ask-LLM prompt is utilized for the setup.
+D.1 Data Classifier Setup
+In this section, the authors describe the specifics of the Ask-LLM classifier setup:
+
+Token Limit: Classification of documents is based on the first 10,000 tokens.
+Thresholds:
+A score threshold of >0.6 is applied.
+Another threshold of >0.97 is used for experiments detailed in section 4.1.
+D.1 Ask-LLM prompt template
+The section introduces a prompt template for the Ask-LLM model to understand if a previous document contains informative signals suitable for pre-training. The key criteria for an informative datapoint are specified as follows:
+
+Information should be well-formatted and usable knowledge
+Data must not contain any harmful, racist, sexist, or inappropriate content.
+Meta-Data
+The paper utilizes the FineWeb-Edu (FWE) classifier to filter a dataset, aiming to identify a higher-quality subset of rephrased data with a score threshold of >2.5 in section 4.3.
+
+Filtering Rephrased Data with FWE Classifier
+The researchers apply the published FWE classifier to the QA rephrased FWE dataset, employing a score threshold of >2.5 to filter the data. The goal of this filtering process is to explore whether a subset of rephrased data with higher quality can be distinguished. Key points included:
+
+The FWE classifier is used for filtering rephrased data.
+Dataset filtering is done using a score threshold of >2.5.
+The objective is to identify a higher-quality subset within the rephrased data.
+E Training setup
+The authors utilize the Stable LM 2 1.6B model architecture for pre-training experiments in section 4. The training involves:
+
+Training models from scratch for 50,000 steps
+Using a batch size of 2e6 tokens on 100B tokens
+Implementing training in BF16 mixed-precision
+Setting a maximum gradient norm of 1 and a weight decay of 0.
+Data and Model Licenses
+The researchers provided information on the licenses and sources for the datasets and models used in the study, as summarized in two tables:
+
+Datasets:
+ODC-By v1.0
+CulturaX (CX)
+Oscar subsets
+CC0 1.0 Universal
+FineWeb-Edu (FWE)
+Models:
+HuggingFaceFW/fineweb-edu
+UltraChat 200k
+MIT HuggingFaceH4/ultrachat_200k
+The datasets were sourced from various licenses, including ODC-By v1.0 and CC0 1.0 Universal, while the models used in the research came from sources like HuggingFaceFW, UltraChat 200k, and MIT HuggingFaceH4.
+
+G Pre-training Dynamics
+The section presents pre-training dynamics for the C4 experiments in one figure, CX experiments in another figure, and compares C4, CX-E, FWE, and CX-E rephrasing with various Qwen2 Instruct model scales in a third figure.
+
+Shows benchmark dynamics during pre-training steps for C4 experiments
+Illustrates pre-training dynamics for CX experiments
+Compares C4, CX-E, FWE, and CX-E rephrasing with different Qwen2 Instruct model scales
+H Example Generations
+The section presents various generations obtained from different models using a common prompt to demonstrate distinct rephrasing styles.
+
+Several models were compared using the same prompt.
+The purpose was to highlight the variations in how each model rephrased the given text.
+This comparison illustrates the diversity in rephrasing styles across the different models used in the study.
+Toddler Rephrasing
+The Statue of Liberty, a gift from France to America in 1886, stands as a prominent symbol of freedom and democracy. Designed by American sculptor Auguste Bartholdi, the statue features a torch and a crown, embodying hope, peace, and the American dream. Situated in the New York harbor, this iconic statue evokes thoughts of courage and freedom, representing core American values.
+
+The Statue of Liberty reflects freedom and democracy, serving as a powerful emblem of these principles in America.
+The statue's significance lies in its representation of the American dream and ideals of freedom and democracy.
+Hard Rephrasing
+The Statue of Liberty, a gift from the French Republic to the United States in 1886, stands in New York Harbor on Liberty Island near Ellis Island. Constructed by the Civilian Conservation Corps during the Great Depression, the monument was dedicated in 1933.
+
+Lesson: The Best Diet for Weight Loss
+This lesson focuses on optimal nutrition for weight loss, exploring a variety of dishes that can be prepared weekly. Selecting a recipe that is both healthy and tasty poses a challenge, but this discussion covers effective dietary practices for weight loss and overall well-being:
+
+Adequate dietary fiber helps regulate blood sugar levels and promotes balance.
+Consumption of fruits and vegetables is recommended for their richness in nutrients and vitamins, supporting metabolic functions.
+Wiki Rephrasing
+The section details Arthur Lee's journey with the guitar, starting from his initial fascination during a visit to England in 1984, to his dedication to learning the instrument upon returning to the United States in 1985. Here are the key points from the narrative:
+
+Arthur's interest in the guitar was sparked by music from a pipe organ in England.
+He started learning from a neighbor who was a professional musician.
+By 1986, Arthur had made significant progress in his guitar skills.
+Arthur considered joining a local guitar club but opted for lessons at his church instead.
+Lesson: The Best Diet for Weight Loss
+The lesson emphasizes the importance of a healthy diet for weight loss and overall well-being. Here are the main points discussed:
+
+Prioritizing health over appearance is crucial for a healthy body.
+Consuming nutrient-dense foods and avoiding unhealthy options is key to a healthy lifestyle.
+Guidelines for making informed food choices include eating foods you enjoy, limiting junk food intake, prioritizing nutrient-dense foods, and understanding the importance of protein.
+Conflict of Interest
+The authors of the paper have stated that they do not have any conflicts of interest related to the research or its outcomes.
+
+No conflicts of interest were declared by the authors.

@@ -1,0 +1,198 @@
+4. The Best of Both Worlds: Bridging Quality and Diversity in Data Selection with Bipartite Graph
+Minghao Wu, Thuy-Trang Vu, Lizhen Qu, Gholamreza Haffari 
+
+
+
+Introduction
+Large language models (LLMs) have greatly advanced natural language processing (NLP) by generating coherent text through supervised fine-tuning (SFT). The quality and diversity of SFT data are essential for model success:
+
+Quality data ensures accurate learning of language patterns and appropriate responses.
+Diversity in data aids in generalization across various contexts.
+However, selecting a balanced subset of data from the vast SFT data available is challenging. Existing methods often focus on quality or diversity separately, missing the optimal balance:
+
+Quality-focused approaches may ignore diverse language patterns necessary for generalization.
+Diversity-focused methods might include lower-quality data, impacting model performance negatively.
+To address this challenge, a novel method called GRAPHFILTER is proposed:
+
+It models the dataset as a bipartite graph to identify relationships between sentences and n-grams.
+Sentences and n-grams are nodes in the graph, with edges representing n-grams in sentences, enabling prioritization based on unique n-gram contributions.
+Key points about GRAPHFILTER's methodology include:
+
+A priority function evaluates sentences based on quality and diversity metrics.
+Quality is assessed using SUPERFILTER to measure response informativeness, while diversity is quantified through TF-IDF scores for n-grams.
+During the selection process, GRAPHFILTER iteratively chooses high-priority sentences, updates the graph, and recalculates priorities. Experimental results against baselines show the effectiveness of GRAPHFILTER:
+
+Outperforms state-of-the-art baselines across different model backbones and benchmarks.
+Achieves better computational efficiency, being significantly faster without GPU usage.
+The contributions of GRAPHFILTER are outlined as follows:
+
+Introduction of the bipartite graph model for data selection, enhancing n-gram coverage efficiently.
+Proposal of a priority function integrating quality and diversity metrics seamlessly.
+Demonstrated superiority over existing data selection strategies, emphasizing improved efficiency.
+In-depth analyses support the effectiveness of GRAPHFILTER, highlighting design choices, subset characteristics, and the importance of quality and diversity across various data scales.
+
+RELATED WORK
+The success of large language models (LLMs) heavily depends on the data used in their training process, with state-of-the-art LLMs trained on extensive corpora. Research is focused on creating high-quality corpora for pre-training these models. Additionally:
+
+LLMs can generate high-quality datasets for supervised fine-tuning, sparking interest in dataset synthesis research.
+Efforts in dataset synthesis lead to the creation of large-scale datasets with billions of tokens, driving the need for selecting valuable subsets.
+Data selection strategies target identifying informative data subsets for model training, considering both quality and diversity:
+
+Quality-focused approaches prioritize metrics like complexity, difficulty, or informativeness, sometimes overlooking the variety of language patterns required for generalization.
+Diversity-focused methods aim to capture a wide range of linguistic patterns and contexts, potentially including lower-quality data that may impact model performance negatively.
+Ours
+To address limitations in existing data selection methods, the authors introduce GRAPHFILTER, a novel approach that represents datasets as a bipartite graph of sentences and their n-grams. By integrating quality and diversity through a priority function, this method enhances model performance across different downstream tasks.
+
+Methodology
+The methodology section addresses the data selection problem for supervised fine-tuning, modeling the dataset as a bipartite graph, and re-ranking graph nodes using a priority function that blends quality and diversity metrics. Key points include:
+
+Introduction to data selection problem for supervised fine-tuning in Section 3.1.
+Description of dataset modeling as a bipartite graph in Section 3.2.
+Explanation of re-ranking of graph nodes using a priority function integrating quality and diversity metrics in Section 3.3.
+DATA SELECTION PROBLEM
+The data selection problem addresses the challenge of choosing the most relevant subset of supervised instances from a larger dataset to optimize large language models (LLMs). Here are the key points:
+
+Dataset Description:
+Denoted as D = {(x_i, y_i)}^N_i=1, where x_i is an instruction and y_i is the corresponding response for the i-th training instance.
+Objective:
+Select a subset S π of size k from D using a data selection strategy π, where k represents the data selection budget.
+Optimization Goal:
+Find the optimal data selection strategy, denoted as π*, to choose a subset S π that maximizes the fine-tuned LLM f_θ's performance on downstream tasks D_tst.
+Formalization:
+Mathematically, the problem is expressed as finding π* to maximize the performance metric, R(f_θ; D_tst), of the fine-tuned model f_θ on the downstream tasks D_tst, where S π is the selected training data subset, and θ represents the backbone model F's parameters after fine-tuning.
+GRAPHFILTER: MODELING DATASETS AS BIPARTITE GRAPHS
+The authors employ a bipartite graph model to represent datasets effectively, capturing relationships between sentences and their constituent n-grams. This modeling technique involves:
+
+Dividing vertices into two sets: sentence nodes (U) and n-gram nodes (V), connected by edges (E).
+Facilitating the selection of sentences optimizing n-gram coverage aligned with specific priorities.
+The algorithm, GRAPHFILTER, iteratively selects sentences to maximize n-gram coverage while respecting priority functions:
+
+Algorithm operation starts with an empty set (S) and a bipartite graph (G) with sentence nodes, n-gram nodes, and edges.
+Each iteration selects the highest-priority sentence, updates the graph structure, and removes associated n-grams and edges.
+Key points included:
+
+Relationship to the set cover problem, where the objective is to select the smallest number of sets covering all elements in the universe.
+The algorithm's complexity is O(N) per iteration but can be optimized to O(log N) by using a max-heap for efficient highest-priority sentence selection.
+In a minimalistic example illustrated:
+
+Graph updates and sentence selection process are visually represented.
+Performance insights and theoretical foundations related to the algorithm's execution are discussed, especially in scenarios where all sentences have the same priority score.
+The approach efficiently maximizes n-gram coverage in datasets by sequentially selecting sentences based on priority functions.
+
+BALANCING QUALITY AND DIVERSITY WITH PRIORITY FUNCTION
+The authors introduce a priority function ϕ(u) to balance quality and diversity in selecting sentences for language model training. This function re-ranks sentence nodes based on quality and diversity considerations.
+
+SUPERFILTER for Quality: The SUPERFILTER metric assesses response informativeness by comparing perplexity with and without conditioning on instructions, aiding quality evaluation.
+
+TF-IDF for Diversity: Term Frequency-Inverse Document Frequency (TF-IDF) quantifies the importance of n-grams in the dataset, enhancing diversity assessment based on n-gram significance.
+
+Combined Priority Function: Integrating quality (via SUPERFILTER) and diversity (using TF-IDF), the authors create a unified priority function. This function prioritizes sentences that excel in both quality and contribute significantly to n-gram diversity.
+
+By incorporating quality and diversity into the selection process, the algorithm effectively identifies sentences that cover diverse linguistic patterns while maintaining high data quality standards.
+
+EXPERIMENTS
+The experimental setup is outlined in Section 4.1, followed by the main results in Section 4.2. The researchers compare their approach, GRAPHFILTER, with various baseline methods. Details of the baseline approaches are provided in Section A.1.
+
+Baselines:
+Experiments are conducted on diverse model backbones like GEMMA-2-2B, MISTRAL-7B-V0.3, and LLAMA-3-8B.
+Optimization details can be found in Section A.2.
+Evaluation:
+Evaluations are conducted on six benchmarks, grouped into Standardized and LLM-as-a-Judge categories.
+Standardized (LM-EVALUATION-HARNESS):
+Model performance is assessed on benchmarks like MMLU, ARC, HellaSwag, and GSM8K, measured by accuracy.
+The overall performance of this group is represented by the macro-average accuracy across these benchmarks (denoted as µ BENCH).
+LLM-as-a-Judge (AlpacaEval-2.0 and MT-Bench):
+Reference answers are generated for AlpacaEval-2.0 by GPT-4-1106-PREVIEW.
+Performance on MT-Bench is denoted as µ MT, the macro-average across all categories.
+The overall performance of this group (µ LLM) is the macro-average of length-controlled win rate (LC) and µ MT.
+Overall Model Performance:
+µ ALL is defined as the macro-average of results from standardized benchmarks, LC, and µ MT.
+In calculating µ ALL and µ LLM, µ MT is scaled by 10× for alignment with a 1 to 100 range.
+Additional evaluation details are provided in Section A.3.
+Main Results
+In comparing GRAPHFILTER with baseline approaches, the results consistently show superior performance:
+
+GRAPHFILTER outperforms baseline approaches on standardized and LLM-as-a-Judge benchmarks across various model backbones.
+It achieves the best or second-best results on most individual benchmarks.
+Specifically, the performance improvements of GRAPHFILTER are highlighted by significant margins:
+
+Shows improvements of up to +2.37 for GEMMA-2-2B, +3.02 for MISTRAL-7B-V0.3, and +3.38 for LLAMA-3-8B compared to the LONGEST baseline, showcasing its effectiveness in combining quality and diversity in data selection.
+Furthermore, insights into data selection quality and performance are revealed through comparisons with other methods:
+
+Models fine-tuned on subsets chosen by ARMORM perform well on AlpacaEval-2.0 but poorly on other benchmarks.
+The PERPLEXITY-selected subset consistently yields the worst performance on GSM8K, emphasizing the risks of relying solely on neural models for high-quality data selection.
+Efficiency and runtime comparisons demonstrate the practical advantages of GRAPHFILTER:
+
+GraphFilter's efficiency is highlighted by its quick execution on a CPU, contrasting with neural model-dependent baselines that typically require a GPU.
+With the utilization of SUPERFILTER, GRAPHFILTER completes tasks efficiently in 2.48 hours, and without the re-ranking priority function, it achieves even faster completion times, taking only 0.53 hours on a CPU, performing up to 61× faster than other benchmarks, notably surpassing ALPAGASUS by completing tasks in 32.34 hours.
+Analysis
+The analysis section of the paper is structured into different subsections:
+
+GRAPHFILTER Ablation Study (Section 5.1):
+Conducted an ablation study on GRAPHFILTER.
+Selected Subsets Analysis (Section 5.2):
+Analyzed the selected subsets.
+Instruction Diversity Highlight (Section 5.3):
+Emphasized instruction diversity in this specific section.
+Quality and Diversity Interplay with Subset Sizes Examination (Section 5.4):
+Examined the interplay between the quality and diversity of subsets in relation to their sizes.
+ABLATION STUDY
+The researchers investigated the impact of combining n-grams to capture features at various levels. Here are the key points:
+
+The study compared different n-gram combinations, specifically focusing on unigrams, bigrams, and trigrams.
+Results showed that integrating these n-grams significantly outperformed variations that did not include n-gram combinations.
+Different n-grams capture features at different levels, and merging them effectively consolidates this information.
+The study also analyzed the quality-diversity relationships of subsets selected by various methods:
+
+Figures and tables present semantic diversity in subsets from different approaches like GRAPHFILTER, ARMORM, and INSTAG.
+Both quality and diversity metrics in the priority function improved data selection effectiveness.
+Integrating metrics like QUALITY(u) and DIVERSITY(u) into GRAPHFILTER enhanced overall performance, indicating the importance of combining quality and diversity metrics.
+What Data are Selected by GRAPHFILTER?
+The selection of datasets by GRAPHFILTER maintains a balance between quality and diversity. Here are the key points from this section:
+
+To ensure quality and diversity, the authors measured lexical diversity using the MTLD metric and assessed data quality with the SKYWORKRM model.
+GRAPHFILTER exhibited high lexical diversity and ranked second in data quality, indicating its ability to balance both factors effectively.
+Visualization comparisons with other methods like ARMORM and INSTAG using the BGE-LARGE-EN-V1.5 model showed that GRAPHFILTER selects unique instructions that are not chosen by ARMORM.
+While quality-based SUPERFILTER performs well with smaller budgets, its advantage diminishes as the budget increases, hinting at biases towards certain linguistic patterns that limit generalization.
+Diversity-based INSTAG performs better with larger budgets, highlighting the trade-off between quality and diversity based on the budget size.
+GRAPHFILTER consistently outperforms RANDOM across all budget levels, showing its effectiveness in integrating both quality and diversity factors seamlessly.
+CONCLUSION
+The researchers introduce GRAPHFILTER, a unique data selection method that represents datasets as bipartite graphs connecting sentences to their constituent n-grams. To strike a balance between quality and diversity, they employ a priority function that merges a quality metric with a diversity metric. This enables the selection of subsets that not only improve n-gram diversity but also uphold high response quality.
+
+Key points included:
+
+Experimental Setup:
+GRAPHFILTER's effectiveness was tested on three model backbones and six benchmark datasets.
+Results:
+Superior model performance and computational efficiency of GRAPHFILTER over nine baseline methods were consistently demonstrated.
+Analyses:
+Design choices were validated through analyses that evaluated subsets chosen by GRAPHFILTER and other methods.
+Importance of instruction diversity, the role of quality, and diversity concerning subset sizes were examined.
+ETHICS STATEMENT
+The authors of the paper introduce GRAPHFILTER, a method for selecting data to fine-tune large language models (LLMs). They highlight the importance of ethical considerations regarding data usage, biases, and the societal impact of LLMs. Here are the key points from their ethics statement:
+
+The datasets used in the experiments are publicly available and have been widely used in previous research, with adherence to all relevant licenses and terms of use.
+Acknowledgment is made regarding the potential for biases in the training data to be perpetuated or amplified by LLMs.
+The authors recommend that practitioners employing GRAPHFILTER should thoroughly analyze selected data subsets to detect and address any biases.
+While the aim is to enhance model performance and computational efficiency, the authors are mindful of the possibility of improved models being misused in unethical ways. Therefore, they advocate for the responsible deployment of LLMs and emphasize the importance of following ethical guidelines and best practices to prevent misuse.
+A. EXPERIMENTAL SETUP
+The experimental configuration features:
+
+RANDOM: Selects a random subset of size k from the dataset.
+LONGEST: Chooses the top-k instances based on the number of words in each instruction.
+PERPLEXITY: Selects top-k instances based on perplexity values, computed using GPT2.
+ARMORM: Utilizes a gating network to integrate rewards from diverse perspectives.
+ALPAGASUS: Employs GPT-3.5-TURBO to assess data quality, replaced by GEMMA-2-27B-IT in this study.
+DEITA: Uses CHATGPT to create a quality estimation dataset and fine-tune large language models (LLMs).
+SUPERFILTER: Calculates Instruction-Following Difficulty (IFD) metric using GPT2 scores.
+KMEANS: Involves clustering training instances using sentence embeddings from BGE-LARGE-EN-V1.
+A.2 OPTIMIZATION Hyperparameters
+The experiments share the same set of hyperparameters:
+
+Batch size: 64
+Learning rate: 2 × 10^-5
+Warmup ratio: 0.05
+Learning rate schedule: Linear
+Experiment duration: 3 epochs
+Computation Infrastructure
+All methods are trained on two A100 80GB GPUs interconnected via PCIe.

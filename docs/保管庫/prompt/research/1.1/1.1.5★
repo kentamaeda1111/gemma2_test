@@ -1,0 +1,252 @@
+5. A Practical Guide to Fine-tuning Language Models with Limited Data
+Márton Szép, Daniel Rueckert, Rüdiger von Eisenhart‐Rothe, Florian Hinterwimmer 
+
+
+Introduction
+Pre-trained Language Models (PLMs) are revolutionizing the field of Natural Language Processing (NLP) by effectively learning and modeling natural language data distributions across various domains. However, their training requirements in terms of data and computational resources can be prohibitive, especially for languages other than English and specialized domains like medicine, chemistry, law, finance, and engineering. To address this challenge, researchers commonly employ transfer learning, involving initial self-supervised pre-training on extensive general or mixed-domain data followed by domain adaptation, fine-tuning, or few-shot learning on domain-specific data.
+
+Key points included:
+
+Training PLMs with limited data poses challenges such as overfitting, poor generalization, and suboptimal performance.
+Fine-tuning PLMs with insufficient data necessitates strategic pre-training, domain adaptation, and parameter optimization to effectively leverage the model's existing knowledge.
+The paper focuses on addressing the training challenge of LLMs with limited data, particularly for low-resource languages and specialized domains, by exploring recent transfer learning advancements.
+The systematic review conducted involved over 2500 papers from various reputable sources such as Scopus, Web of Science, Google Scholar, and ACL Anthology.
+The paper aims to benefit both NLP researchers and practitioners by offering insights into state-of-the-art methods and practical suggestions for enhancing model performance in data-scarce scenarios.
+The examination is centered on adapting LLMs to specific tasks and domains with limited data, emphasizing the selection of appropriate pre-training methods, efficient data utilization during fine-tuning and few-shot learning, and discussing the benefits, limitations, and challenges of transfer learning strategies.
+Few labeled examples in related tasks
+The section discusses how the model can adapt quickly to new tasks even with few labeled examples in related tasks. Additionally, it mentions that this adaptability can be computationally intensive and potentially complex to implement.
+
+The model's ability to adapt rapidly to new tasks is highlighted.
+
+Despite requiring only a small number of labeled examples in related tasks, the process might be computationally demanding.
+
+Implementing this adaptability could pose complexities due to the computational intensity involved.
+
+In summary, the model can efficiently handle new tasks with minimal labeled examples, but this flexibility may come at the cost of computational complexity during implementation.
+
+Few-shot classification tasks
+In this section, the researchers provide an overview of the methods discussed in the paper for few-shot classification tasks. The summary includes a table that outlines the various methods used in the research.
+
+Key points:
+
+The section provides a detailed overview of the methods employed in the paper for few-shot classification tasks.
+The table presented in this section highlights the different approaches and techniques utilized in the research.
+The researchers discuss how these methods contribute to the accuracy and effectiveness of classifying data with limited training samples.
+Related Work
+The researchers highlight the strategies explored to enhance the performance of pre-trained language models (PLMs) in data-scarce settings, emphasizing specific tasks, languages, or domains. Key points included in the discussion are:
+
+Data augmentation is crucial for addressing data scarcity, but it may not suffice for specialized domains in low-resource languages due to limited diversity and quality degradation.
+The paper focuses on model-centric approaches that effectively utilize available data for robust language understanding in self-supervised ways to adapt to a range of downstream tasks, even with limited labeled data.
+The choice of model architecture is crucial, with guidance in Section 6, and the selection should align with the downstream task to enhance transferability.
+Decoder models are tailored for text generation tasks using causal language modeling (CLM) objectives, predicting the next token given the preceding ones.
+Encoder models are specialized in classification tasks, employing masked language modeling (MLM) objectives to predict masked tokens, beneficial for bidirectional representations.
+An advanced approach, replaced token detection (RTD), enhances convergence by replacing input tokens using a small generator network.
+Encoder-decoder models are well-suited for text transformation tasks, extending masking to sequences of tokens through masked or denoising sequence-to-sequence (S2S) pre-training.
+Continued Pre-training
+Continued pre-training is a powerful technique that involves limited training steps with a pre-training objective and in-domain or downstream task data without labels. The goal is to enhance model performance on downstream tasks by bridging the gap between pre-training data and the target domain or language. Key points included:
+
+This technique allows extending the model vocabulary to include previously unseen terms and phrases when there is a notable discrepancy between original and target modalities.
+Continued pre-training facilitates sample-efficient reuse of labeled fine-tuning data in a self-supervised manner but may face challenges like catastrophic forgetting.
+Balancing training length, data size, and model size is crucial, often benefiting from additional regularization techniques such as learning rate warm-up and experience replay.
+For models like decoders, exploring the relationship between model size and data requirements for single-epoch pretraining reveals significant data needs with proportional scaling of model size and data.
+In data-scarce scenarios, training decoders for up to 16 epochs can yield significant improvements, especially when continued pre-training is performed on a small in-domain corpus.
+Another strategy involves training only a subset of the model parameters, offering better adaptation to new tasks and domains while preserving prior knowledge.
+Cross-lingual alignment methods enhance multilingual performance by training on unpaired monolingual data from different languages, highlighting improvements in cross-lingual transfer abilities.
+Continued MLM pre-training with uniform sampling across high- and low-resource languages boosts performance on low-resource languages without compromising high-resource language performance.
+Training encoder models separately for each language performs better in some cases than training a single multilingual model, showcasing the impact of multilingual adaptation.
+Having even a small amount of parallel data, like translations, can significantly improve cross-lingual representations through techniques like Translation Language Modeling (TLM) objective and token masking approaches.
+Domain Adaptation
+Adapting pre-trained models to specialized domains is crucial for effectively handling domain-specific tasks, particularly when there are significant differences in language and vocabulary. Here are the key points highlighted in this section:
+
+Domain adaptation is widely used across various fields such as biomedicine, legal, finance, and science.
+Effective domain adaptation can be achieved with small amounts of carefully selected data.
+It is more beneficial than simply mixing limited domain-specific data with general data and starting training from scratch.
+Domain adaptation demonstrates improved generalization to unseen data compared to solely fine-tuning on in-domain data.
+In low-resource scenarios with insufficient unlabeled data, utilizing similar in-domain corpora for continued pre-training can boost performance. Quality and relevance of data are vital, not just quantity.
+Research findings suggest that the RTD objective, which focuses on domain-specific vocabulary, outperforms random masking.
+Enhancing domain adaptation can be done by including an adversarial domain discriminator for both encoder and decoder models.
+For parameter-efficient methods, pre-training the newly introduced parameters further enhances performance.
+Combining original pre-training data with in-domain corpora in cross-domain settings leads to increased robustness.
+Fine-tuning
+Fine-tuning pre-trained language models (PLMs) in low-resource settings presents challenges such as overfitting and unstable optimization due to limited data compared to the model capacity, affecting generalization to new examples. To address this, several strategies and techniques are explored:
+
+Catastrophic Forgetting Mitigation: Proper optimization and regularization techniques are crucial for effectively fine-tuning deeper transformer models with limited data.
+Input-Based Weight-Scaling Strategy: A strategy proposed to stabilize training and accelerate convergence of deep models with scarce data, enhancing training efficiency.
+Effect of Training Length and Layer Re-initialization: The impact of training duration and the number of re-initialized higher layers on BERT fine-tuning efficiency is studied.
+Layer-Wise Learning Rate Decay (LLRD): Implements higher learning rates deeper into the network to retain general information from pre-training while learning task-specific details in later layers.
+Regularization Techniques: Methods like pre-trained weight decay, Mixout, SMART, and adversarial regularization are employed to encourage parameter stability and avoid aggressive updates.
+Incorporating External Knowledge: Proposes fine-tuning on a larger intermediate task before transitioning to the target task with limited data, leveraging additional knowledge for improved performance.
+These diverse approaches aim to enhance the fine-tuning process of PLMs in low-resource scenarios by addressing overfitting, optimization stability, and generalization challenges.
+
+Parameter-efficient Training
+Parameter-efficient fine-tuning (PEFT) methods offer a more sample-efficient and stable approach compared to tuning the entire set of parameters in Pre-trained Language Models (PLMs), especially in low-resource settings, by updating only a reduced set of weights.
+
+PEFT methods are beneficial in data-scarce scenarios, reducing the risk of catastrophic forgetting associated with full re-training.
+Masking-based methods train specific layers or parameter types without adding extra parameters, while early approaches focus on training additional last layers on top of encoder models.
+BitFit optimizes model efficiency by tuning bias terms, while subnetwork optimization methods select or adapt subnetworks based on gradient information.
+Adapters, lightweight feedforward modules between transformer layers, offer efficient training but may require wider layers and more parameters than other PEFT methods.
+Compacter methods utilize low-rank matrices and parameter sharing to reduce training time and memory consumption, with adapters impacting inference time.
+Parallel adapters and Ladder Side-Tuning improve model efficiency by incorporating learnable modules alongside the backbone model.
+Prefix-tuning optimizes continuous embeddings to serve as task-specific context for the model, enhancing performance.
+IA3 scales keys and values in attention mechanisms, improving model performance with more parameters than adapters.
+Reparametrization methods reduce parameter count without compromising performance by decomposing weight matrices or exploiting low-dimensional manifolds.
+Hybrid methods like UniPELT combine different PEFT methods using a gating mechanism to activate adapters, prefix-tuning, and other techniques dynamically for optimal performance based on the task and data setup.
+These hybrid approaches introduce design spaces for parametrizing layer grouping, trainable parameter allocation, and PEFT strategy selection, offering a versatile optimization strategy for different scenarios.
+Embedding Learning
+Embedding vectors play a crucial role in Natural Language Processing (NLP) tasks, serving as numerical representations of input tokens. Here's a summary of the key points discussed in the section:
+
+Importance of Embedding Vectors:
+
+Vital for Language Model (LLM) success in downstream tasks by capturing semantic information like language nuances and task specifics.
+Enable models to comprehend input text effectively.
+Granularity Trade-offs:
+
+Language models are constrained by predefined vocabularies set during tokenization, impacting time and space complexities.
+Word-level granularity offers expressiveness but demands larger vocabularies and memory.
+Character or byte-level granularity is space-efficient but less expressive, producing lengthy sequences.
+Subword-level granularity strikes a balance between expressive power and efficiency, commonly used in models.
+Adapting Granularity for Tasks and Languages:
+
+Optimal granularity choice depends on the task and language nuances, affecting generalization and robustness.
+Training a shallow transformer to learn word representations from characters enhances robustness to spelling errors and domain shifts.
+Strategies to Improve Embeddings:
+
+Training token embeddings with a frozen transformer body addresses differences in pre-trained and target domain vocabularies efficiently.
+Identifying words prone to fragmentation based on token embedding entropy and augmenting their embeddings improves model performance.
+Mapping embeddings of different languages into a shared space using parallel data or seed dictionaries enhances cross-lingual transfer capabilities.
+Enhancing Low-resource Tasks:
+
+Leveraging high-resource language embeddings can significantly benefit low-resource downstream tasks.
+Implicit mapping through alignment training objectives on paired data provides another method to enhance embedding quality.
+These strategies aim to enhance the performance, generalization, and adaptability of language models by refining embedding learning techniques.
+
+Contrastive and Adversarial Learning
+Contrastive and adversarial learning methods aim to extract valuable insights from language and domain differences and similarities to improve model alignment and adaptation. Here's a concise summary of this section:
+
+Contrastive Learning (CL):
+
+Focuses on learning effective representations by pulling semantically similar samples together and pushing apart dissimilar ones.
+Operates on various levels of granularity such as sentences and words, often requiring parallel data.
+Correlates alignment with enhanced cross-lingual transfer capabilities, leading to impressive performance on downstream tasks even with labeled examples limited to the source language.
+Shows synergy with methods like adapters, enhancing cross-lingual contrastivity.
+Benefits of Contrastive Learning (CL):
+
+Facilitates improved data utilization at the downstream task level, particularly beneficial for text similarity tasks.
+Functions as an unsupervised objective by generating positive pairs through data augmentation techniques.
+Applications of CL:
+
+Easily generates pairs for binary classification tasks and various others like sentiment analysis and Named Entity Recognition (NER) by linking to class descriptions or reformulating tasks as question answering.
+Adversarial Learning:
+
+Involves training two models with conflicting objectives simultaneously, guiding each other to enhance performance.
+Helps bridge the gap between pretraining and target domains or languages without paired data.
+Employs a language or domain discriminator to deceive the model, encouraging the learning of robust, domain-invariant, or language-agnostic representations.
+Integration with PEFT Methods:
+
+Can be combined with methods like adapters or learning domain-specific or domain-independent prefixes for added effectiveness.
+Limited Supervision
+In low-resource scenarios, methods like semi-supervised learning, unsupervised learning, and active learning can enhance model generalization and robustness by utilizing unlabeled data effectively. Here are the key points included:
+
+Semi-Supervised Learning (SSL):
+
+SSL combines labeled and unlabeled data, with approaches like self-training and consistency regularization to improve model stability and avoid confirmation bias.
+Co-training involves training multiple modules on different data views or having them agree on predictions, enhancing SSL effectiveness.
+SSL is beneficial in transfer learning, where pre-trained language models can improve pseudo-label generation for target tasks.
+Unsupervised Learning:
+
+Unsupervised methods rely solely on unlabeled data, making them valuable when labeled data is scarce. Techniques like self-supervised pre-training and consistency conditions are pivotal in unsupervised fine-tuning.
+Cycle-consistency and learning relationships between diverse domains, languages, or text styles are integral to unsupervised approaches.
+Unsupervised objectives often need significant unlabeled data to learn data distributions effectively, prompting a combination with supervised methods for better performance.
+Active Learning (AL):
+
+AL focuses on selecting informative data points to maximize limited training data effectiveness, crucial for scenarios with unlabeled data and annotation budget constraints.
+Metrics like confidence scores, entropy, and diversity-based sampling strategies guide AL data selection, enhancing data representation and minimizing outliers.
+Iterative AL processes involve selecting unlabeled samples for annotation based on model refinements, with stable model re-initialization improving performance, especially for underrepresented classes.
+Integration and Benefits:
+
+AL techniques, when integrated with methods like adapters and UniPELT, offer promising results in enhancing model performance for low-resource tasks.
+AL strategies enable efficient learning from limited data, alleviating annotation burdens and adapting to various task complexities.
+Few-shot Learning
+Few-shot learning involves training models with a limited number of examples for a new task, challenging the model to generalize to unseen data. This section explores various methods, with some techniques involving fine-tuning on target data while others do not.
+
+The approach in few-shot learning revolves around training models with minimal examples for new tasks.
+Models are tested on unseen data to evaluate their ability to generalize effectively.
+Some methods within few-shot learning incorporate fine-tuning using target data to improve task performance.
+Other techniques in few-shot learning do not rely on fine-tuning, presenting alternative approaches to generalize from limited examples.
+In-context Learning
+In-context learning (ICL) has gained popularity as a method to enhance the generalization ability of large decoder models trained on extensive text datasets. Here are key points from this section:
+
+ICL, also known as prompting, capitalizes on the ability of large decoder models to implicitly learn various tasks from text data.
+Conversational models, post-CLM pre-training, can be fine-tuned using reinforcement learning to align with user intent, improving helpfulness, accuracy, and safety without requiring extensive retraining.
+ICL enables models to quickly adapt to new tasks with minimal examples, reducing the need for computationally expensive gradient-based training.
+In low-shot scenarios, ICL can outperform traditional fine-tuning methods, although prompt quality plays a crucial role in its effectiveness.
+Discrete prompts, while intuitive and interpretable, often necessitate manual crafting, limiting their scalability to new models and tasks.
+Leveraging fill-in templates, prompt libraries, and retriever modules can streamline the usage of prompting techniques, reducing manual effort and enhancing performance.
+Text generation tasks can be used for various natural language understanding tasks, and sophisticated prompting methods like chain-of-thought can significantly enhance few-shot learning outcomes.
+Cross-lingual prompting is particularly beneficial for low-resource languages by transferring knowledge from high-resource languages, with English task descriptions showing consistent performance in few-shot scenarios.
+However, ICL is most effective with large generative models requiring substantial computational resources during inference due to their large context window.
+Pattern-Exploiting Training
+Pattern-exploiting training (PET), also known as prompt-based fine-tuning, adopts a cloze format to enable models to predict targets using a Masked Language Model (MLM) objective. This technique effectively merges pre-training and fine-tuning processes. Here are the key points included:
+
+Formulates classification tasks in a cloze format for predicting targets
+Particularly beneficial for few-shot classification in low-resource languages and specialized domains
+Requires handcrafted patterns and verbalizers tailored to the specific task and dataset
+Pattern templates convert inputs into cloze-style prompts, while verbalizers map labels to target token sequences in the model's vocabulary
+In cross-lingual settings, combining PET with a consistency loss enhances learning inter-language correspondences. During inference, this method employs a computationally expensive autoregressive decoding scheme for verbalized targets involving multiple tokens. Here are more details:
+
+Various approaches aim to enhance inference efficiency, such as calculating similarity with average target embeddings, prototypical nearest neighbor decoding, or evolutionary verbalizer search algorithms
+Karimi Mahabadi et al. introduced a method that substitutes handcrafted verbalizers and patterns with learned label embeddings and task-specific adapters, resulting in performance improvements in PET applications.
+Multi-task Learning
+The concept of multi-task learning involves training models to perform multiple tasks simultaneously, enhancing zero-shot task generalization for large generative models with billions of parameters. Here are the key points included in this section:
+
+Multi-task fine-tuning is a common approach used to boost zero-shot task generalization.
+Huge generative models are fine-tuned on a wide array of related downstream tasks to establish strong baselines for comparison.
+Even when data or computational limitations prevent task-specific fine-tuning, these models still prove to be robust.
+Shared layers in multi-task models help in learning common features across tasks, while task-specific layers focus on the unique aspects of each task.
+Mixture-of-experts (MoE) models take this further by routing computations through smaller subnetworks, enabling the sharing of representations among tasks and enhancing overall performance.
+Meta-learning
+Meta-learning is inspired by human development theory and focuses on learning from past experiences to enhance efficient adaptation in future tasks. In the realm of few-shot learning:
+
+Metric-based approaches aim to learn a similarity score in a latent space for comparing new and familiar samples.
+Class prototypes capture class-specific information in a metric space.
+Strategies like instance-and class-specific CL combined with PET or anchoring to class descriptions with triplet loss enhance the embedding space and incorporate expert knowledge.
+Methods for inference and prediction involve:
+
+Utilizing pairwise comparisons or non-parametric learning algorithms like k-Nearest Neighbors.
+Relying on representative class examples for effective performance.
+A key direction in meta-learning involves learning suitable initialization parameters to enable fast adaptation on unseen tasks in a few optimization steps. This approach treats meta-learning as a two-level optimization problem:
+
+Task-specific inner loop.
+Task-agnostic outer loop.
+Key strategies include:
+
+Updating weights from the inner loop to provide gradients on the query set for updating model parameters in the outer loop.
+Implementing supervised few-shot updates on the target task, particularly suitable for classification tasks employing encoder models.
+Data-efficient NLP Techniques
+This section discusses effective methods for NLP tasks with limited data, highlighting key points such as:
+
+Model Selection:
+Choosing the appropriate pre-trained model is crucial for optimal task performance.
+Factors to consider include model architecture, parameter count, and pretraining data characteristics.
+Bidirectional encoder models with fewer parameters can excel in NLU tasks compared to decoder models with billions of parameters.
+Text generation tasks necessitate more parameters in the decoder component due to their complexity.
+Handling Limited Data:
+For low-resource scenarios, in-context learning is a quick solution that does not rely on gradient-based training.
+PET with adapters is effective for few-shot classification tasks.
+Increased pretraining becomes more effective as available unlabeled data grows.
+Continued pre-training using minimal data quantities can enhance downstream tasks, especially with introduced PEFT methods' weights.
+Quality data and proper regularization are crucial for mitigating catastrophic forgetting.
+Adapting Models to New Tasks:
+PEFT methods are highly effective for adapting large pre-trained models to new tasks with limited data while maintaining generalization abilities.
+Different techniques like adapters, prefixtuning, parameter masking, and LoRA suit varying data availability levels.
+Other Approaches:
+Prompttuning can surpass full fine-tuning in low-resource settings but converges slower and works better with larger models.
+Complementary options like CL for better representation quality, active learning to maximize data utility, and semi-supervised learning for enhanced performance and robustness are also mentioned.
+Conclusion
+The survey addresses challenges in using Language Models (LMs) in scenarios with limited data. It provides a systematic overview of methods for effective pretraining and fine-tuning in data-scarce situations. The findings suggest that:
+
+Choosing larger models and combining parameter-efficient methods with suitable regularization and training options can enhance performance in low-resource scenarios.
+Research on preventing catastrophic forgetting during model adaptation in data scarcity is limited.
+Benchmarking various methods across different tasks, especially in specialized domains and resource-poor languages, is lacking.
+There is a need for more public datasets and standardized evaluation frameworks.
+Encouragement is given to explore combining different methods to leverage their strengths effectively.

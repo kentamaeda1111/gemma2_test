@@ -1,0 +1,312 @@
+2. Style-Specific Neurons for Steering LLMs in Text Style Transfer
+Wen Lai, Viktor Hangya, Alexander Fraser
+
+
+Introduction
+Text style transfer (TST) involves transforming text from one style to another while preserving content and fluency. Large language models (LLMs) excel in various NLP tasks, including TST, but often prioritize preserving meaning over stylistic changes. Neuron analysis can enhance neural network interpretability by identifying and understanding individual neuron roles, potentially improving task performance by focusing on language-specific neurons.
+
+Recent LLMs are applied to TST through different approaches, requiring varying data and prompting sensitivities.
+Neuron analysis can enhance multilingual capabilities by focusing on language-specific neurons.
+Research questions are posed regarding style-specific neurons and their optimization for text generation.
+sNeuron-TST Framework
+sNeuron-TST aims to steer LLMs in TST by leveraging style-specific neurons.
+Activation values are used to identify neurons exclusive to each style and eliminate overlapping neurons crucial for faithful style transfer.
+Deactivating source-specific neurons, excluding overlapping ones, improves style transfer accuracy but may impact fluency.
+The contrastive decoding algorithm is adapted for optimal performance, revealing style layers' significant influence on style-related outputs.
+Experimental Evaluation
+The framework is evaluated across six benchmarks with distinct styles, demonstrating higher target style word generation, improved style transfer accuracy, fluency, and maintained content.
+Contributions include the first use of style-specific neurons in TST, emphasizing the importance of eliminating overlapping neurons, and introducing an enhanced contrastive decoding approach.
+The method not only increases target style word production but also ensures fluent sentences, addressing issues related to direct text copying in TST.
+Related Work
+In the realm of Text Style Transfer (TST), Language Model Models (LLMs) have demonstrated effectiveness with techniques like fine-tuning, in-context learning, and prompt-based editing, albeit with high computational demands and sensitive prompts. The existing methods tend to pose practicality challenges due to these requirements.
+
+LLMs in TST have shown promise through techniques like fine-tuning and prompt-based editing.
+However, these methods often demand significant computational resources and specific prompts, impacting their usability.
+This paper introduces a novel decoding approach that leverages fixed prompts to guide LLMs in TST, reducing the need for extensive computational power and ensuring consistent outputs.
+Neuron analysis has gained traction as a powerful tool for exploring the inner workings of neural networks, providing valuable insights into their functionality and attracting increasing attention in recent times.
+
+Neuron analysis helps in understanding how neural network models work.
+The activation of neurons is linked to acquired knowledge, showing efficacy in tasks such as enhancing knowledge, sentiment analysis, and enabling multilingual capabilities in LLMs.
+Drawing inspiration from the success of neuron analysis in improving multilingual functionalities in LLMs, this paper proposes the existence of style-specific neurons, identifies them, and seamlessly incorporates neuron activation and deactivation into the decoding process.
+Method
+The researchers aim to discover neurons in Large Language Models (LLMs) that control specific writing styles, enabling the generation of text customized to a particular style while ensuring smooth language output without any explicit style guidance. Here's how they approached this:
+
+Identification of Style-Specific Neurons:
+Neurons controlling specific writing styles are pinpointed based on their activation patterns.
+It is crucial to deactivate neurons representing both the source and target styles to prevent blending of styles.
+Deactivation of Neurons:
+Neurons linked exclusively to the source or target style are switched off.
+This deactivation process is vital for guiding the LLMs toward generating content unique to the target style without interference from other style-related neurons.
+Deactivating Source Style Neurons for Identifying Style-Specific Neurons in Positive Texts
+In this section, the researchers discuss their method for deactivating source style neurons to identify style-specific neurons in positive texts. Key points included:
+
+The researchers note an enhanced probability of generating words matching the target style while sacrificing fluency when deactivating certain source style neurons.
+They introduce a contrastive decoding approach called Dola for Text Style Transfer (TST) in Section 3.3 to maintain sentence fluency.
+The framework detailing their methodology is depicted in a figure, providing an overview of their approach.
+Identifying Style-Specific Neurons
+Neurons in neural networks are typically seen as feature extractors translating neural activities into understandable concepts. However, some neurons demonstrate polysemy, encoding multiple features such as formal and informal styles, making their interpretation complex. To precisely manipulate particular features of Large Language Models (LLMs) without undesired alterations, it is crucial to pinpoint and exclude neurons with clear-cut functions.
+
+Key Points:
+
+Neurons in neural networks are often considered as entities that extract features translatable into human-understandable ideas.
+Some neurons can exhibit polysemy, encoding more than one feature like formal and informal styles, leading to challenges in interpretation.
+To modify specific features in LLMs without unintended alterations, it is essential to identify and eliminate unambiguous neurons.
+Neurons in LLMs
+The architecture of LLMs predominantly consists of Transformers, featuring multiple layers with multi-head self-attention and feed-forward network (FFN) modules. Some key points to note are:
+
+FFNs in LLMs account for a significant portion of the model's parameters and play a crucial role in encoding extensive information for various tasks.
+Activation or deactivation of neurons within the FFN modules has a notable impact on the model's overall output.
+Researchers aim to pinpoint neurons within the FFN modules of LLMs that are specialized for specific styles.
+The activation values of a layer in a network are formally defined based on the weights, biases, previous layer's activations, and activation function used (e.g., GLU).
+Neurons in a layer are considered active based on their activation values.
+This section delves into the importance of understanding and identifying specific neurons within the FFN modules of LLMs, shedding light on their role in shaping the model's behavior and performance.
+
+Neuron Selection
+The researchers introduced a method to identify language-specific and style-specific neurons, showing significant overlaps among neurons across different languages and styles:
+
+Approximately 25% overlap found between Chinese and English neurons.
+In the Politics benchmark, nearly 95% overlap seen between "democratic" and "republican" styles.
+The study did not initially assess the performance implications of these overlaps. To address this:
+
+The researchers applied their method to a style-specific corpus and noted higher overlaps among style-specific neurons.
+They found that the substantial overlap negatively affected the performance of TST.
+To eliminate overlaps between neurons of different styles, the following steps were taken:
+
+Two distinct styles, denoted as A and B, were considered.
+Activation values of neurons in the Feed-Forward Network layers for both styles were obtained by feeding the respective corpora separately.
+Neurons with activation values above zero were selected to form sets S_A and S_B.
+Top k neurons (tuned on the validation set) were selected from each set.
+Neurons associated with strictly one style were identified by computing disjoint sets of the two smaller sets.
+Deactivating Source Style Neurons
+In the context of neural networks, deactivating neurons associated with a specific style can impact model performance significantly. In a Text Style Transfer (TST) task focusing on formality and politeness transfer experiments:
+
+Deactivating source-style neurons while keeping target-style neurons active improves the accuracy of generating the target style.
+Conversely, deactivating target-style neurons, regardless of the state of the source-style neurons, decreases the accuracy of generating the target style.
+Deactivating target-style neurons impairs the model's ability to generate target-style words during decoding, reducing accuracy, while deactivating source-style neurons enhances focus on generating target-style words, improving accuracy.
+Deactivating neurons, whether source-style or target-style, leads to decreased fluency due to significant impacts on word distribution during decoding.
+Deactivation causes the model to generate non-deactivated style words more frequently, resulting in generated text that lacks fluency and coherence.
+After deactivating source-style neurons, the generated text may include a mix of target-style words but lacks fluency, compromising the overall quality of the text.
+Contrastive Decoding for TST
+Contrastive decoding (CD) is a technique that improves fluency and coherence by adjusting the probability of predicting the next word through a comparison of outputs from a large language model (LLM) and a smaller model. In recent advancements, a CD approach called Dola has shown promising results by comparing output differences between the final layer and early layers of a model.
+
+Dola Approach:
+Dola's method involves comparing outputs from different layers of a model to enhance performance.
+It has been successful in improving results by focusing on differences between final and early layers.
+Application in TST:
+Dola's CD approach is now being adapted to Transformer-based Speech Translation (TST) systems.
+The adaptation aims to address fluency issues encountered when deactivating certain neurons during the translation process.
+Dola
+The Dola method calculates the probability of the next token in a transformer model by contrasting information from various layers, including early exit strategies and the final layer:
+
+Early exit: Predicting the next token's probability involves the hidden states and a vocabulary head function.
+Contrasting layers: Dola contrasts the final layer with a selected premature layer using a function F to compute the log-domain difference between their output distributions.
+Dynamic layer selection: The premature layer is chosen dynamically at each time step based on Jensen-Shannon Divergence to compare outputs from different layers.
+Style information integration: Dola adapts for TST by selecting layers with more style-specific neurons for comparison, typically focusing on the last few layers with higher style neuron content.
+Our Adaptation to TST
+The authors investigate token generation in LLMs by deactivating specific neurons to explore target-style token production. Key points included:
+
+Deactivating source-style neurons in LLMs leads to the generation of target-style tokens.
+The study aims to understand if the appearance of target-style tokens is due to consistently high probabilities across layers or if it results from a probability shift caused by neuron deactivation in later layers.
+Consistency in token probabilities from initial to final layers suggests style-independent tokens, often function words, retained in the final output.
+Tokens with low probabilities in early layers, potentially target-style words, might only undergo probability changes in later layers due to neuron deactivation.
+The layer with the maximum Jensen-Shannon Divergence (JSD) distance from candidate layers is identified as the premature layer M, and token probabilities are adjusted accordingly.
+Datasets
+The researchers assess their method across six common Text Sentiment Task (TST) categories, encompassing formality, toxicity, politics, politeness, authorship, and sentiment. Their evaluation is conducted using datasets from various sources, including GYAFC, ParaDetox, Politeness, Shakespeare, and Yelp. Detailed statistics regarding these datasets are provided in the supplementary materials in Appendix A.
+
+Evaluation spans six TST tasks: formality, toxicity, politics, politeness, authorship, and sentiment
+Datasets utilized: GYAFC, ParaDetox, Politeness, Shakespeare, Yelp
+Additional dataset statistics available in Appendix A for reference
+Baselines
+The researchers compare their approach with several baselines to evaluate its effectiveness:
+
+LLaMA-3: This baseline system is used without additional fine-tuning as the vanilla baseline.
+APE: This baseline utilizes activation probability entropy to identify style-specific neurons.
+AVF: Utilizes activation value frequency and sets a threshold to identify style neurons.
+PNMA: This baseline aims to find neurons that activate on the source style sentences but not on target style sentences.
+Baselines 2, 3, and 4 from the original paper focus on enhancing multilingual capabilities by identifying language-specific neurons. The researchers extend these methodologies to their style-related corpus.
+Baseline 4 requires parallel data from both source and target texts to identify neurons, while Baselines 2, 3, and the researchers' method do not need parallel data. After identifying the neurons, source-style neurons in Baselines 2, 3, and 4 are deactivated.
+For a detailed comparison of different decoding strategies, readers are directed to Appendix G.
+
+Implementation
+The authors implemented the study using the 8B model of LLaMA-3 from the HuggingFace repository in a zero-shot setting. Additionally, they tested the scalability of their method by incorporating the 70B LLaMA-3 model as well. To ensure a fair comparison, identical hyperparameters, such as the threshold, were maintained across all baseline systems.
+
+The study utilized the 8B model of LLaMA-3 from the HuggingFace repository in a zero-shot setting.
+To evaluate scalability, the 70B LLaMA-3 model was also employed.
+Consistent hyperparameters, including the threshold, were used for each baseline system for comparability with the original paper.
+Evaluation Metric
+The researchers evaluated their approach in Text Style Transfer (TST) tasks using three key metrics:
+
+Style Accuracy:
+
+Assessed the accuracy of labels predicted correctly by a style classifier.
+More details can be found in Appendix B.
+Content Preservation:
+
+Utilized Cosine similarity between embeddings of the original text and text generated by the model.
+LaBSE was used to generate sentence embeddings as the primary metric.
+Also employed BLEURT metrics for comparison, considering strong correlations found in previous studies between BLEURT assessments on TST and human evaluation results (see Appendix F).
+Fluency:
+
+Measured the perplexity of sentences generated by the model using GPT-2.
+Results
+The study evaluates transfer performance of six benchmarks in 12 directions, focusing on style accuracy, content preservation, and fluency. Here are the key findings:
+
+Baseline Performance:
+
+APE, AVF, and PNMA show strong multilingual enhancement but do not surpass the original LLaMA-3 in the TST task, except for content preservation.
+Language-specific properties are easily identified using simple features, leading to differences in performance.
+Neuron selection methods of baselines minimally affect multilingual performance.
+Challenges in Style Transfer:
+
+Text style complexity requires models to grasp intricate knowledge and make nuanced judgments at word and semantic levels.
+Baseline systems with overlapping neurons across styles, especially in style accuracy, lead to suboptimal results.
+Lack of a contrastive decoding strategy in baselines compromises fluency.
+Improved Method Performance:
+
+The proposed method surpasses baselines in accuracy and fluency by eliminating overlapping style neurons and using contrastive decoding.
+Content Preservation Analysis:
+
+Baselines excel in content preservation due to a copy mechanism preserving original semantics over stylistic differences.
+Semantic gap variations between sentences of different styles lack effective metrics for full measurement.
+Directional Performance Discrepancies:
+
+Style transfer between different directions within the same task shows significant performance gaps.
+Training data biases in LLMs towards positive corpora lead to disparities, impacting the safety and style balance of generated responses.
+Analysis
+The analysis section of the paper focuses on various critical aspects related to the model and its performance. It includes:
+
+Ablation study conducted to confirm the necessity of removing overlap between style neurons on the source and target sides.
+Emphasis on the importance of neuron deactivation and contrastive decoding techniques.
+Detailed examination of the copy problem within the TST task.
+Exploration of other essential factors specific to the model approach.
+This section provides in-depth insights into how specific components like style neurons, neuron deactivation, and decoding techniques influence the model's performance, highlighting key considerations for improving effectiveness and addressing challenges within the task.
+
+Ablation Study
+The researchers conducted an ablation study to assess the impact of removing overlapping source- and target-style neurons and presented their findings in a detailed table. Here are the key points from the study:
+
+A substantial 95% overlap was observed in most neurons, indicating significant similarity between the source and target style neurons, making them hard to differentiate during decoding using Language Model Models (LLMs).
+
+Results from ablating neuron deactivation and contrastive decoding (CD) yielded important insights:
+
+Deactivating neurons on the source side had a significant impact on the results, as it encouraged LLMs to produce words in the target style.
+CD alone did not show significant improvements and could even degrade results, likely due to the processing of style-related information in later layers, where simple comparisons did not lead to substantial enhancements.
+Optimal performance was achieved when both deactivating source-side style neurons and utilizing CD were combined, leading to better generation of target style vocabulary, though at the expense of sentence fluency.
+
+The combination of deactivating neurons and employing CD was found to enhance sentence fluency, highlighting the importance of CD in improving the overall quality of generated sentences.
+
+Copy Problem
+The "copy problem" in multilingual machine translation occurs when models simply duplicate the input text without making meaningful changes in the output, especially affecting semantic consistency in translated texts. To address this issue, various strategies have been explored:
+
+Investigation Areas: The study delves into tasks related to formality, politeness, and toxicity to examine the prevalence of the copy problem, particularly in maintaining semantic meaning over incorporating stylistic variations.
+
+Existing Solutions: Neuron-based methods like APE, AVF, and PNMA partially address the copy problem by regulating neuron activation to generate more target-style words during decoding. However, these approaches face challenges in completely eliminating overlap between source and target style neurons, impacting performance.
+
+Novel Approach: In contrast, the proposed approach aims to reduce the copy rate by deactivating source-side neurons and employing a unique decoding strategy, highlighting a promising method to tackle the copy problem effectively.
+
+Case Study
+The researchers conducted a case study involving three style transfer tasks: transforming informal to formal, impolite to polite, and negative to positive text. Here is how the study unfolded:
+
+Comparison with LLaMA Model:
+
+The original LLaMA model often kept a higher number of words from the source text verbatim, which was a known issue discussed earlier.
+By adjusting style neurons, the researchers directed the model to produce a more diverse vocabulary in line with the target style.
+Model Output Example:
+
+An example demonstrated the model generating the word "moist" following a prompt task where the source style sentence was to be transformed into the target style sentence while preserving the original sentence's meaning.
+Informal → Formal:
+The authors address the task of converting informal text to formal text, exemplified with the phrase: "i don't know. and my exams r not over yet still 1 remaining i.e on 23-dec."
+
+Transforming informal expressions to their formal equivalents is a key focus.
+The informal text "i don't know" is converted to "I do not know".
+"My exams r not over yet still 1 remaining i.e on 23-dec" is formalized to "My exams are not over yet. There is still one remaining, i.e., on 23rd December".
+LLaMA-8B
+The section mentions the author's uncertainty about an exam and a description of a slice that was found to be dry and had an unusual taste.
+
+The author expresses not knowing and having an upcoming exam on December 23rd.
+The slice consumed was characterized as being very dry and having an odd flavor throughout.
+Our
+The section describes contrasting experiences with two slices of cake, highlighting one as negative and the other as positive in taste and moisture content. Additionally, it mentions a table illustrating a case study on transforming tasks from informal to formal, impolite to polite, and negative to positive.
+
+The first cake slice is criticized for being dry with an unpleasant taste.
+In contrast, the second cake slice is praised for being moist and delicious.
+A table is presented outlining a case study focusing on converting tasks from informal to formal, impolite to polite, and negative to positive.
+Further Analysis
+The researchers extensively analyze their method across various dimensions, revealing key insights:
+
+Their method shows consistent effectiveness across diverse model sizes, including larger models like 70B.
+Optimal performance is achieved by selecting the last few layers over earlier layers.
+Different strategies for preserving meaning result in similar outcomes, emphasizing the need for innovative approaches in future research.
+Contrastive decoding proves significantly advantageous over traditional decoding methods in the TST task, leading to the adoption of the CD strategy.
+Conclusion
+The authors analyze the Task-Specific Transformation (TST) in Large Language Models (LLMs) using a neuronal perspective, aiming to identify style-specific neurons in LLMs while emphasizing the importance of separating source and target stylistic neurons. Key points included:
+
+Deactivation of source-specific neurons improves the likelihood of generating target-style words but might impact sentence fluency.
+The state-of-the-art contrastive decoding method (Dola) is modified for TST to balance fluency and style transformation in generated sentences.
+Experimental results on six benchmarks validate the effectiveness of the proposed approach, showcasing improved style adaptation while maintaining fluency in generated text.
+Limitations
+The limitations of the study are as follows:
+
+Deactivation of style-specific neurons was done across all layers, but exploring other layers could provide additional insights.
+Deactivating neurons in different layers (e.g., understanding or generating layers) may have nuanced effects on experimental outcomes.
+The evaluation of the approach was limited to the text style transfer task, but it could be extended to other style-related tasks like image style transfer and multilingual style transfer.
+The method is task-agnostic and shows potential for adaptation to tasks like identifying domain-specific neurons for domain adaptation tasks.
+These limitations highlight areas for potential future research and expansion of the current findings to broader applications beyond the text style transfer task.
+
+A Datasets
+The researchers utilized publicly available datasets for neuron identification and applied specific preprocessing steps to the raw data, which included:
+
+Removing sentences longer than 120 characters
+Eliminating duplicate sentences
+Filtering out sentences with a high number of special symbols
+Detailed statistics of the preprocessed corpus are presented in a table for reference.
+
+B Classifiers used in Each Benchmark
+The authors assess the accuracy of style transfer by employing open-source classifiers across six evaluated benchmarks. The classifiers utilized for evaluation are from various specified sources, as outlined in a detailed table.
+
+Open-source classifiers are applied to gauge the effectiveness of style transfer.
+Evaluation is conducted on six distinct benchmarks to measure performance.
+The specific sources of these classifiers are referenced and detailed in a table for clarity.
+C JSD Distance between Layers:
+To validate the encoding of stylistic information in style-specific layers for transferring text from informal to formal styles, the researchers computed Jensen-Shannon Divergence (JSD) distances between the final layer and preceding layers for the TST task.
+
+Results revealed that earlier layers (0 to 26) maintained consistent or minimally changing distances from the final layer, indicating similarity in encoded information.
+In contrast, the last layers (27 to 31) exhibited smaller JSD distances from the final layer but increased distances among themselves, implying processing of style-related content in these layers.
+Analysis highlighted certain formal style-associated words with greater distance variations in the last layers, supporting the hypothesis that target style words are more likely to activate in the style layer, enhancing their selection for token generation.
+Effectiveness of Different Model Sizes
+The researchers conducted experiments on the 70B version of LLaMA-3 to assess the effectiveness of their method on a larger model. The results, detailed in Table 10, demonstrated that their method performs well on the larger model, aligning with the conclusions derived from the 7B model.
+
+Key points included:
+
+Experiments conducted on the 70B version of LLaMA-3
+Performance of the method assessed on a larger model
+Results presented in Table 10
+Method found to be effective on the larger model as well
+Consistency with conclusions from the 7B model mentioned
+E Style Layers vs. Dola Layers
+In this section, the authors highlight the difference between E Style Layers and Dola Layers in their approach. They specifically focus on the selection of style layers for decoding in contrast to the final layer. Here's a summary of the comparison between the two methods:
+
+E Style Layers Selection:
+
+The method chooses the style layers, particularly the last layers of the LLMs, for decoding, contrasting them against the final layer.
+This approach differs from Dola, which selects early layers for decoding by contrasting them with the final layer.
+Comparison Experiment:
+
+The authors conducted a comparison experiment to validate the effectiveness of their selected style layers.
+The results, presented in a table, clearly demonstrate the advantages of choosing the last few layers for contrastive decoding in the TST task.
+Different Content Preservation Metrics
+The researchers evaluated their method's content preservation by comparing it with baseline methods using different metrics. Here's a summary of their findings:
+
+The method did not perform optimally in content preservation, as shown in Table [Table Number].
+A comparison experiment was conducted with other content preservation metrics.
+Results in Table [Table Number] indicated that their method was inferior to the baseline method in preserving meaning.
+The researchers invite readers to refer to Section 5 for a detailed analysis of these findings.
+Different Decoding Strategy
+In this section, the researchers introduce a novel decoding strategy aimed at contrasting style layers within the context of the text style transfer (TST) task. The key points covered in this section include:
+
+The comparison of the proposed decoding strategy with two other methods, nucleus sampling and contrastive search, which revealed that the researchers' decoding approach surpasses the others in performance.
+
+Contrastive search focuses on the isotropy of token representations during decoding, leading to less variation for semantically similar words in the representation space, which contradicts the goal of exposing more target-style words in the TST task.
+
+Nucleus sampling (NP) sets a threshold on cumulative probabilities for sampling the most probable tokens, making it unsuitable for TST as it distorts the probability distribution of words, resulting in predominantly target-style words and potential issues with fluency.
+
+The research includes a comparison table illustrating JSD distances between the final layer and previous layers in LLaMA-3, shedding light on the evolution of token generation through different decoding steps, exemplifying the TST task transfer from informal to formal style.

@@ -1,0 +1,216 @@
+
+
+2. Leveraging LLMs for Dialogue Quality Measurement
+Juanjuan Jia, Abi Komma, Timothy Leffel, Xinhua Peng, Ajay Nagesh, Tamer Soliman, Aram Galstyan, Anoop Kumar 
+
+
+Introduction
+Conversational system performance evaluation in NLP presents challenges, with traditional metrics like BLEU and ROUGE lacking in measuring perceived quality accurately due to complex mappings.
+
+Advanced methods such as USR, FED, and DialogRPT have emerged but often rely on extensive training data and human references, limiting their generalizability to new datasets.
+Recent progress in Large Language Models (LLMs) has showcased zero-shot capabilities and reasoning skills, prompting researchers to explore LLM applications in tasks like dialogue evaluation.
+While LLMs perform well on diverse datasets, questions remain about factors like model size and in-context examples' impact on LLM performance.
+This paper aims to address these gaps by proposing two evaluation strategies and conducting experiments on benchmark datasets, exploring the influence of attributes like model size and in-context examples on dialogue evaluation.
+
+Larger model sizes and fine-tuning can enhance zero-shot dialogue evaluation, while algorithmic selection of in-context examples improves results in few-shot scenarios.
+Supervised fine-tuning significantly boosts LLM performance in dialogue evaluation tasks, and a Chain-of-Thought (CoT)-based evaluation framework offers comprehensive explanations and justifications for a more holistic evaluation.
+Results show that prompting the LLM to analyze the dialogue before generating labels improves the accuracy of CoT-based evaluation, confirming the effectiveness of LLM-based automated dialogue evaluation.
+Related Work
+The section delves into the challenges of evaluating dialogue systems and highlights various metrics and models used in this context, including:
+
+Metrics like USR and FED address challenges like multiple interlocutors, contextual dynamics, and the one-to-many relationship, showing strong correlation with human evaluation standards.
+Models like RoBERTa and DialoGPT are effective in capturing nuanced dialog attributes, while metrics like GRADE and DEB measure text coherence, response diversity, engagement, and common sense.
+Recent studies focus on large language models (LLMs) for dialogue evaluation, with approaches such as GPTScore using models like GPT-3 to evaluate text quality.
+The G-EVAL framework integrates LLMs with the chain-of-thought (CoT) paradigm and a form-filling strategy, demonstrating strong correlation with human evaluations in summarization tasks.
+Further, the section discusses parameter-efficient fine-tuning techniques for adapting base language models for specific tasks, including:
+
+Prefix-Tuning: Inserting special tokens with trainable embeddings for task-specific fine-tuning.
+Adapter Tuning: Inserting adapter layers between modules to control the model's behavior.
+Low-Rank Adaptation: Using trainable low-rank decomposition matrices to simplify model fine-tuning for specific applications.
+Lastly, the section explores in-context learning as a prompting technique for LLMs, emphasizing the importance of selecting relevant examples for effective task learning. Research in this area includes methods for semantic proximity evaluation and retrieval mechanisms such as BM25 to enhance LLM predictive capabilities in few-shot NLP tasks, aiming to optimize models like GPT-3 with well-chosen in-context examples. Despite advancements, there is a recognized need for further exploration and development of general in-context example retrieval methodologies.
+
+Methodology
+The methodology section delves into the process of evaluating dialogues using Language Model Models (LLMs) like GPT, highlighting two key approaches: evaluation with logits and evaluation with generation. Here's a breakdown of the methodology:
+
+Dialogue Evaluation with Logits:
+LLMs, such as GPT, use a decoder-only architecture and are autoregressive, generating sequences by conditioning each element on the preceding ones.
+The probability of a token sequence is modeled as the product of conditional probabilities for each token given its history.
+LLMs can be prompted to provide a score, leveraging softmax probabilities over the vocabulary to generate ratings.
+Top-K ratings are selected based on corresponding log probabilities, enabling a weighted sum calculation using specified equations.
+Dialogue Evaluation with Generation:
+Lin and Chen (2023) introduced a new framework where LLMs are prompted to directly generate responses for dialogue evaluation.
+Ratings for the dialogue are extracted from the produced LLM responses, offering an alternative method for dialogue evaluation.
+Experiment Setup
+The experimental configuration features:
+
+Models: Utilization of models from the Llama family and Falcon series, including instruction-tuning variants proposed in the Alpaca study.
+Temperature: Fixed at 0.7 during generation.
+Datasets:
+Experimentation on two datasets:
+The publicly available USS dataset containing SGD, MultiWOZ, ReDial, and CCPE subsets with a 1-5 quality score scale.
+Evaluation on two versions of an Amazon-internal dialogue-quality dataset with human-annotated quality ratings on a scale of 1-5.
+Data Preprocessing:
+Binarization of datasets based on quality scores: scores of three and below labeled as "defect" and scores of four or five labeled as "non-defect."
+Methodologies:
+Implementation of three different strategies for in-context example selection:
+Use of BERT for extracting representations from input dialogues and identifying similar examples using cosine similarity computations.
+Random selection method conducted in three runs with reported mean values.
+Exploration of supervised fine-tuning to adapt LLMs for dialogue quality evaluation.
+Fine-tuning:
+Adoption of LoRA setting for supervised fine-tuning to enhance model efficacy at the target task while managing computational costs by fine-tuning a smaller number of parameters compared to full-rank fine-tuning processes.
+Results
+The researchers present the outcomes of experiments focusing on different aspects of LLM-based dialogue evaluation. Here are the key findings:
+
+Larger models offer advantages in zero-shot dialogue evaluation.
+A table in the paper illustrates the correlation between model size and zero-shot capability in evaluating dialogue quality, comparing Spearman and Pearson correlation values with human annotations across Alpaca, Llama, and Falcon model series.
+The results indicate a positive association between model size and zero-shot capability in assessing dialogue quality, with the Falcon series showing a notable enhancement in performance.
+While Alpaca 13b shows slight enhancements over 7b, the Llama series does not exhibit significant improvements with increasing size, suggesting weak correlations, potentially linked to the poor instruction understanding of the original Llama model.
+The findings emphasize the advantages of employing larger models in dialogue systems, particularly for scenarios requiring zero-shot adaptability.
+Instruction-tuning helps zero-shot dialogue evaluation
+The authors explored the impact of instruction fine-tuning on models' ability for zero-shot dialogue quality evaluation, focusing on the Alpaca series of models which underwent instruction fine-tuning based on foundational Llama models:
+
+Instruction fine-tuning significantly enhances task-specific performance.
+Alpaca models exhibit superior performance in zero-shot dialogue quality evaluation, showing consistently higher Spearman and Pearson correlation coefficients compared to Llama models.
+The improvement from Alpaca-13b to Llama-13b models is 0.47 in Spearman correlation, indicating the effectiveness of instruction tuning in enhancing task execution accuracy.
+Instruction tuning may refine language models' comprehension of instructions, improving task accuracy.
+Key points included:
+
+Few-shot performance generally surpasses zero-shot performance, especially in the first three datasets.
+Providing in-context examples enhances dialogue evaluation performance, but excessive examples do not necessarily improve results.
+Lengthy inputs may challenge language models' capacity, leading to performance degradation.
+Zero-shot outperforms few-shot settings in the SGD dataset due to dialogue length constraints.
+Algorithmic selection methods like BM25 and BERT significantly improve performance compared to random selection for in-context examples.
+The optimal in-context example selection method varies across datasets, with BM25 excelling in the first two and BERT in the third dataset.
+In Conclusion
+The authors' results indicate that using in-context examples can notably improve dialogue evaluation quality. Algorithmic methods for selecting these examples are crucial, as the appropriate selection strategy can result in significant performance improvements.
+
+Key points:
+
+In-context examples greatly enhance dialogue evaluation quality.
+Employing algorithmic methods for example selection is vital for meaningful performance gains.
+Contribution to Few-Shot Learning
+This study adds to the knowledge on leveraging few-shot learning effectively in dialogue systems by revealing underlying patterns that highlight the optimal utilization of this learning approach.
+
+Key points:
+
+Contributes to a deeper understanding of optimizing few-shot learning in dialogue systems.
+Supervised Fine-Tuning Improves Dialogue Evaluation Quality
+The researchers investigated the impact of supervised fine-tuning (SFT) on the performance of Large Language Models (LLMs) for dialogue evaluation. Here are the key points from this section:
+
+Experimental Setup:
+
+Models were fine-tuned using Likert-scale and binary label data on internal datasets.
+Two versions of datasets were used: a small version denoted as "xxx-small" and a larger version labeled as "xxx-large."
+Classification Metrics:
+
+Evaluation was based on precision, recall, F1-score, and F1-micro.
+After SFT, improvements were observed, especially in Spearman and Pearson correlations with human annotations.
+Performance Improvements:
+
+A model like "Falcon-40b-instruct-sft-large" showed a 48% relative improvement post-SFT.
+Analysis revealed that SFT generally enhances performance, with up to 75% relative improvement in some cases.
+Effect of Dataset Size:
+
+Models trained on larger datasets often showed better correlations, but occasionally smaller datasets led to superior F1-micro scores.
+For instance, Llama-13b-sft-small showed a 15% relative improvement over Llama-13b-sft-large.
+Insights on Prediction Quality:
+
+Models like Llama-7b and Llama-13b had high recall but suboptimal precision, indicating the need for better performance.
+Spearman and Pearson correlations provided deeper insights into the relationship between model predictions and human labels.
+Conclusion:
+
+The study highlights that SFT significantly boosts LLM performance in dialogue evaluation.
+Emphasizes the importance of fine-tuning and dataset selection for more accurate and human-aligned evaluations in dialogue systems.
+Chain-of-Thought for Generation of Scores and Reasons
+The section delves into a novel approach called the "generation and chain-of-thoughts," which not only produces scores but also offers natural language explanations for those scores. Here are the key points from this section:
+
+Two paradigms are explored to achieve this: Analysis-first and Rating-first.
+
+Analysis-first Paradigm:
+
+Involves generating an analysis first and then deriving ratings based on that analysis.
+Shows better alignment between scores and reasons compared to the Rating-first approach.
+Outperforms Rating-first in 85% of evaluation metrics, indicating consistent improvement.
+Rating-first Paradigm:
+
+Prompts to generate a rating first and then elucidate the reasons behind that specific score.
+Shows inconsistencies between scores and subsequent reasoning, as highlighted during failure analysis.
+Aligned Scores and Reasons:
+
+In the Analysis-first paradigm, there is observed consistency between ratings and scores, leading to improved metrics.
+This alignment between scores and reasoning is crucial for various applications, emphasizing the importance of this approach.
+Implications and Future Directions:
+
+The research suggests that alignment between scores and reasoning is crucial across applications.
+Further exploration of these paradigms can offer valuable insights for leveraging Language Models for tasks like rating and explanation generation in complex scenarios.
+Conclusion
+The paper delves into using Large Language Models (LLMs) for assessing task-oriented dialogue systems, uncovering crucial insights:
+
+Pretrained Model Size Impact: The size of pretrained models significantly influences performance.
+
+Instruction Fine-tuning Significance: Fine-tuning instructions is vital for better outcomes.
+
+Effectiveness of In-Context Examples: In-context examples play a key role in enhancing system effectiveness.
+
+Consistent Performance Improvement: Supervised fine-tuning consistently enhances system performance.
+
+Optimal Paradigm: The Analysis-first approach paired with the chain-of-thought paradigm proves most effective.
+
+Limitations
+The authors acknowledge limitations in their study despite valuable insights gained:
+
+They concentrate on open-source models, omitting closed ones such as ChatGPT and Claude.
+Evaluation predominantly revolves around user satisfaction, neglecting measures of interestingness and coherence.
+Performance is impacted by prompt designs, with suboptimal prompts potentially resulting in decreased model effectiveness.
+Ethics Statement
+The authors raise ethical concerns regarding the use of Large Language Models (LLMs) in their evaluation, primarily focusing on the potential biases and negative impacts on dialogue evaluation that LLMs may introduce. Additionally, they express concerns about user satisfaction overshadowing critical issues like toxic responses, which could result in inadequate evaluations.
+
+To mitigate these concerns and address the risk of unintentional disclosure of private information during reason and rating generation, the researchers emphasize the importance of exercising caution when utilizing LLMs for reasons and ratings. They stress the need for ensuring accuracy and fairness in interpretation to uphold ethical standards in research involving LLMs.
+
+Key points included:
+
+Potential biases of LLMs may influence dialogue evaluation outcomes negatively.
+Focus on user satisfaction may neglect critical issues like toxic responses, leading to insufficient evaluations.
+Researchers should be cautious to prevent the unintentional release of private information during reason and rating generation.
+Accuracy and fairness in interpretation are crucial when using LLMs for reasons and ratings to maintain ethical standards.
+A Prompts
+The section delves into the specifics of the prompts and instructions employed in the evaluation methods, focusing on both logits-based and generation-based approaches.
+
+Key Points:
+Logits-based evaluation method prompt details:
+
+Logits referred to as raw non-normalized predictions
+Logits prompt complexity discussed
+Generation-based evaluation method prompt details:
+
+Instructions tailored for text generation tasks
+Addressing prompt effectiveness and relevance in evaluating text generation models
+A.1 Prompts for Logits Method
+The researchers formulated prompts for the logits method as follows:
+
+Instruction: Requested participants to evaluate subsequent dialogues by assigning a score from a predefined set.
+Scoring: Clarified that a score of 1 indicates dissatisfaction, while a score of 5 indicates high satisfaction.
+A.2 Prompts for Generation Method
+Rating-First
+The authors outline the prompts used in the Rating-First method where Large Language Models (LLMs) are directed to provide reasons and ratings for dialogues, along with evaluation criteria. The process includes:
+
+Providing an instruction for LLMs to evaluate a dialogue and give a score with an explanation.
+Evaluation Criteria:
+Score of 1: Very dissatisfied
+Score of 2: Dissatisfied
+Score of 3: Normal
+Score of 4: Satisfied
+Score of 5: Very satisfied
+Steps for evaluation:
+Read the dialogue and response.
+Rate the response on a 1-5 scale.
+Provide a brief explanation for the rating.
+Analysis-First
+In this section, the prompts for the Analysis-First method are described, similar to Rating-First but with a focus on overall dialogue quality. The process involves:
+
+Instructing LLMs to evaluate dialogues based on user goal, user feedback, system response, and system feedback.
+Evaluation Criteria similar to Rating-First.
+Evaluation steps:
+Read the dialogue and response.
+Provide brief analysis on specific aspects.
+Rate the response from 1-5 based on the evaluation criteria and analysis.

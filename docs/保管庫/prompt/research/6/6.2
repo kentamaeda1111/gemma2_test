@@ -1,0 +1,205 @@
+
+
+
+
+2. LoRTA: Low Rank Tensor Adaptation of Large Language Models
+Ignacio Hounie, Charilaos I. Kanatsoulis, Arnuv Tandon, Alejandro Ribeiro 
+
+
+
+
+
+Introduction
+The advent of Large Language Models (LLMs) has ushered in unprecedented capabilities across various tasks by leveraging billion-parameter scale models pretrained on extensive datasets. However, the exponential growth in LLM sizes poses challenges in terms of computational and memory requirements, especially for those lacking access to high-performance computing infrastructure. This challenge has sparked interest in parameter-efficient fine-tuning (PEFT) techniques, which allow the adaptation of LLMs to specific applications or user preferences using only a small fraction of trainable parameters. Key points included:
+
+PEFT techniques reduce GPU memory requirements by shrinking optimizer states, enabling efficient storage and deployment of fine-tuned LLMs.
+Apart from computational benefits, PEFT methods act as implicit regularization mechanisms to mitigate overfitting risks associated with fine-tuning high-capacity LLMs.
+Parameter sharing, a well-established technique in deep learning, enhances generalization across various tasks and has shown performance improvements in specialized applications with limited data, such as in the medical domain.
+Low Rank Adaptation (LoRA) is a prevalent PEFT approach that optimizes weight matrix updates using a low-rank parametrization, allowing fine-tuning of large LLMs with significantly fewer trainable parameters. Recent works have aimed to further reduce parameter count in LoRA by employing different strategies. Key points included:
+
+Recent efforts focus on reducing parameters in LoRA by allocating different ranks across update matrices, using fixed low-rank projections, and parameterizing low-rank matrices with a random basis.
+The introduction of Low Rank Tensor Adapters (LoRTA) aims to exploit redundancies in weight updates across different model components, achieving a reduction in trainable parameters while facilitating learning by leveraging shared information among model components.
+LoRTA's explicit tensor model is fully trainable and more expressive than implicit tensor models in other methods. It offers greater parameter efficiency than existing matrix-based approaches in the context of vision transformers. Key advantages of LoRTA over matrix-based approaches are:
+
+Reduction in trainable parameters through lower tensor rank updates.
+Finer-grained control over adapter size.
+Evaluation of LoRTA across various benchmarks demonstrates substantial reduction in the number of trainable parameters compared to state-of-the-art PEFT methods, with minimal performance trade-offs.
+
+TRANSFORMER ARCHITECTURE
+The researchers focus on the transformer architecture, highlighting its versatility to extend beyond itself to architectures like Convolutional Neural Networks and Long Short Term Memory networks. Here are the key points about the transformer architecture:
+
+The transformer model starts with an initial embedding layer that converts input tokens into d-dimensional vector representations.
+These embeddings then go through a series of layers, each conducting multi-head attention, normalization, and feed-forward operations.
+Each layer of the transformer takes an input matrix X(l) in R^N×d form, where N represents the number of queries in a d-dimensional feature space.
+A transformer layer with H attention heads involves key (k), query (q), value (v), and projection (p) matrices in R^d×d for each head h and layer l.
+LOW RANK (MATRIX) ADAPTATION
+The researchers introduce LoRA, a technique that adjusts pre-trained weights by incorporating trainable updates, mainly focusing on fine-tuning attention matrices for Language Model Adaptation (LLM). The approach involves:
+
+Modifying pre-trained weights at each layer and attention head using trainable adapters.
+Parametrizing updates across all attention heads with rank-r matrices to facilitate adaptation.
+Introducing a scaling factor to optimize learning rate adjustments for different adapter rank sizes.
+Demonstrating that appropriate learning rate settings for specific matrices can enhance convergence and performance.
+Key points included:
+
+LoRA's efficiency in fine-tuning comes with a parameter cost of at least 8 • d • r per layer, leading to a significant number of trainable parameters in high-dimensional LLMs with many layers.
+Integration with model weight quantization for reduced computational resources without increasing deployment inference time.
+Development of AdaLoRA, expanding LoRA by dynamically adjusting rank for low-rank matrices during fine-tuning.
+Introduction of LoRA-FA, which freezes the A matrix at random initialization to reduce trainable parameters while maintaining performance.
+This adaptation technique offers a balance between efficient fine-tuning and parameter management in neural network models, particularly beneficial for LLMs with complex architectures and resource constraints.
+
+TENSOR ALGEBRA
+The tensor adaptation model for PEFT, known as LoRTA, is introduced in this section. Here are the key points about tensor algebra explained in the section:
+
+A tensor, denoted by X, is an N-way array indexed by i1, i2, ..., iN, with elements X(i1, i2, ..., iN).
+Tensors have N types of modes, like X(:, i2, ..., iN) and X(i1, :, ..., iN).
+Any tensor can be decomposed as a sum of N-way outer products, where the factors A1, A2, ..., AN are called the low-rank factors of the tensor.
+The decomposition represents the Canonical Polyadic Decomposition (CPD) or Parallel Factor Analysis (PARAFAC) of a tensor.
+A tensor can be characterized by its latent factors, allowing representation by its CPD model.
+The CPD model is unique under certain conditions, making it preferred when minimizing parameters is the goal.
+Apart from the CPD model, tensors can also be represented as a set of matrices, fixing all modes but two.
+In summary, tensor algebra involves decomposing tensors into outer products, characterizing them with latent factors like in CPD models, and representing tensors as matrices under different conditions.
+
+PARAMETER SHARING ACROSS LAYERS
+Parameter sharing across layers in PEFT models involves using predefined projection matrices and tensor factorization models with fixed and learnable parameters. Two proposed approaches are Vector-based Random Matrix Adaptation (VeRA) and Random Matrix basis Adaptation (NOLA):
+
+Vector-based Random Matrix Adaptation (VeRA)
+VeRA uses fixed random matrices shared across all layers and two learnable vectors at each layer for parameterizing updates.
+The update at each layer involves random projections A, B, and matrices C_D, C_B to collect trainable vectors across layers.
+VeRA can be seen as a coupled matrix factorization model resembling a tensor model, and as a low-rank tensor CPD parametrization when the C_B term is removed.
+Omitting the C_B term results in a small performance degradation compared to omitting C_D.
+Random Matrix Basis Adaptation (NOLA)
+NOLA parameterizes weight updates by expressing matrices A and B as linear combinations of fixed random basis matrices shared across all layers.
+Each layer's weight update is determined by fixed random matrices A_i, B_j shared across layers, along with learned coefficients for each layer.
+NOLA can be interpreted as a tensor factorization model, expressed as a summation of CPD models, which is a powerful tensor model but may lack parsimony.
+LORTA: A GENERAL TENSOR MODEL
+The authors propose a novel approach, LoRTA, to address the issue of large model sizes in PEFT models by employing a low-rank CPD structure for modeling trainable adapters. Here's a breakdown of the key points:
+
+Motivation for CPD:
+
+CPD is chosen for its universal factorization capability while keeping the model concise with fewer parameters needed for accurate approximation.
+Contrasts with existing tensor adapters in vision that rely on Tucker and Tensor-Train models, offering a more parameter-efficient alternative.
+Structure of LoRTA:
+
+Represents weight updates as a 5th-order tensor, integrating updates of layers, heads, and matrices into the CPD tensor model.
+Utilizes factor matrices for input/output dimensions, attention heads, layers, and matrices Q, K, V, P to capture shared information efficiently.
+Comparison with other models:
+
+Unlike NOLA and VeRA, LoRTA's model is fully trainable, with factor matrices (A, B, C_H, C_L, C_M) learned during training.
+Provides greater expressiveness by learning all factor matrices, eliminating the need for predetermined random projections.
+Parameter Efficiency:
+
+Reduces the number of parameters significantly compared to existing models like LoRA, achieving substantial parameter savings without losing expressive power.
+Example showcasing a 47.6% reduction in parameters in a specific model (LLaMA27B).
+Comparison Visualization:
+
+Illustrative comparison between LoRA and a rank one tensor parametrization for a single weight matrix update, showcasing parameter efficiency gains with CPD-based LoRTA.
+Natural Language Understanding
+The authors evaluate their approach by fine-tuning RoBERTa-base and RoBERTa-large models on the General Language Understanding Evaluation (GLUE) benchmark, following the setup established in prior research. Key points included:
+
+The evaluation involves tuning all attention matrices in each self-attention module and fully training the classification head.
+The reported number of trainable parameters includes only the attention layers, as the classifier undergoes full fine-tuning by all methods.
+Separate learning rates are utilized for the classification head and the adapted layers, with adjustment through a grid search.
+Parameters such as batch size, maximum sequence length, and number of epochs align with those in prior studies.
+Detailed settings are documented in Table in Appendix D.1.
+The authors benchmark their method against various approaches:
+
+Full finetuning where all parameters are trained.
+Bitfit (Zaken et al., 2021) where only bias vectors are fine-tuned.
+Adapter tuning, which includes variations like Adapter H, Adapter P, and AdapterDrop for efficiency.
+LoRA, LoRA-FA, and other methods are compared in terms of performance and parameter efficiency.
+The main findings include:
+
+LoRTA demonstrates competitive performance with a minor average reduction compared to the top methods.
+LoRTA achieves this with significantly fewer parameters than the most efficient method (VeRA) and a much larger reduction compared to LoRA.
+INSTRUCTION TUNING
+The researchers fine-tuned the 7 billion parameter Llama2 models using the cleaned Alpaca instruction tuning dataset, training for one epoch with a warm-up learning rate sweep. This fine-tuning process aimed to enhance model performance with specific hyperparameters outlined in the appendix.
+
+LoRTA, depicted in a figure, significantly reduces the number of parameters compared to LoRA, maintaining high performance at a fraction of the parameter cost.
+Despite having fewer trainable parameters, LoRTA only experiences a minor performance decrease compared to the best-performing methods.
+To evaluate the fine-tuned models, the researchers utilized MT-Bench, a benchmark assessing conversational and instruction-following abilities across 80 open-ended questions in roleplaying, reasoning, coding, and information retrieval. GPT-4 scores the model outputs on a scale of one to ten for evaluation.
+
+In another figure, it is demonstrated that LoRTA achieves near-average performance using only 1/5th of the parameters compared to traditional models.
+However, unlike the consistent performance increase observed in the Alpaca dataset, performance fluctuations are noticed, possibly indicating overfitting, with varying performance across tasks.
+Specifically, while most LoRTA models excel in reasoning tasks compared to LoRA, they may fall short in writing tasks.
+PREFERENCE OPTIMIZATION
+The researchers chose Direct Preference Optimization (DPO) for aligning Large Language Models (LLMs) with human preferences due to its simplicity and effectiveness. Here are the key points included:
+
+The 7 billion parameter Llama 2 model was fine-tuned on the Intel Orca DPO pairs dataset, consisting of 6k prompts across various domains and tasks, along with outputs from ChatGPT and Llama2-13B.
+ChatGPT was used to score outputs in the dataset, determining preferred choices based on these scores. A KL regularization was applied to mitigate overfitting due to the small size of preference datasets.
+A regularization coefficient β of 0.1 was used in the experiments, and the Huggingface Transformer Reinforcement Learning (trl) library was employed.
+LoRTA exhibited non-monotonic performance across ranks, indicating the need for further hyperparameter tuning to stabilize its performance. However, even without this tuning, most ranks outperformed LoRA with significantly fewer parameters.
+The fine-tuned models were evaluated on the LLM-as-a-judge MT-benchmark, where LoRTA consistently outperformed LoRA across all ranks, showing improved out-of-distribution generalization capabilities for LoRTA adapters compared to the training dataset's characteristics.
+Protein Folding
+Protein folding is a crucial process in molecular biology where the amino acid sequence determines the 3D structure of a protein, impacting its function and potential therapeutic applications. The ESMFold model plays a significant role in predicting protein structures, as outlined in the following points:
+
+ESMFold Model Training:
+
+ESMFold utilizes ESM-2, a BERT-based protein language model, trained in two stages:
+ESM-2 undergoes unsupervised pretraining to capture intricate patterns in amino acid sequences.
+In the second stage, a model head predicting 3D protein structures is trained on top of ESM-2 features.
+In the second stage, ESMFold is fine-tuned using LoRA and LoRTA techniques, optimizing ESM-2 35M model due to computational constraints.
+Performance Evaluation:
+
+Evaluation of ESMFold performance is done using the Local Distance Difference Test for Cα atoms (LDDT-Cα), which measures the accuracy of predicted protein structures.
+LDDT-Cα ranges from 0 (low accuracy) to 1 (perfect match) by comparing distances between alpha carbons in predicted and true structures.
+Results and Findings:
+
+Experimental results show that all tested LoRTA ranks surpass rank 1 LoRA on the training set.
+On the validation set, all tested LoRTA ranks demonstrate competitive performance with rank 1 LoRA.
+Despite having significantly fewer parameters, rank 1 LoRTA is able to compete with rank 1 LoRA, showcasing the efficiency of the model.
+Conclusion
+The authors introduced LoRTA, a novel approach utilizing a low-rank tensor model for LLM updates. Key points included in the conclusion are:
+
+LoRTA extends low-rank adaptation to higher-order tensors, overcoming limitations on trainable parameters while providing more precise control over adapter size.
+Experimental results on various benchmarks show that LoRTA achieves comparable or superior performance to baselines with fewer parameters.
+Previous works have unknowingly used low-rank tensor models with random factors, suggesting a potential future direction for enhancing efficiency.
+Future work could focus on developing more efficient tensor operation implementations to improve memory efficiency, making LoRTA more suitable for resource-constrained environments.
+The paper briefly covers tensor algebra basics along with N-order tensor and rank-one tensor definitions.
+Tensor decomposition methods such as Canonical Polyadic Decomposition (CPD) or Parallel Factor Analysis (PARAFAC) are explained for representing tensors efficiently.
+Additional Related Work
+The section discusses various techniques and approaches related to model compression, knowledge distillation, low rank training, data-efficient fine-tuning, and efficient architectures in the context of deep learning models, specifically Large Language Models (LLMs). Here are the key points included:
+
+Model Compression:
+
+Techniques like pruning and quantization focus on reducing the requirements of trained models, offering valuable insights for developing more efficient approaches like Parameter-Efficient Fine-Tuning (PEFT).
+Pruning removes less important weights and can achieve high compression rates.
+Quantization reduces weight precision, decreasing model size and enabling more efficient operations.
+Knowledge Distillation:
+
+Involves transferring knowledge from a large "teacher" model to a smaller "student" model.
+Low Rank Training:
+
+Exploiting low-rank structure during training and inference in deep models, often combined with sparsity for efficiency.
+Recent advancements include techniques like Cuttlefish and ELRT.
+Data Efficient Fine Tuning:
+
+Focuses on reducing fine-tuning costs by minimizing the amount of data required.
+Approaches like Few-shot and continual learning have shown effectiveness in LLM tasks.
+Efficient Architectures:
+
+Using more efficient model architectures, such as Mixture of Experts (MoE) technique in models like Switch Transformers and GLaM.
+Non-transformer architectures like RWKV and Mamba combine RNNs and Transformers for efficient inference and training.
+Parameter Efficiency Gains Breakdown
+This part provides a detailed breakdown of the parameter savings achieved by the LoRTA method compared to LoRA. The authors parameterize weight updates using low-rank tensor decompositions at various granularities, showcasing the dimensions of update tensors, the number of update tensors used, and corresponding parameter savings. The experiments and results presented in the main paper are elaborated upon in this section.
+
+D.1 NLU
+In the GLUE experiments, the researchers used Huggingface's PEFT and VeRA's codebase, specifying hyperparameters for their method implementation. The optimization and learning rate scheduling setup matched a particular configuration. Here are the key details:
+
+Models underwent training for 850,000 steps with a batch size of 32.
+Validation metrics relied on the validation set from a specific source.
+Regarding the selection of α values for LoRA and LoRTA experiments, higher α values were found to improve results during initial tests. The process of choosing α values involved multiple stages:
+
+Initially, models were trained with α values of 256 × r and 128 × r.
+The best-performing model from the initial stages was retained for further analysis.
+In cases where both model configurations diverged, an adaptive halving strategy for α values was employed:
+
+If divergence occurred, α was halved, and models were retrained with the subsequent lower pair.
+The halving process continued iteratively until a model convergence was achieved.
+The specific α values selected across experiments were documented in a table, showcasing the evolution of α values during the experimental process.
+
+E ADDITIONAL RESULTS
+The authors observed in their study that the validation gains were mainly a result of decreased training error, even though there was a slight decline in generalization, especially at rank 2. Moreover, the researchers noted that the results from the MT-bench performance demonstrated that LoRTA either matched or outperformed other methods across all ranks.
+
+Validation gains were driven by reduced training error.
+Generalization saw a slight decline, particularly at rank 2.
+MT-bench performance illustrated that LoRTA excelled compared to other methods across all ranks.

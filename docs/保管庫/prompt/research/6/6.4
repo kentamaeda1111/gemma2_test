@@ -1,0 +1,67 @@
+
+
+4. KD-LoRA: A Hybrid Approach to Efficient Fine-Tuning with LoRA and Knowledge Distillation
+Rambod Azimi, Rishav Rishav, Marek Teichmann, Samira Ebrahimi Kahou 
+
+
+
+
+
+
+Introduction
+With advancements in transformer architectures and hardware capabilities like GPUs and distributed training, researchers have developed Large Language Models (LLMs) with billions of parameters, such as LLaMA 3.1 with up to 405 billion parameters. These models, trained on trillions of tokens, demonstrate remarkable capabilities across various tasks, but fine-tuning them requires significant energy and memory. To address challenges in managing memory during fine-tuning, Parameter Efficient Fine-Tuning (PEFT) techniques have emerged, focusing on fine-tuning a subset of parameters while keeping the majority fixed.
+
+PEFT methods like LoRA and its variants reduce trainable parameters by introducing trainable rank decomposition matrices, maintaining performance across tasks.
+DoRA enhances LoRA by decomposing pre-trained weights into magnitude and direction, optimizing efficiency.
+KD, another method, transfers knowledge from larger teacher models to smaller student models, reducing memory demands without compromising performance significantly.
+In this paper, the authors introduce KD-LoRA, a novel fine-tuning method that integrates LoRA into the KD framework to achieve competitive performance with reduced computational costs, suitable for resource-limited environments. By combining KD with LoRA, the method leverages the strengths of both approaches:
+
+Efficiency: KD-LoRA achieves about 97% of FFT's performance while updating significantly fewer parameters compared to traditional fine-tuning.
+Compactness: KD-LoRA is about 40% more compact than FFT and LoRA by utilizing smaller student models, reducing GPU memory usage and inference time significantly.
+Performance: KD-LoRA maintains about 98% of LoRA's performance by incorporating knowledge from larger teacher models and using fewer trainable parameters due to compact student models.
+Method
+The researchers introduce KD-LoRA, a novel fine-tuning approach combining LoRA with Knowledge Distillation (KD). The method involves three key steps:
+
+Teacher Model: Initiated as T from a pre-trained language model (e.g., BERT), the teacher model is fine-tuned on task D using FFT.
+
+Student Model with LoRA: A smaller student model (S), within the same model family as T, is augmented with LoRA modules in the attention layers. This involves decomposing weight matrices and updating low-rank matrices during fine-tuning.
+
+KD Process: KD is conducted as the student model learns from the teacher model. The student model, with LoRA, adjusts its low-rank matrices to capture the transferred knowledge. The student is trained on target task D using a combined loss function, incorporating KD loss along with task-specific loss.
+
+The student model's low-rank matrices are updated during training steps to minimize the loss.
+
+Experimental Setup
+Three well-known encoder-only LLMs, BERT, RoBERTa, and DeBERTaV3, were selected for experiments.
+Three fine-tuning strategies were evaluated on the GLUE benchmark: FFT, LoRA, and KD-LoRA, with compact student models belonging to the same family as their larger teacher models.
+Student models used were DistilBERT-base, DeBERTa-v3-small, and DistilRoBERTa-base for BERT-base, DeBERTa-v3-base, and RoBERTa-base, respectively.
+A range of hyperparameter configurations were tested for each strategy, and experiments were run on NVIDIA A100 GPUs.
+Results
+Results were reported based on the median of the top 6 configurations, showcasing the number of trainable parameters, GPU memory usage during inference, and inference time on the CoLA dataset.
+Experiments
+The experiments show the performance of KD-LoRA in comparison to FFT and LoRA models:
+
+KD-LoRA achieves about 97% of FFT's performance and approximately 98% of LoRA's performance.
+The student model of BERT-base scores 78.9 with KD-LoRA, compared to 80.8 with FFT and 80.1 with LoRA.
+Model Efficiency:
+KD-LoRA significantly reduces the number of trainable parameters:
+About 99% fewer parameters than FFT.
+Approximately 49% fewer parameters than LoRA.
+For the DistilRoBERTa-base model:
+KD-LoRA updates 1.5M parameters, while LoRA updates 2.9M parameters at a rank of 8.
+Resource Usage:
+KD-LoRA reduces GPU memory usage:
+By 75% compared to FFT.
+By 30% compared to LoRA.
+The model is approximately 40% more compact than both FFT and LoRA.
+Inference Speed:
+On the CoLA dataset, KD-LoRA decreases inference time by around 30%.
+It maintains a comparable convergence speed to FFT and LoRA.
+Conclusion
+The researchers introduce KD-LoRA, a novel fine-tuning method that merges LoRA modules into a student model while capitalizing on knowledge distillation (KD) from a larger teacher model. The key findings and advantages of KD-LoRA are:
+
+Empirical results on the GLUE benchmark demonstrate that KD-LoRA maintains around 97% of FFT performance and 98% of LoRA performance.
+KD-LoRA reduces the model size by approximately 40%.
+Comparing trainable parameters, KD-LoRA decreases them by 99% compared to FFT and 49% compared to LoRA.
+GPU memory usage is lowered by 75% compared to FFT and by 30% compared to LoRA.
+KD-LoRA reduces inference time by 30%.
+These results highlight the effectiveness of KD-LoRA in enhancing model performance and efficiency while significantly reducing computational requirements and maintaining high levels of accuracy.

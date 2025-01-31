@@ -11,23 +11,6 @@ This project showcases:
 2. **Data Processing & Quality Control**: Systematic evaluation and formatting of dialogues
 3. **Model Training & Testing**: Fine-tuning and evaluating Gemma-2b for Socratic dialogue
 
-## Components
-
-1. **Generation Pipeline**:
-   - Dialogue generation using Claude API
-   - Dual AI system (Student & Socrates)
-   - Configurable conversation parameters
-
-2. **Processing Pipeline**:
-   - Quality assessment and filtering
-   - Format conversion for Gemma
-   - Dialogue segmentation and cleaning
-
-3. **Training & Testing Pipeline**:
-   - Model fine-tuning with LoRA
-   - Interactive chat interface
-   - Performance evaluation metrics
-
 ## Setup & Usage
 
 ### API Configuration
@@ -84,7 +67,7 @@ project_root/
 │   │
 │   ├── models/                
 │   │   ├── training/
-│   │   │   ├── train_fin_copy.py
+│   │   │   ├── train.py
 │   │   │   └── README.md
 │   │   │
 │   │   └── inference/
@@ -117,12 +100,21 @@ project_root/
 │       └── processed/
 │
 ├── models/                  
-│   └── [model_name]/
+│   ├── kaggle_model/
+│   │   ├── model/
+│   │   └── logs/
+│   └── kaggoe_model_ver2/  
 │       ├── model/
-│       └── logs/
+│       ├── logs/
+│       └── training_progess
+│
+├── docs/                        
+│   ├── DECISION_PROCESS.md      
+│   └── assets/                  
 │
 ├── .env.template           
-├── .gitignore             
+├── .gitignore   
+├── .LICENSE            
 ├── README.md              
 └── requirements.txt       
 ```
@@ -158,19 +150,6 @@ For detailed documentation of each component, please refer to the README.md file
 - Operating System: Windows 10/11, macOS, or Linux
 - Package Manager: pip (latest version)
 
-### For Training
-Note: Training large language models requires significant computational resources. Please refer to the official Gemma documentation for detailed hardware requirements. In our case, we used Google Colab Pro+ with A100 GPU for training.
-
-### For Inference
-- GPU: NVIDIA GPU with 8GB+ VRAM
-- RAM: 16GB+
-- Storage: 20GB+ free space
-- API access:
-  - Claude API (for dialogue generation)
-  - Hugging Face (for model access)
-
-Note: For inference, the model can be run with reduced precision (bfloat16) to decrease memory requirements. When loaded in bf16, it consumes approximately 8GB of VRAM for the 2b model.
-
 ### Hardware Requirements
 
 Based on our training logs, the model requires the following minimum specifications:
@@ -195,6 +174,7 @@ Based on our training logs, the model requires the following minimum specificati
 - Storage: 20GB+ free space
 
 Note: These requirements are based on using LoRA for fine-tuning and 4-bit quantization (QLoRA). Running the model in full precision or without quantization would require significantly more memory.
+Note: For inference, the model can be run with reduced precision (bfloat16) to decrease memory requirements. When loaded in bf16, it consumes approximately 8GB of VRAM for the 2b model.
 
 ## Data and Model Transparency
 
