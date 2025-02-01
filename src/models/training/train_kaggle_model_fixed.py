@@ -132,17 +132,23 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_quant_storage=torch.uint8,
 )
 
+# モデルロード前にGPU情報を出力
+print("CUDA available:", torch.cuda.is_available())
+if torch.cuda.is_available():
+    print("CUDA device count:", torch.cuda.device_count())
+    print("CUDA device name:", torch.cuda.get_device_name(0))
+    print("Current CUDA device:", torch.cuda.current_device())
+
 # モデルの読み込みを修正
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
     quantization_config=bnb_config,
     device_map="auto",
-    torch_dtype=torch.bfloat16,
+    torch_dtype=torch.float16,
     attn_implementation='eager',
-    token=huggingface_token,  # APIトークンを追加
-    max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}  # メモリ制限を追加
+    token=huggingface_token,
+    max_memory={0: "12GiB", "cpu": "24GB"}
 )
-
 
 # モデルをLoRA用に準備した後にキャッシュを無効化
 model = prepare_model_for_kbit_training(model)
