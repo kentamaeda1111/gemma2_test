@@ -21,10 +21,12 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from src.utils.config import get_api_keys
 import psutil
+import gc
 
 # Global Setting
 DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
 MAX_SEQUENCE_LENGTH = 512
+TOKENIZE_MAX_LENGTH = 512  # 追加: トークン化時の最大長
 
 # Setup output directory paths
 BASE_OUTPUT_DIR = "models/kaggle_model_ver2"  
@@ -147,9 +149,10 @@ model = AutoModelForCausalLM.from_pretrained(
     model_name,
     token=os.environ["HUGGINGFACE_TOKEN"],  
     quantization_config=bnb_config,
-    device_map="auto",
-    torch_dtype=torch.bfloat16,
-    attn_implementation='eager'
+    device_map="balanced",
+    torch_dtype=torch.float16,
+    attn_implementation='sdpa',
+    max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}
 )
 
 # Prepare model for LoRA and disable cache
@@ -189,7 +192,7 @@ def tokenize_function(examples):
     result = tokenizer(
         examples['text'],
         truncation=True,
-        max_length=512,      # Improve memory efficiency
+        max_length=TOKENIZE_MAX_LENGTH,      # 256 から TOKENIZE_MAX_LENGTH に変更
         padding='max_length',
         add_special_tokens=True,
         return_tensors=None,
@@ -810,6 +813,8 @@ class CustomTrainer(Trainer):
         loss = super().training_step(*args, **kwargs)
         if self.state.global_step % 100 == 0:
             clear_memory()
+            gc.collect()
+            torch.cuda.empty_cache()
         return loss
 
 # Create custom Trainer class for evaluation

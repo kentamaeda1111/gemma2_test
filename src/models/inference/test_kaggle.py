@@ -1,3 +1,5 @@
+#kaggleに提出したもので使ったコード、kaggle向けのコードなのでGPUのみに特化
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
 import os

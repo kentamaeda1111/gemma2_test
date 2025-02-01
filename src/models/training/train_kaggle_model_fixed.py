@@ -1,3 +1,5 @@
+# kaggleでGPUP100を使うことを前提にしているコード
+
 import torch
 from transformers import (
     AutoModelForCausalLM,

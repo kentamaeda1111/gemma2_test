@@ -1,6 +1,5 @@
-# CPUやGPUやいろんな環境で使えるものに修正
+#kaggleに提出したものはkaggle向けのコードなのでGPUのみに特化してたが、CPUでも使えるように修正
 
-from src.utils.config import get_api_keys
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
 import os
@@ -10,46 +9,6 @@ from IPython.display import clear_output
 import ipywidgets as widgets
 from huggingface_hub import login
 from peft import PeftModel
-
-# Check and install requirements
-def check_and_install_requirements():
-    try:
-        import pkg_resources
-        required = {
-            'torch',
-            'transformers',
-            'peft',
-            'ipywidgets'
-        }
-        installed = {pkg.key for pkg in pkg_resources.working_set}
-        missing = required - installed
-        
-        if missing:
-            import subprocess
-            import sys
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', *missing])
-            print(f"Installed missing packages: {missing}")
-    except Exception as e:
-        print(f"Error checking/installing requirements: {str(e)}")
-
-# Check and install requirements
-check_and_install_requirements()
-
-# Global Settings
-MODEL_VERSION = "kaggle_model_ver2"  
-CHECKPOINT_NUMBER = "1980"  
-MAX_HISTORY = 5  
-BASE_MODEL = "google/gemma-2-2b-jpn-it"
-
-# Get API keys using config utility
-api_keys = get_api_keys()
-HF_TOKEN = api_keys['huggingface_api_key']
-
-if not HF_TOKEN:
-    logger.warning("HUGGINGFACE_API_KEY not found in environment variables")
-
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-MODEL_PATH = os.path.join(ROOT_DIR, "models", MODEL_VERSION, "model", f"checkpoint-{CHECKPOINT_NUMBER}")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -78,7 +37,6 @@ class ChatAI:
         """
         self.max_history = max_history
         self.message_history = Queue(maxsize=max_history)
-        self.hf_token = hf_token
         
         try:
             logger.info("Loading model and tokenizer...")
@@ -102,7 +60,7 @@ class ChatAI:
             
             # Adjust configuration based on device
             if device == "cuda":
-                load_config["device_map"] = "auto"
+                load_config["device_map"] = "balanced"
                 load_config["torch_dtype"] = torch.bfloat16
             else:
                 load_config["device_map"] = "auto"
@@ -115,7 +73,7 @@ class ChatAI:
                 **load_config
             )
             
-            # Load the PEFT model
+            # Load the PEFT model with same configuration
             self.model = PeftModel.from_pretrained(
                 base_model_obj,
                 model_path,
@@ -136,46 +94,7 @@ class ChatAI:
             logger.error(f"Error initializing model: {str(e)}")
             raise
 
-    def _initialize_model(self, base_model, model_path, hf_token):
-        """Initialize the model with appropriate device and memory settings"""
-        try:
-            # Check available memory and GPU
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            
-            # Configure model loading parameters based on available resources
-            load_config = {
-                "torch_dtype": torch.bfloat16,
-                "trust_remote_code": True,
-                "token": hf_token
-            }
-            
-            # If running on CPU or limited memory, adjust loading strategy
-            if device == "cpu":
-                load_config["device_map"] = "auto"
-                load_config["offload_folder"] = "offload_folder"  # Add offload directory
-                os.makedirs("offload_folder", exist_ok=True)
-            else:
-                load_config["device_map"] = "balanced"
-
-            # Load base model with configured parameters
-            base_model_obj = AutoModelForCausalLM.from_pretrained(
-                base_model,
-                **load_config
-            )
-
-            # Load fine-tuned model
-            self.model = PeftModel.from_pretrained(
-                base_model_obj,
-                model_path,
-                **load_config
-            )
-
-            logger.info(f"Model loaded successfully on {device}")
-            
-        except Exception as e:
-            logger.error(f"Error initializing model: {str(e)}")
-            raise
-
+class ChatAI(ChatAI):
     def _update_history(self, message: dict) -> None:
         """
         Enqueues new user or model messages and manages removal of old messages
@@ -202,6 +121,7 @@ class ChatAI:
         
         return messages
 
+class ChatAI(ChatAI):
     def generate_response(self, user_input: str, add_to_history: bool = True) -> str:
         """
         Generates a response from the model
@@ -254,43 +174,9 @@ class ChatAI:
             logger.error(f"Error generating response: {str(e)}")
             return "There was an error"
 
-    def _get_model_config(self):
-        """Get model configuration based on available hardware"""
-        config = {
-            "torch_dtype": torch.bfloat16,
-            "trust_remote_code": True,
-            "token": self.hf_token
-        }
-        
-        # GPUが利用可能かチェック
-        if torch.cuda.is_available():
-            config["device_map"] = "balanced"
-            logger.info("GPU detected, using balanced device map")
-        else:
-            # CPU環境用の設定
-            config["device_map"] = "auto"
-            config["offload_folder"] = "offload_folder"
-            os.makedirs("offload_folder", exist_ok=True)
-            logger.info("CPU environment detected, using memory offloading")
-        
-        return config
-
 def create_chat_ui(chatai: ChatAI):
     """
-    Creates a basic interactive chat UI. If running in Jupyter/IPython environment,
-    creates an interactive widget UI, otherwise runs in console mode.
-    """
-    try:
-        # Check if we're in IPython/Jupyter environment
-        get_ipython()
-        _create_widget_ui(chatai)
-    except:
-        # If not in IPython, use console interface
-        _create_console_ui(chatai)
-
-def _create_widget_ui(chatai: ChatAI):
-    """
-    Creates a widget-based UI for Jupyter/IPython environment
+    Creates a basic interactive chat UI connected to the ChatAI instance
     """
     chat_output = widgets.Output()
     text_input = widgets.Text(
@@ -309,9 +195,11 @@ def _create_widget_ui(chatai: ChatAI):
             
         with chat_output:
             clear_output(wait=True)
+
             for i, msg in enumerate(chatai.message_history.queue):
                 if msg["role"] == "user":
                     if i == 0:
+
                         pass
                     else:
                         print(f"\nYou: {msg['content']}")
@@ -334,64 +222,35 @@ def _create_widget_ui(chatai: ChatAI):
                 else:
                     print(f"\nYou: {msg['content']}")
             else:
-                print(f"\nLaMDA: {msg['content']}")
+                print(f"\nSocrates: {msg['content']}")
     
     display(widgets.VBox([
         chat_output,
         widgets.HBox([text_input, send_button]),
     ]))
 
-def _create_console_ui(chatai: ChatAI):
-    """
-    Creates a console-based UI for standard Python environment
-    """
-    # Display initial messages
-    for i, msg in enumerate(chatai.message_history.queue):
-        if msg["role"] == "user":
-            if i == 0:
-                pass  # Skip first user input
-            else:
-                print(f"\nYou: {msg['content']}")
-        else:
-            print(f"\nSocrates: {msg['content']}")
-    
-    # Start conversation loop
-    while True:
-        try:
-            user_input = input("\nYou: ").strip()
-            if user_input.lower() in ['quit', 'exit', 'bye']:
-                print("\nSocrates: さようなら、また会おう。")
-                break
-            if not user_input:
-                continue
-                
-            response = chatai.generate_response(user_input)
-            print(f"\nSocrates: {response}")
-            
-        except KeyboardInterrupt:
-            print("\nSocrates: 対話を終了します。")
-            break
-        except Exception as e:
-            print(f"\nError: {str(e)}")
-            break
+model_path = "/kaggle/input/gemma-2b-jpn-socrates/pytorch/default/1/gemma-2b-jpn-socrates/checkpoint-1980"
+base_model = "google/gemma-2-2b-jpn-it"
 
 IS_KAGGLE_SUBMISSION = os.path.exists('/kaggle/working')
 
-if not os.path.exists(MODEL_PATH):
-    print(f"Error: Model path {MODEL_PATH} does not exist")
+if not os.path.exists(model_path):
+    print(f"Error: Model path {model_path} does not exist")
 else:
     try:
         if IS_KAGGLE_SUBMISSION:
-            chatai = ChatAI() 
+            chatai = ChatAI(
+                model_path=model_path,
+                base_model=base_model
+            )
         else:
             chatai = ChatAI(
-                model_path=MODEL_PATH,
-                base_model=BASE_MODEL,
-                max_history=MAX_HISTORY,
-                hf_token=HF_TOKEN
+                model_path=model_path,
+                base_model=base_model,
+                hf_token="your-actual-token-here" 
             )
         
-        print(f"\nSocratic AI Assistant with Fine-Tuned Gemma-2b (Model: {MODEL_VERSION}, Checkpoint: {CHECKPOINT_NUMBER})")
+        print("\nSocratic AI Assistant with Fine-Tuned Gemma-2b")
         initial_user_msg = "あなたは古代ギリシャの哲学者ソクラテスです。今日は何について話しますか？"
         initial_model_msg = (
             "やぁ、よく来てくれたね。今日は『自分』という、これ以上ないほど身近な存在でありながら、あまり話すことのないトピックについて話そうではないか。"
