@@ -1,3 +1,4 @@
+# trainに成功したやつ
 import torch
 from transformers import (
     AutoModelForCausalLM,

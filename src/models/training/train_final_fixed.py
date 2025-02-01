@@ -1,3 +1,4 @@
+#kaggleでも使えるようにしたやつでうまくいった。ただ色々変更もくわえた
 import torch
 from transformers import (
     AutoModelForCausalLM,

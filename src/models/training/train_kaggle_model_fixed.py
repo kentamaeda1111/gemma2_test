@@ -1,4 +1,4 @@
-# kaggleでGPUP100を使うことを前提にしているコード
+# 2goukiのやつをベースにkaggleGPUP100でつかえるようにしようと試みてるやつ
 
 import torch
 from transformers import (

@@ -1,3 +1,4 @@
+#kaggle p100用につくったやつ
 import torch
 from transformers import (
     AutoModelForCausalLM,
@@ -21,10 +22,12 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from src.utils.config import get_api_keys
 import psutil
+import gc
 
 # Global Setting
 DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
 MAX_SEQUENCE_LENGTH = 512
+TOKENIZE_MAX_LENGTH = 512  # 追加: トークン化時の最大長
 
 # Setup output directory paths
 BASE_OUTPUT_DIR = "models/kaggle_model_ver2"  
@@ -190,7 +193,7 @@ def tokenize_function(examples):
     result = tokenizer(
         examples['text'],
         truncation=True,
-        max_length=512,      # Improve memory efficiency
+        max_length=TOKENIZE_MAX_LENGTH,      # 256 から TOKENIZE_MAX_LENGTH に変更
         padding='max_length',
         add_special_tokens=True,
         return_tensors=None,
@@ -207,6 +210,7 @@ tokenized_dataset = dataset.map(
     desc="Tokenizing datasets",
     remove_columns=dataset.column_names,
 )
+
 # Add memory usage monitoring log
 def log_memory_usage():
     import psutil
@@ -810,6 +814,8 @@ class CustomTrainer(Trainer):
         loss = super().training_step(*args, **kwargs)
         if self.state.global_step % 100 == 0:
             clear_memory()
+            gc.collect()
+            torch.cuda.empty_cache()
         return loss
 
 # Create custom Trainer class for evaluation

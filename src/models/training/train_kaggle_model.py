@@ -1,3 +1,4 @@
+# もともとは2goukiのやつ
 import torch
 from transformers import (
     AutoModelForCausalLM,
