@@ -87,37 +87,22 @@ class ChatAI:
                 trust_remote_code=True
             )
             
-            # Get configuration based on available hardware
+            # Check if GPU is available
             device = "cuda" if torch.cuda.is_available() else "cpu"
-            logger.info(f"Using device: {device}")
-            
-            # Load the base model with appropriate configuration
-            load_config = {
-                "trust_remote_code": True,
-                "token": hf_token,
-                "low_cpu_mem_usage": True
-            }
-            
-            # Adjust configuration based on device
-            if device == "cuda":
-                load_config["device_map"] = "auto"
-                load_config["torch_dtype"] = torch.bfloat16
-            else:
-                load_config["device_map"] = "auto"
-                load_config["torch_dtype"] = torch.float32
-                load_config["offload_folder"] = "offload_folder"
-                os.makedirs("offload_folder", exist_ok=True)
             
             base_model_obj = AutoModelForCausalLM.from_pretrained(
                 base_model,
-                **load_config
+                device_map="cpu",
+                torch_dtype=torch.float32,
+                trust_remote_code=True,
+                token=hf_token,
+                low_cpu_mem_usage=True
             )
             
-            # Load the PEFT model
             self.model = PeftModel.from_pretrained(
                 base_model_obj,
                 model_path,
-                torch_dtype=load_config["torch_dtype"]
+                torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32
             )
             
             logger.info(f"Model loaded successfully on {device}")

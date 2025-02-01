@@ -139,7 +139,8 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map="auto",
     torch_dtype=torch.bfloat16,
     attn_implementation='eager',
-    token=huggingface_token  # APIトークンを追加
+    token=huggingface_token,  # APIトークンを追加
+    max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}  # メモリ制限を追加
 )
 
 

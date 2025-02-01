@@ -1,9 +1,6 @@
 
 kaggle
 
-
-
-
 ・実際にtrain.pyで使っているtoken数はkaggle_model.jsonのあるデータよりも少ないよね、おそらく。
 
 ・どうやってkaggleでtrainを使えるようにしたか
