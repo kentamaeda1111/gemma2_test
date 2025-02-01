@@ -1,4 +1,4 @@
-# trainに成功したやつ
+# trainに成功したやつ。ただ色々修正もしているので2goukiとはかなり差がでている
 import torch
 from transformers import (
     AutoModelForCausalLM,

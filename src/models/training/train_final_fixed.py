@@ -1,4 +1,4 @@
-#kaggleでも使えるようにしたやつでうまくいった。ただ色々変更もくわえた
+#train_finalをkaggleでも使えるよにしたやつ。
 import torch
 from transformers import (
     AutoModelForCausalLM,

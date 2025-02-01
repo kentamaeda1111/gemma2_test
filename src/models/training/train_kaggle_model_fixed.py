@@ -1,5 +1,4 @@
-# 2goukiのやつをベースにkaggleGPUP100でつかえるようにしようと試みてるやつ
-
+# もともとは2goukiのやつ
 import torch
 from transformers import (
     AutoModelForCausalLM,
@@ -134,23 +133,20 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_quant_storage=torch.uint8,
 )
 
-# モデルロード前にGPU情報を出力
-print("CUDA available:", torch.cuda.is_available())
-if torch.cuda.is_available():
-    print("CUDA device count:", torch.cuda.device_count())
-    print("CUDA device name:", torch.cuda.get_device_name(0))
-    print("Current CUDA device:", torch.cuda.current_device())
-
 # モデルの読み込みを修正
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
     quantization_config=bnb_config,
     device_map="auto",
-    torch_dtype=torch.float16,
+    torch_dtype=torch.bfloat16,
     attn_implementation='eager',
-    token=huggingface_token,
-    max_memory={0: "12GiB", "cpu": "24GB"}
+    token=huggingface_token,  # APIトークンを追加
+    max_memory={
+        0: "14GB",    # GPU (Tesla P100)用に14GB
+        "cpu": "24GB"  # CPU用に24GB
+    }
 )
+
 
 # モデルをLoRA用に準備した後にキャッシュを無効化
 model = prepare_model_for_kbit_training(model)
@@ -189,7 +185,7 @@ def tokenize_function(examples):
     result = tokenizer(
         examples['text'],
         truncation=True,
-        max_length=MAX_TOKENIZE_LENGTH,      # グローバル設定を使用
+        max_length=MAX_TOKENIZE_LENGTH,
         padding='max_length',
         add_special_tokens=True,
         return_tensors=None,
