@@ -6,10 +6,10 @@ __pycache__/
 *.py[cod]
 
 # Project specific
-models/*
+models/
 !models/kaggle_model/
 !models/kaggle_model/**
-others/*
+others/
 
 # IDE 
 .idea/
