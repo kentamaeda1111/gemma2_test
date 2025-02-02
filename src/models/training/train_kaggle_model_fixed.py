@@ -143,7 +143,7 @@ model = AutoModelForCausalLM.from_pretrained(
     token=huggingface_token,
     max_memory={
         0: "10GB",    # GPU用のメモリを14GBから12GBに減らす
-        "cpu": "24GB"  # CPU用は維持
+        "cpu": "22GB"  # CPU用は維持
     }
 )
 
