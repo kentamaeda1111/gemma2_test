@@ -21,7 +21,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 from src.utils.config import get_api_keys
-import psutil
 
 # グローバル設定
 DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model_test.json"  # 対話データのJSONファイルパス
@@ -181,137 +180,48 @@ print(dataset.features)
 # データセットのバッチ処理を最適化
 dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
 
-# tokenize_functionの前に追加
-def debug_tokenize_sample(text):
-    """トークナイズのデバッグ用関数"""
-    try:
-        tokens = tokenizer.encode(text)
-        decoded = tokenizer.decode(tokens)
-        logging.info(f"\nSample tokenization debug:")
-        logging.info(f"Original length: {len(text)}")
-        logging.info(f"Tokens length: {len(tokens)}")
-        logging.info(f"First 100 chars: {text[:100]}")
-        logging.info(f"First 10 tokens: {tokens[:10]}")
-        return True
-    except Exception as e:
-        logging.error(f"Tokenization error: {str(e)}")
-        return False
-
-# tokenize_function を修正
+# トークナイズ関数の修正
 def tokenize_function(examples):
-    """トークナイズ関数"""
-    try:
-        # 進捗表示を追加
-        logging.info(f"\nProcessing batch of size: {len(examples['text'])}")
-        
-        # サンプルの最初のテキストをデバッグ
-        if len(examples['text']) > 0:
-            debug_tokenize_sample(examples['text'][0])
-        
-        # メモリ使用量を表示
-        process = psutil.Process()
-        logging.info(f"Memory usage before tokenization: {process.memory_info().rss / 1024 / 1024:.2f} MB")
-        
-        # トークナイズを実行
-        result = tokenizer(
-            examples['text'],
-            truncation=True,
-            max_length=MAX_TOKENIZE_LENGTH,
-            padding='max_length',
-            add_special_tokens=True,
-            return_tensors=None,
-        )
-        
-        # 結果の統計を表示
-        logging.info(f"Tokenized batch statistics:")
-        logging.info(f"Input IDs shape: {len(result['input_ids'])}x{len(result['input_ids'][0])}")
-        logging.info(f"Memory usage after tokenization: {process.memory_info().rss / 1024 / 1024:.2f} MB")
-        
-        return result
-    except Exception as e:
-        logging.error(f"Error in tokenize_function: {str(e)}")
-        logging.error(f"Exception type: {type(e)}")
-        logging.error(f"Stack trace:", exc_info=True)
-        raise
-
-# データセットの処理部分を以下のように修正
-logging.info("\nPre-tokenization check:")
-logging.info(f"Dataset length: {len(dataset)}")
-logging.info(f"Available CPU cores: {os.cpu_count()}")
-logging.info(f"Current memory usage: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB")
-
-# dataset.map()の呼び出しを修正
-logging.info("\nStarting dataset tokenization...")
-try:
-    # まず1件だけテスト
-    logging.info("Testing single example tokenization...")
-    single_test = tokenize_function({'text': [dataset[0]['text']]})
-    logging.info("Single example tokenization successful")
-    
-    # 小さなバッチでテスト（シングルプロセス）
-    logging.info("Testing small batch tokenization...")
-    test_batch = dataset.select(range(min(5, len(dataset))))
-    test_result = test_batch.map(
-        tokenize_function,
-        batched=True,
-        batch_size=2,
-        num_proc=None,  # シングルプロセスで実行
-        load_from_cache_file=False,
-        desc="Testing tokenization"
+    result = tokenizer(
+        examples['text'],
+        truncation=True,
+        max_length=MAX_TOKENIZE_LENGTH,
+        padding='max_length',
+        add_special_tokens=True,
+        return_tensors=None,
     )
-    logging.info("Small batch tokenization successful")
-    
-    # 本番の処理（シングルプロセスで実行）
-    logging.info("Starting full dataset tokenization...")
-    tokenized_dataset = dataset.map(
-        tokenize_function,
-        batched=True,
-        batch_size=16,  # バッチサイズを小さくする
-        num_proc=None,  # シングルプロセスで実行
-        load_from_cache_file=False,  # キャッシュを無効化
-        desc="Tokenizing datasets",
-        remove_columns=dataset.column_names,
-    )
-    logging.info("Dataset tokenization completed successfully")
-except Exception as e:
-    logging.error("Error during dataset tokenization:")
-    logging.error(str(e))
-    logging.error("Stack trace:", exc_info=True)
-    import traceback
-    traceback.print_exc()
-    raise
+    return result
 
-# データセットの検証関数を修正
+# データセットの処理を最適化
+tokenized_dataset = dataset.map(
+    tokenize_function,
+    batched=True,
+    batch_size=32,  # バッチサイズは維持
+    num_proc=None,  # num_proc=4 から None に変更してシングルプロセス化
+    load_from_cache_file=True,
+    desc="Tokenizing datasets",
+    remove_columns=dataset.column_names,
+)
+
+# メモリ使用量を監視するログを追加
+def log_memory_usage():
+    import psutil
+    process = psutil.Process()
+    logging.info(f"Memory usage: {process.memory_info().rss / 1024 / 1024:.2f} MB")
+
+# データセットのサイズをログに記録
+logging.info(f"Total dataset size: {len(dataset)}")
+log_memory_usage()
+
+# データセットの検証を追加
 def validate_dataset(dataset):
-    """データセットの検証とデバッグ情報の出力"""
-    try:
-        logging.info("\nValidating dataset...")
-        
-        # データセットの基本情報
-        logging.info(f"Dataset size: {len(dataset)}")
-        logging.info(f"Dataset features: {dataset.features}")
-        
-        # 最初の要素をチェック
-        first_item = dataset[0]
-        logging.info("\nFirst item details:")
-        logging.info(f"Keys: {first_item.keys()}")
-        for key, value in first_item.items():
-            if isinstance(value, (list, np.ndarray)):
-                logging.info(f"{key} shape: {len(value)}")
-                logging.info(f"{key} first 10 elements: {value[:10]}")
-            else:
-                logging.info(f"{key}: {value}")
-        
-        # メモリ使用量
-        process = psutil.Process()
-        logging.info(f"\nMemory usage after dataset validation: {process.memory_info().rss / 1024 / 1024:.2f} MB")
-        
-        return dataset
-    except Exception as e:
-        logging.error("Error during dataset validation:")
-        logging.error(str(e))
-        logging.error("Stack trace:", exc_info=True)
-        raise
+    # 最初の要素をチェック
+    first_item = dataset[0]
+    print("Validated first item structure:")
+    print(f"Keys: {first_item.keys()}")
+    print(f"input_ids type: {type(first_item['input_ids'])}")
+    print(f"input_ids length: {len(first_item['input_ids'])}")
+    return dataset
 
 tokenized_dataset = validate_dataset(tokenized_dataset)
 
