@@ -1,22 +1,13 @@
 # Japanese-Speaking Socratic Gemma
 
 ## Supplementary Repository for Kaggle Competition
-This repository provides comprehensive implementation details and additional resources for the [Japanese-Speaking Socratic Gemma](https://www.kaggle.com/code/kentamaeda/japanese-speaking-socratic-gemma) Kaggle notebook. While the Kaggle notebook demonstrates the core inference functionality, this repository contains the complete codebase including dialogue generation, quality assessment, and training components.
+This repository provides the complete pipeline and resources necessary to replicate the model training process behind [Japanese-Speaking Socratic Gemma](https://www.kaggle.com/code/kentamaeda/japanese-speaking-socratic-gemma), our Kaggle notebook submission to the [Google - Unlock Global Communication with Gemma](https://www.kaggle.com/competitions/gemma-language-tuning) competition. While the Kaggle notebook only includes the inference code, this repository contains the full end-to-end training pipeline to enable complete model reproduction, including implementations of dialogue generation, quality assessment, data preparation, and model training.
 
-Note: This repository is shared under the MIT License for reference purposes and is not actively maintained.
+Note: The repository is shared under the MIT License for reference purposes. While we may occasionally update it to address necessary fixes in the Kaggle notebook, it is not actively maintained.
 
-### Development Pipeline
-Our project implements a five-stage pipeline to create a Japanese-speaking Socratic dialogue model using Gemma-2b:
+## Repository Overview
 
-1. **Dialogue Generation**: Automated creation of Socratic dialogues using Claude API
-2. **Quality Assessment**: Evaluation of generated dialogues for Socratic method adherence
-3. **Data Preparation**: Processing of approved dialogues into training format
-4. **Model Training**: Fine-tuning of Gemma-2b with processed dialogues
-5. **Model Inference**: Deployment of trained model for interactive dialogue
-
-## Complete Implementation Details
 ### Repository Structure
-
 ```
 project_root/
 ├── src/                      # Source code for all pipeline components
@@ -24,17 +15,38 @@ project_root/
 └── models/                   # Trained model checkpoints and logs
 ```
 
-### Documentation Structure
+### 1. Development Pipeline
+This project implements a four-stage pipeline using Gemma-2b. Each stage corresponds to specific implementation files:
 
-#### Component Documentation
-Each major component directory contains its own README.md providing implementation details:
-- `src/data/generation/README.md`: Dialogue generation implementation details
-- `src/data/quality_check/README.md`: Quality assessment system implementation
-- `src/models/training/README.md`: Training process implementation
-- `src/models/inference/README.md`: Inference system implementation
+#### Stage 1: Dialogue Generation
+- Implementation: `src/data/generation/automation.py`
+- Documentation: `src/data/generation/README.md`
+- Inputs:
+  - Configuration: `data/config/automation.csv`
+  - Prompts: `data/prompts/*.json`
+- Output: Generated dialogue files in `data/dialogue/raw/`
 
-#### Core Technical Documentation
-Two comprehensive technical documents detail our approach:
+#### Stage 2: Quality Assessment
+- Implementation: `src/data/quality_check/dialogue_quality_check.py`
+- Documentation: `src/data/quality_check/README.md`
+- Input: Dialogue files from `data/dialogue/raw/`
+- Action: Moves low-rated dialogues to `data/dialogue/low_rated/`
+
+#### Stage 3: Data Preparation
+- Implementation: `src/data/dataset_preparation/dialogue_extractor.py`
+- Documentation: `src/data/dataset_preparation/README.md`
+- Input: Dialogue files from `data/dialogue/raw/`
+- Output: `data/dialogue/processed/kaggle_model.json`
+
+#### Stage 4: Model Training
+- Implementation: `src/models/training/train.py`
+- Documentation: `src/models/training/README.md`
+- Input: `data/dialogue/processed/kaggle_model.json`
+- Output: Model artifacts in `models/kaggle_model/` 
+
+### 2. Core Technical Documentation
+Two comprehensive documents in the `data/` directory detail our approach:
+
 - `data/README.md`: Training Data Strategy
   - Data generation policies and rationale
   - Quality assurance methodology
@@ -49,7 +61,7 @@ Two comprehensive technical documents detail our approach:
   - Initial question design strategy
   - Anti-overfitting measures
 
-### Implementation Transparency
+### 3. Implementation Transparency
 This repository intentionally includes key files that would typically be excluded:
 
 1. `data/config/automation.csv`: Configuration parameters for dialogue generation
@@ -75,18 +87,10 @@ This repository intentionally includes key files that would typically be exclude
 - Latest pip version
 - Compatible with Windows 10/11, macOS, and Linux
 
-### Hardware Specifications
-
-#### Training Environment
-- GPU: NVIDIA GPU with 24GB+ VRAM (A5000/A6000/A100)
-- RAM: 32GB minimum (24GB usage + 8GB buffer)
+### Hardware Specifications for Training Environment
+- GPU: NVIDIA GPU with 24GB+ VRAM
+- RAM: 32GB minimum
 - Storage: 50GB+ free space
-- Training Duration: ~2.5 hours on A100 GPU
-
-#### Inference Environment
-- GPU: NVIDIA GPU with 8GB+ VRAM
-- RAM: 16GB minimum
-- Storage: 20GB+ free space
 
 ## Setup Instructions
 
@@ -112,5 +116,4 @@ python -m src.data.generation.automation
 python -m src.data.quality_check.dialogue_quality_check
 python -m src.data.dataset_preparation.dialogue_extractor
 python -m src.models.training.train
-python -m src.models.inference.test
 
