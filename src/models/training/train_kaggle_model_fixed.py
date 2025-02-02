@@ -140,10 +140,10 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map="auto",
     torch_dtype=torch.bfloat16,
     attn_implementation='eager',
-    token=huggingface_token,  # APIトークンを追加
+    token=huggingface_token,
     max_memory={
-        0: "14GB",    # GPU (Tesla P100)用に14GB
-        "cpu": "24GB"  # CPU用に24GB
+        0: "12GB",    # GPU用のメモリを14GBから12GBに減らす
+        "cpu": "24GB"  # CPU用は維持
     }
 )
 
@@ -360,14 +360,14 @@ training_args = TrainingArguments(
     report_to=[],
     run_name=None,
     per_device_train_batch_size=4,  # メモリが許す場合は増やす
-    per_device_eval_batch_size=2,   # トレーニングバッチサイズの半分を評価用に設定
+    per_device_eval_batch_size=1,   # 評価時のバッチサイズを2から1に減らす
     gradient_checkpointing=True,
     max_grad_norm=0.5,       # 「Gradient clipping: Values between 0.5-1.0 help prevent divergence」から0.5を選択
     dataloader_pin_memory=True,
     save_total_limit=3,
     fp16=True,
     optim="adamw_torch_fused",
-    eval_accumulation_steps=8,
+    eval_accumulation_steps=4,      # 8から4に減らす
     load_best_model_at_end=True,
     metric_for_best_model="combined_score",  # 新しい評価指標を使用
 )
@@ -694,8 +694,8 @@ class CustomTrainer(Trainer):
     def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
         eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
         if eval_dataset is not None:
-            # 評価データセットを100サンプルに制限
-            eval_dataset = eval_dataset.select(range(min(100, len(eval_dataset))))
+            # 評価データセットを50サンプルに制限（100から減らす）
+            eval_dataset = eval_dataset.select(range(min(50, len(eval_dataset))))
         return super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
 
 # トレーナーの設定を更新
