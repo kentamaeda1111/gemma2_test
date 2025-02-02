@@ -234,9 +234,22 @@ def tokenize_function(examples):
         logging.error(f"Stack trace:", exc_info=True)
         raise
 
-# データセットの処理部分を修正
+# データセットの処理部分を修正する前に追加
+logging.info("\nPre-tokenization check:")
+logging.info(f"Dataset length: {len(dataset)}")
+logging.info(f"Available CPU cores: {os.cpu_count()}")
+logging.info(f"Current memory usage: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB")
+
+# dataset.map()の呼び出しを修正
 logging.info("\nStarting dataset tokenization...")
 try:
+    # まず小さなバッチサイズでテスト
+    test_batch = dataset.select(range(min(5, len(dataset))))
+    logging.info("Testing tokenization with small batch...")
+    test_result = tokenize_function({'text': test_batch['text']})
+    logging.info("Test tokenization successful")
+    
+    # 本番の処理
     tokenized_dataset = dataset.map(
         tokenize_function,
         batched=True,
