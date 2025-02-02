@@ -7,8 +7,6 @@ __pycache__/
 
 # Project specific
 others/**
-src/models/inference
-src/models/training
 
 # IDE 
 .idea/
