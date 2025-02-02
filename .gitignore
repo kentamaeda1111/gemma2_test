@@ -9,7 +9,7 @@ __pycache__/
 models/
 !models/kaggle_model/
 !models/kaggle_model/**
-others/
+others/**
 
 # IDE 
 .idea/
