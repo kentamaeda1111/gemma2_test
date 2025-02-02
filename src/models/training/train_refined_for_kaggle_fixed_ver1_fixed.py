@@ -66,24 +66,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 api_keys = get_api_keys()
 os.environ["HUGGINGFACE_TOKEN"] = api_keys['huggingface_api_key']
 
-# 2.モデルとトークナイザーの基本設定 および　データ準備と前処理
-# Model and tokenizer preparation
-model_name = "google/gemma-2-2b-jpn-it"
-tokenizer = AutoTokenizer.from_pretrained(
-    model_name,
-    token=os.environ["HUGGINGFACE_TOKEN"],  
-    trust_remote_code=True
-)
-
-
-
-
-# Add special tokens to tokenizer
-tokenizer.add_special_tokens({
-    'additional_special_tokens': [
-        '。', '、', '！', '？',  # Punctuation marks
-    ]
-})
+# 2.データ準備と前処理
 
 
 def validate_message_format(message):
@@ -169,6 +152,10 @@ print(dataset.features)
 # Optimize dataset batch processing
 dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
 
+
+# Log dataset size
+logging.info(f"Total dataset size: {len(dataset)}")
+log_memory_usage()
 
 
 def tokenize_function(examples):
@@ -301,9 +288,25 @@ tokenized_dataset = tokenized_dataset.map(
 
 
 
+# 3.モデルとトークナイザーの設定
 
-# 3.モデルの詳細設定
+# Model and tokenizer preparation
+model_name = "google/gemma-2-2b-jpn-it"
+tokenizer = AutoTokenizer.from_pretrained(
+    model_name,
+    token=os.environ["HUGGINGFACE_TOKEN"],  
+    trust_remote_code=True
+)
 
+
+
+
+# Add special tokens to tokenizer
+tokenizer.add_special_tokens({
+    'additional_special_tokens': [
+        '。', '、', '！', '？',  # Punctuation marks
+    ]
+})
 
 
 # Optimize BitsAndBytesConfig settings
@@ -510,7 +513,6 @@ def compute_metrics(eval_preds):
 
 
 
-
 # Add memory usage monitoring log
 def log_memory_usage():
     import psutil
@@ -538,9 +540,7 @@ def log_memory_usage():
         logging.info(f"  - Reserved: {gpu['reserved']:.2f} MB")
         logging.info(f"  - Max Allocated: {gpu['max_allocated']:.2f} MB")
 
-# Log dataset size
-logging.info(f"Total dataset size: {len(dataset)}")
-log_memory_usage()
+
 
 # Add memory cleanup
 def clear_memory():
