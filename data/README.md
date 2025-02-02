@@ -1,260 +1,120 @@
+# Overall Strategy
+Given the limited time, I needed an efficient approach. We decided to:
+1. Create multiple models by varying the training data
+2. Select the best performing model
+Therefore, data generation became a crucial factor in this project.
 
-■大枠の戦略
-限られた時間の中で時間効率のいいアプローチをする必要があると考えたときに、
-主に学習データに変化をつけることで複数のモデルを作り、
-その中から一番優秀なモデルを選ぶ、という戦略をとりました。
+# Training Data Generation Policy
+There are primarily two patterns of user experience:
+1) Dialogues initiated by Socrates
+2) Dialogues initiated by users
 
-尚、結果が芳しくなければ以下に着手する予定でした。
-・学習データの見直しや品質向上に向けた新たなアプローチ
-・アルパカ形式を使ったsystem promptの導入
-・ファインチューニング（ここはもっと書く）
-・モデルのアーキテクチャの変更（ここももっとかく）
+For this project, I decided to structure it so that:
+- Socrates initiates with fixed questions
+While historically Socrates was more about interjecting into others' discussions rather than posing initial questions, I chose this approach because:
+- Having users initiate conversations could lead to too many unpredictable inputs
+- Fine-tuning isn't magic; we wanted to minimize variables
+- Even simple prompt engineering was challenging for the base model, so having Socrates control the dialogue initiation seemed risky from a control perspective
 
-■学習データ生成時の方針
-ユーザー体験のパターンとしては大きく分けて以下の２つがあると思います。
-１）ソクラテスから対話を始めるパターン
-と
-2）ユーザーから対話を始めるパターン
-今回の場合、私はソクラテスから問いがはじまる、
-且つ問いは固定されている、という構造にすることにしました。
-もともとソクラテスは問いをたてるというよりは、
-議論をまじわせている人々に横やりを入れる、というスタイルであったため、（事実確認チェック）
-実態とは乖離がありますが、
-今回の場合まずユーザーから会話を開始させてしまうと、
-予期しない入力が多かったり、入力できるバラエティが多すぎるため、収集がつかないと考えました。
-また、ファインチューニングは魔法ではないため、
-できるだけ制御する要素は絞りたいと考えました。
-それでなくてもシンプルなprompt enigneeringでさえ、ベースモデルは対応できないようなレベルだったので、
-ソクラテスから対話をスタートさせた場合、ソクラテスにその対話のスタートのさせ方を担わせるのは
-制御の観点からあまりいいアイデアではないと思いました。
-ということで、結論としては、お題はこちらで固定をし、ソクラテスから対話が開始するように”見せかけ”、初期の動きを固定することにしました。
-カスタマーサービスボットが”何かお困りごとはありますか？”という問いからはじまるのと同じ理屈です。
-これによりある程度会話の方向性や流れが収束するため、
-”問いを返す”という挙動や、ソクラテス風の口調のファインチューニングに専念できると考えました。
+Therefore, I decided to:
+- Fix the topics
+- Make it "appear" as if Socrates initiates the dialogue
+- Fix the initial interactions
 
-２）学習データの生成方法
-ソクラテスの文献からあたる、ということは
-学習言語が英語ならまだしも、
-日本語の場合著作権の問題があったため、
-あまり現実的ではないと考えました。
-そのため、結論としてはＡＩで、
-且つＡＩとＡＩの対話を自動化して作る、という方針にしました。
+This is similar to customer service bots starting with "How may I help you?"
+This approach helps converge conversation directions and allows focus on fine-tuning the "questioning response" behavior and Socratic speech patterns.
 
-３）学習データの量
-どの程度の量が適切なのか、について、
-主に以下のような媒体で調査をしました。
+# Training Data Generation Method
+Using Socratic literature directly wasn't practical due to:
+- Copyright issues (especially for Japanese content)
+Therefore, I decided to:
+- Automate AI-to-AI dialogue generation
 
-①gemmaやgemma2の２B関連のhugging faceやgithubにあるドキュメントやディスカッション
-②類似モデル（Mistral 2.3B、Falcon 1.5B、OpenLLaMA 2.7B、XGen 2.2B、RedPajama-INCITE 3B）のhugging faceやgithubにあるドキュメントやディスカッション
-③チューナ（XTuner, Axolotl, LLaMA Factory）のドキュメントやディスカッション
-④kaggleのgemma（特に2B-it)関連のファインチューニングに関連するcode
-⑤論文（scispaceやconsensusやelicitを使用し論文の絞り込み）
-⑥WEBリサーチ（gemini advanced 1.5 pro with deep research、perplexity、feloを使用）
-※このリサーチ方法の場合ルシネーションがおきる可能性が高いため、必ず根拠となった記事や文献を見せるように、という指示をだし、実際に記事を確認する、ということを徹底
+# Training Data Volume
+Research on appropriate volume was conducted through:
+- Gemma and Gemma 2B related documentation and discussions on Hugging Face and GitHub
+- Similar model documentation (Mistral 2.3B, Falcon 1.5B, OpenLLaMA 2.7B, XGen 2.2B, RedPajama-INCITE 3B)
+- Tuner documentation (XTuner, Axolotl, LLaMA Factory)
+- Kaggle code related to Gemma (especially 2B-it) fine-tuning
+- Web research (using Gemini Advanced 1.5 Pro with deep research, Perplexity, Felo)
+*Note: Due to potential hallucination risks, source verification was strictly enforced
+- Academic papers (using SciSpace, Consensus, Elicit)
 
-かなりばらつきはあったものの、
-結果的には以下のような幅をもたせたかたちで、
-複数モデルを作ってテストする、という方針にし、
-問題がありそうであれば都度調整をしていく、という方針をとりました。
+Based on research, we aimed for:
+- Total tokens: 20,000 - 500,000 
+- Average dialogue length: 50-300 tokens
 
-総token数：２万～５０万
-１つの対話の平均の長さ：５０～３００token
+Considering that 20% would be used for testing and anticipating some low-quality data, we set a target of approximately 700,000 tokens for training data. As a result, we generated 296 dialogue sets with 12 turns each using AI×AI interaction.
 
-20%をテストに使うと想定し、少なくとも625,000token程度のデータの生成を目指し、
-結果的にAIｘＡＩで、１２往復の対話データを２９６個生成しました。
-（より詳細な内容はautomation.pyのREADME.mdを確認してください）
+# Ensuring Data Quality (Diversity)
 
-４）データの質（多様性）の確保の方法
-ソクラテスの設定は一定を保ちました。
-応答に一貫性をもたせるためです。
-そのためpromptやパラメーターは変更をせず、同一のものを全対話で使っています。
-バラエティを出したのは以下の要素です。（詳しくはpromptsのREADME.ｍｄを確認してください）
+To ensure data quality while maintaining diversity, I kept certain elements consistent while varying others. For consistency, I maintained:
+- A fixed character setting for Socrates
+- The same prompts and parameters across all dialogues
 
-★ユーザー側のペルソナ
-ペルソナを１４８生成
-うち６８は一般人、４０は歴史的な人物、４０は歴史的な人物の思想を受け継いだ一般人
+For diversity, I introduced variations in the following elements:
 
-★initial question
-最終的には質問は固定するという方針であったため、
-最初は学習データの対話についても質問を固定し、ソクラテスの切り返しの仕方等でバラエティを作ろうと考えていたのですが、
-過学習を恐れ、質問自体もかえることにし、結果、７４の初期の質問を使いました。
+Regarding user personas:
+I generated 148 different personas, consisting of:
+- 68 personas representing general public
+- 40 personas based on historical figures
+- 40 personas representing modern individuals influenced by historical figures' thoughts
 
-★パラメーターの変更
-具体的にはユーザーのパラメーターを０．３のバージョンと０．７のバージョンを作りました。
-これによって返答の傾向も変化させました。
+Regarding initial questions:
+While I initially planned to use fixed questions and create variety through Socrates' responses, I became concerned about overfitting. This led me to create 74 different initial questions to introduce more variety in the training data.
 
-５）データの品質の確保の方法
-（ここはもっと肉厚にする）等々、色々な方法はあったと思うのですが
-まず最初に着手した方法は一番時間効率がよさそうな
-ＡＩにまずは１次フィルターを担わせ、フィルターしたものを私がチェックする、という二段構えの品質チェックの手法です。（詳しくはprocessingのREADME.mdをよんでください）
-プロセスとしてはまずはAIに対話を以下の３つの基準で評価させました。
+Regarding parameter variations:
+I created two versions of user responses by setting different parameters (0.3 and 0.7) to introduce variation in response patterns.
 
-①ソクラテスの口調になっているか、について以下を参考に点数付け
+# Quality Assurance Method
 
-0:まったくソクラテスではない
-1:ソクラテスの要素が感じられない
-2:悪くはないが少し気になる点がある
-3:ソクラテスのような発言になっている
-4:まさにソクラテス！申し分ない
+I implemented a two-stage quality assurance process for efficiency. First, I had AI perform initial filtering, followed by my personal verification of the results.
 
-②ソクラテスの返答は論理矛盾がなく、自然なものか、について以下を参考に点数付け
+For the AI evaluation stage, I established three criteria:
 
-0:意味不明な発言をしてしまっている。
-1:会話がかみ合ってない気がする
-2:悪くはないが、少し気になる点がある
-3:しっかりと自然な流れで会話ができている
-4:非常に良い切り返し！さすがソクラテス！
+- Evaluation of Socratic tone on a 0-4 scale
+- Assessment of logical consistency and natural flow on a 0-4 scale
+- Detailed comments on each dialogue (to help me verify the AI's evaluation process)
 
-③評価対象の対話に対してのコメント
-※これはAIの評価の仕方を私が判定するために、explanable AIの観点から挿入しました。
+The results of this quality assurance process were positive:
+- We achieved a good yield rate on first attempts
+- Upon review, even dialogues that received lower scores showed acceptable quality
+- Nevertheless, I decided to remove all dialogues flagged as low-quality by the AI
+- This process reduced our dialogue count from 296 to 242
 
-次に、２以下の点数がついたものを私が見て、
-その判断が妥当そうか、を”③評価対象の対話に対してのコメント”も参考にしつつ、
-確認をしました。
-結果としてはまずそもそも
-歩留まりは悪くなく、且つ２以下を採点されていたものですら、
-品質が悪くなかったため、
-これ以上品質向上に向けた取り組みは不要と考え、
-次のプロセスに進みました。
-尚、品質は決して悪くなかったのですが、念のためAIが品質が低いと判定したものに関しては
-排除しました。
-そのため、結果的に296個あった対話は242個に減りました。
+# System Prompt Integration
+This was a particularly challenging decision point. According to the official documentation, Gemma has a fundamental design philosophy that:
+- Only supports two roles: "user" and "model" (notably lacking a system role)
+- Requires dialogues to start from the user side
 
-６）学習データにsysmtem promptを組み込むか否か、そしてどう組み込むか
-ここは非常に悩んだポイントでした。
-gemmaは公式ドキュメントに書いてある通り、
-userとmodelという二つのroleしかなく、
-且つuserから対話がはじまる、
-という設計思想になっています。
-インターネット上では多くの人がこの設計思想を無視してsystem promptのような記述をしているケースが散見されたのですが、
-私はこの手法は避けました。
-というのも調査の過程で、必ずしもstyle transferにおいてsystem promptは必要ない、という趣旨の内容も見かけたためです。
-そのため、いったんsystem promptを一切使わない、という手法をとることにしました。
-ただ、”あなたはソクラテスです”というような短文を挿入する、というpracticeは割とよくつかわれていたため、
-それは念のためuser側の発話の前に挿入することにしました。
-尚、XTuner, Axolotl, LLaMA FactoryといったTunerを使えば、system promptのような形式で学習させる、ということもできたのですが、
-まずはできるだけ自然な形で、つまりgemma2のオリジナルの思想にアラインする形でためそうと考えました。
+While many examples on the internet ignored this design philosophy by including system prompt-like elements, I decided to avoid this approach. 
 
-■最終的に生成した学習データ
-結果として、以下のようなバリエーションを付けたかたちで９つのデータを使ってモデルをトレインすることにしました。
+Instead, I decided to create two variations of training data:
+1. One completely without any system prompt-like elements
+2. Another incorporating brief phrases like "You are Socrates" before user utterances, as this was a commonly used practice
 
-総token数：22753（厳密にはこれの８０％）～685875（厳密にはこれの８０％）
-１対話の平均token数：76.87～310.24
-system prompt：入れない、＆入れる（２パターン）の計３パターン
+While we could have used tuners like XTuner, Axolotl, or LLaMA Factory to implement system prompt-like functionality during training, I prioritized staying aligned with Gemma2's original design philosophy and testing in the most natural way possible.
 
-すべてuserから発話がスタートしています。
-また、このまとめを作っている過程で気づきましたが、model4～model9に関しては品質の低いと判断されたデータも入ってしまっていました。
-詳細は以下です。
+# Final Training Data
+Generated 9 variations with:
+- Total tokens: 22,753-685,875 (80% of these values)
+- Average tokens per dialogue: 76.87-310.24
+- System prompt: None + 2 variations
+- All user-initiated
 
-model1
-12往復から抽出した対話の数：１１
-１対話に組み込んだ発話の数：２
-１対話の数：１１
-総対話数: 2662（242 x 11)
-総token数: 707115
-1ペアの平均token数: 265.63
-1ペアのMAX token数: 535
-1ペアのminimum token数: 27
-user発話の平均トークン数: 152.39
-model発話の平均トークン数: 113.24
-system promptもどき：userの発話の前に”ソクラテスさん。”を追加  
+Note: Models 4-9 inadvertently included lower-quality data
 
-model2
-12往復から抽出した対話の数：１１
-１対話に組み込んだ発話の数：２
-総対話数: 2662（242 x 112)
-総token数: 752369
-1ペアの平均token数: 282.63
-1ペアのMAX token数: 552
-1ペアのminimum token数: 44
-user発話の平均トークン数: 169.39
-model発話の平均トークン数: 113.24
-system promptもどき：userの発話の前に”あなたは古代ギリシャの哲学者ソクラテスです。”を追加  
+# Comparison of Training Data Characteristics Across Model Configurations
 
-model3
-12往復から抽出した対話の数：１１
-１対話に組み込んだ発話の数：２
-総対話数: 2662（242 x 112)
-総token数: 685875
-1ペアの平均token数: 257.65
-1ペアのMAX token数: 527
-1ペアのminimum token数: 19
-user発話の平均トークン数: 144.42
-model発話の平均トークン数: 113.24
-system promptもどき：userの発話の前に何もいれない
-
-model4
-12往復から抽出した対話の数：1
-１対話に組み込んだ発話の数：2
-総対話数: 296（こちらは全て使用したため296 x 1)
-総token数: 22753
-1ペアの平均token数: 76.87
-1ペアのMAX token数: 129
-1ペアのminimum token数: 36
-user発話の平均トークン数: 12
-model発話の平均トークン数: 64.87
-system promptもどき：userの発話の前に何もいれない
-
-
-model5
-12往復から抽出した対話の数：1
-１対話に組み込んだ発話の数：4
-総対話数: 296（こちらは全て使用したため296 x 1)
-総token数: 84431
-1対話の平均token数: 285.24
-1対話のMAX token数: 416
-1対話のminimum token数: 181
-user1発話の平均トークン数: 67.63
-model1発話の平均トークン数: 74.99
-system promptもどき：userの発話の前に何もいれない
-
-model6
-12往復から抽出した対話の数：1
-１対話に組み込んだ発話の数：2
-総対話数: 296（こちらは全て使用したため296 x 1)
-総token数: 25121
-1ペアの平均token数: 84.87
-1ペアのMAX token数: 137
-1ペアのminimum token数: 44
-user発話の平均トークン数: 20
-model発話の平均トークン数: 64.87
-system promptもどき：userの発話の前に”ソクラテスさん。”を追加  
-
-model7
-12往復から抽出した対話の数：1
-１対話に組み込んだ発話の数：2
-総対話数: 296（こちらは全て使用したため296 x 1)
-総token数: 30153
-1ペアの平均token数: 101.87
-1ペアのMAX token数: 154
-1ペアのminimum token数: 61
-user発話の平均トークン数: 37
-model発話の平均トークン数: 64.87
-system promptもどき：userの発話の前に”あなたは古代ギリシャの哲学者ソクラテスです。”を追加  
-
-
-model8
-12往復から抽出した対話の数：1
-１対話に組み込んだ発話の数：4
-総対話数: 296（こちらは全て使用したため296 x 1)
-総token数: 86799
-1対話の平均token数: 293.24
-1対話のMAX token数: 424
-1対話のminimum token数: 189
-user1発話の平均トークン数: 71.63
-model1発話の平均トークン数: 74.99
-system promptもどき：userの発話の前に”ソクラテスさん。”を追加  
-
-model9
-12往復から抽出した対話の数：1
-１対話に組み込んだ発話の数：4
-総対話数: 296（こちらは全て使用したため296 x 1)
-総token数: 91831
-1対話の平均token数: 310.24
-1対話のMAX token数: 441
-1対話のminimum token数: 206
-user1発話の平均トークン数: 80.13
-model1発話の平均トークン数: 74.99
-system promptもどき：userの発話の前に”あなたは古代ギリシャの哲学者ソクラテスです。”を追加  
-
-※これはマークダウンではグラフにできる？
+| Item | model1 | model2 | model3 | model4 | model5 | model6 | model7 | model8 | model9 |
+|------|--------|--------|--------|--------|--------|--------|--------|--------|--------|
+| Number of dialogues extracted from 12 turns | 11 | 11 | 11 | 1 | 1 | 1 | 1 | 1 | 1 |
+| Number of utterances per dialogue | 2 | 2 | 2 | 2 | 4 | 2 | 2 | 4 | 4 |
+| Total number of dialogues | 2,662 | 2,662 | 2,662 | 296 | 296 | 296 | 296 | 296 | 296 |
+| Total tokens | 707,115 | 752,369 | 685,875 | 22,753 | 84,431 | 25,121 | 30,153 | 86,799 | 91,831 |
+| Average tokens per dialogue | 265.63 | 282.63 | 257.65 | 76.87 | 285.24 | 84.87 | 101.87 | 293.24 | 310.24 |
+| MAX tokens per dialogue | 535 | 552 | 527 | 129 | 416 | 137 | 154 | 424 | 441 |
+| MIN tokens per dialogue | 27 | 44 | 19 | 36 | 181 | 44 | 61 | 189 | 206 |
+| Average user tokens* | 152.39 | 169.39 | 144.42 | 12 | 67.63 | 20 | 37 | 71.63 | 80.13 |
+| Average model tokens* | 113.24 | 113.24 | 113.24 | 64.87 | 74.99 | 64.87 | 64.87 | 74.99 | 74.99 |
+| System prompt | "Socrates." | "You are Socrates, the ancient Greek philosopher." | None | None | None | "Socrates." | "You are Socrates, the ancient Greek philosopher." | "Socrates." | "You are Socrates, the ancient Greek philosopher." |

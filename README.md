@@ -5,7 +5,6 @@ This repository provides comprehensive implementation details and additional res
 
 Note: This repository is shared under the MIT License for reference purposes and is not actively maintained.
 
-## Complete Implementation Details
 ### Development Pipeline
 Our project implements a five-stage pipeline to create a Japanese-speaking Socratic dialogue model using Gemma-2b:
 
@@ -15,14 +14,40 @@ Our project implements a five-stage pipeline to create a Japanese-speaking Socra
 4. **Model Training**: Fine-tuning of Gemma-2b with processed dialogues
 5. **Model Inference**: Deployment of trained model for interactive dialogue
 
+## Complete Implementation Details
 ### Repository Structure
 
+```
 project_root/
 ├── src/                      # Source code for all pipeline components
 ├── data/                     # Configuration, prompts, and dialogue data
 └── models/                   # Trained model checkpoints and logs
+```
 
-Each component is documented in its respective directory's README.md file.
+### Documentation Structure
+
+#### Component Documentation
+Each major component directory contains its own README.md providing implementation details:
+- `src/data/generation/README.md`: Dialogue generation implementation details
+- `src/data/quality_check/README.md`: Quality assessment system implementation
+- `src/models/training/README.md`: Training process implementation
+- `src/models/inference/README.md`: Inference system implementation
+
+#### Core Technical Documentation
+Two comprehensive technical documents detail our approach:
+- `data/README.md`: Training Data Strategy
+  - Data generation policies and rationale
+  - Quality assurance methodology
+  - System prompt integration approach
+  - Detailed model configuration statistics
+  - Training data characteristics analysis
+
+- `data/prompts/README.md`: Prompt Engineering System
+  - Core design philosophy and architecture
+  - Detailed prompt categories and templates
+  - Assistant and user prompt implementations
+  - Initial question design strategy
+  - Anti-overfitting measures
 
 ### Implementation Transparency
 This repository intentionally includes key files that would typically be excluded:
@@ -42,7 +67,6 @@ This repository intentionally includes key files that would typically be exclude
    - `assistant_system_prompt/`: Socrates role prompts
    - `user_system_prompt/`: Student role prompts
    - `questions.json`: Initial philosophical questions
-Note: All prompts are in Japanese. See [data/prompts/README.md](data/prompts/README.md) for English documentation.
 
 ## System Requirements
 
