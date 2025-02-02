@@ -78,7 +78,7 @@ Raises `ValueError` if:
 ### Used By
 
 - `src/data/generation/automation.py`: For dialogue generation
-- `src/data/processing/dialogue_quality_check.py`: For quality assessment
+- `src/data/quality_check/dialogue_quality_check.py`: For quality assessment
 - `src/models/training/train.py`: For model training
 - `src/models/inference/test.py`: For model inference
 

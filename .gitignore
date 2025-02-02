@@ -6,10 +6,9 @@ __pycache__/
 *.py[cod]
 
 # Project specific
-models/
-!models/kaggle_model/
-!models/kaggle_model/**
 others/**
+src/models/inference
+src/models/training
 
 # IDE 
 .idea/
