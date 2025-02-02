@@ -234,7 +234,7 @@ def tokenize_function(examples):
         logging.error(f"Stack trace:", exc_info=True)
         raise
 
-# データセットの処理部分を修正する前に追加
+# データセットの処理部分を以下のように修正
 logging.info("\nPre-tokenization check:")
 logging.info(f"Dataset length: {len(dataset)}")
 logging.info(f"Available CPU cores: {os.cpu_count()}")
@@ -243,19 +243,32 @@ logging.info(f"Current memory usage: {psutil.Process().memory_info().rss / 1024 
 # dataset.map()の呼び出しを修正
 logging.info("\nStarting dataset tokenization...")
 try:
-    # まず小さなバッチサイズでテスト
-    test_batch = dataset.select(range(min(5, len(dataset))))
-    logging.info("Testing tokenization with small batch...")
-    test_result = tokenize_function({'text': test_batch['text']})
-    logging.info("Test tokenization successful")
+    # まず1件だけテスト
+    logging.info("Testing single example tokenization...")
+    single_test = tokenize_function({'text': [dataset[0]['text']]})
+    logging.info("Single example tokenization successful")
     
-    # 本番の処理
+    # 小さなバッチでテスト（シングルプロセス）
+    logging.info("Testing small batch tokenization...")
+    test_batch = dataset.select(range(min(5, len(dataset))))
+    test_result = test_batch.map(
+        tokenize_function,
+        batched=True,
+        batch_size=2,
+        num_proc=None,  # シングルプロセスで実行
+        load_from_cache_file=False,
+        desc="Testing tokenization"
+    )
+    logging.info("Small batch tokenization successful")
+    
+    # 本番の処理（シングルプロセスで実行）
+    logging.info("Starting full dataset tokenization...")
     tokenized_dataset = dataset.map(
         tokenize_function,
         batched=True,
-        batch_size=32,
-        num_proc=4,
-        load_from_cache_file=True,
+        batch_size=16,  # バッチサイズを小さくする
+        num_proc=None,  # シングルプロセスで実行
+        load_from_cache_file=False,  # キャッシュを無効化
         desc="Tokenizing datasets",
         remove_columns=dataset.column_names,
     )
@@ -264,6 +277,8 @@ except Exception as e:
     logging.error("Error during dataset tokenization:")
     logging.error(str(e))
     logging.error("Stack trace:", exc_info=True)
+    import traceback
+    traceback.print_exc()
     raise
 
 # データセットの検証関数を修正
