@@ -1,4 +1,4 @@
-#train_finalをkaggleでも使えるよにしたやつ。
+#train_finalをkaggleでも使えるよにしたやつ。ただT4x2用だからGPU二つある
 import torch
 from transformers import (
     AutoModelForCausalLM,
