@@ -749,16 +749,10 @@ try:
             else:
                 logging.warning("Invalid checkpoint state found. Please check manually.")
                 logging.warning(f"Checkpoint directory: {checkpoint_dir}")
-                user_input = input("Do you want to continue and overwrite? (yes/no): ")
-                if user_input.lower() != 'yes':
-                    logging.info("Aborting to protect existing data.")
-                    exit(0)
+                logging.info("Automatically continuing with training...")  # 追加
         else:
             logging.warning("Checkpoint directory exists but no checkpoints found.")
-            user_input = input("Do you want to continue and overwrite the directory? (yes/no): ")
-            if user_input.lower() != 'yes':
-                logging.info("Aborting to protect existing data.")
-                exit(0)
+            logging.info("Automatically continuing with training...")  # 追加
 
     # 学習を開始（または再開）
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
