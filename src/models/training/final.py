@@ -1,7 +1,7 @@
 #train_finalをkaggleでも使えるよにしたやつ。ただT4x2用だからGPU二つある
 
 # 1.初期設定とインポート部分
-
+### 1.1 インポートとグローバル設定
 import torch
 from transformers import (
     AutoModelForCausalLM,
@@ -30,8 +30,9 @@ import gc
 # Global Setting
 DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
 MAX_SEQUENCE_LENGTH = 512
-TOKENIZE_MAX_LENGTH = 512  # 追加: トークン化時の最大長
+TOKENIZE_MAX_LENGTH = 512  
 
+### 1.2 ディレクトリ設定とロギング設定
 # ディレクトリ設定
 BASE_OUTPUT_DIR = "models/kaggle_model_ver2"  
 MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
@@ -52,12 +53,13 @@ logging.basicConfig(
 )
 
 
-# Initial logging messages to verify logging is working
+# Initial logging messages
 logging.info("Training script started")
 logging.info(f"Using dialogue file: {DIALOGUE_JSON_PATH}")
 logging.info(f"Max sequence length: {MAX_SEQUENCE_LENGTH}")
 logging.info(f"Output directory: {BASE_OUTPUT_DIR}")
 
+### 1.3 環境変数とAPI設定
 # Environment variables and warning settings
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -66,9 +68,25 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 api_keys = get_api_keys()
 os.environ["HUGGINGFACE_TOKEN"] = api_keys['huggingface_api_key']
 
-# 2.データ準備と前処理
+# 2. データパイプライン
+### 2.1 トークナイザー設定
+# Model and tokenizer preparation
+model_name = "google/gemma-2-2b-jpn-it"
+tokenizer = AutoTokenizer.from_pretrained(
+    model_name,
+    token=os.environ["HUGGINGFACE_TOKEN"],  
+    trust_remote_code=True
+)
 
 
+# Add special tokens to tokenizer
+tokenizer.add_special_tokens({
+    'additional_special_tokens': [
+        '。', '、', '！', '？',  # Punctuation marks
+    ]
+})
+
+### 2.2 データセット準備
 def validate_message_format(message):
     """Validate message format"""
     if not isinstance(message, dict):
@@ -134,29 +152,16 @@ def prepare_dataset():
         
     logging.info(f"Processed {len(conversations)} valid conversations")
     return Dataset.from_list(conversations)
-
-
-
-# Dataset preparation
 dataset = prepare_dataset()
-
-
 
 # Check dataset structure
 print("Dataset structure:")
 print(dataset[0])  # Display first element
 print("\nDataset features:")
 print(dataset.features)
-
-
-# Optimize dataset batch processing
 dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
 
-
-# Log dataset size
-logging.info(f"Total dataset size: {len(dataset)}")
-log_memory_usage()
-
+### 2.3 データ前処理と検証
 
 def tokenize_function(examples):
     result = tokenizer(
@@ -251,6 +256,7 @@ def preprocess_function(examples):
     return examples
 
 
+### 2.4 データセット最適化
 # Optimize dataset processing
 tokenized_dataset = dataset.map(
     tokenize_function,
@@ -261,7 +267,6 @@ tokenized_dataset = dataset.map(
     desc="Tokenizing datasets",
     remove_columns=dataset.column_names,
 )
-
 
 # Add dataset validation
 def validate_dataset(dataset):
@@ -285,30 +290,8 @@ tokenized_dataset = tokenized_dataset.map(
 )
 
 
-
-
-
-# 3.モデルとトークナイザーの設定
-
-# Model and tokenizer preparation
-model_name = "google/gemma-2-2b-jpn-it"
-tokenizer = AutoTokenizer.from_pretrained(
-    model_name,
-    token=os.environ["HUGGINGFACE_TOKEN"],  
-    trust_remote_code=True
-)
-
-
-
-
-# Add special tokens to tokenizer
-tokenizer.add_special_tokens({
-    'additional_special_tokens': [
-        '。', '、', '！', '？',  # Punctuation marks
-    ]
-})
-
-
+# 3. モデル設定
+### 3.1 量子化設定（BitsAndBytes）
 # Optimize BitsAndBytesConfig settings
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
@@ -318,6 +301,7 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_quant_storage=torch.uint8,
 )
 
+### 3.2 モデルロードと初期化
 # Load model with modifications
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
@@ -333,6 +317,7 @@ model = AutoModelForCausalLM.from_pretrained(
 model = prepare_model_for_kbit_training(model)
 model.config.use_cache = False
 
+### 3.3 LoRA設定
 # Adjust LoRA configuration
 lora_config = LoraConfig(
     r=16,
@@ -346,10 +331,8 @@ lora_config = LoraConfig(
 # Create LoRA model
 model = get_peft_model(model, lora_config)
 
-
-# 4. 評価メトリクスとコールバック
-
-# Update evaluation metrics
+# 4. トレーニングインフラ
+### 4.1 評価メトリクス定義
 def compute_metrics(eval_preds):
     logits, labels = eval_preds  # Get logits and labels from eval_preds
     
@@ -512,8 +495,7 @@ def compute_metrics(eval_preds):
         }
 
 
-
-# Add memory usage monitoring log
+### 4.2 メモリ管理とモニタリング
 def log_memory_usage():
     import psutil
     import torch
@@ -540,15 +522,15 @@ def log_memory_usage():
         logging.info(f"  - Reserved: {gpu['reserved']:.2f} MB")
         logging.info(f"  - Max Allocated: {gpu['max_allocated']:.2f} MB")
 
+# Log dataset size
+logging.info(f"Total dataset size: {len(dataset)}")
+log_memory_usage()
 
-
-# Add memory cleanup
 def clear_memory():
     gc.collect()
     torch.cuda.empty_cache()
-    
 
-# Update custom callbacks
+### 4.3 コールバック実装
 class StyleCallback(TrainerCallback):
     def __init__(self):
         self.style_scores = []
@@ -574,6 +556,7 @@ class StyleCallback(TrainerCallback):
         logging.info(f"Average Dialogue Flow: {avg_flow:.3f}")
 
 # Extend custom callbacks
+
 class TrainingMonitorCallback(TrainerCallback):
     def __init__(self):
         # Import psutil here as well for safety
@@ -786,9 +769,41 @@ class TrainingMonitorCallback(TrainerCallback):
     def _get_total_ram(self):
         return psutil.virtual_memory().total / (1024 * 1024 * 1024)  # GB
 
+
+### 4.4 カスタムトレーナー定義
+# Training step customization
+class CustomTrainer(Trainer):
+    def training_step(self, *args, **kwargs):
+        loss = super().training_step(*args, **kwargs)
+        if self.state.global_step % 50 == 0:
+            clear_memory()
+            gc.collect()
+            torch.cuda.empty_cache()
+        return loss
+
+# Evaluation customization
+class CustomTrainer(Trainer):
+    def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
+        eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
+        if eval_dataset is not None:
+            # Limit evaluation dataset to 100 samples
+            eval_dataset = eval_dataset.select(range(min(100, len(eval_dataset))))
+        return super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
+
+# Trainer initialization
+trainer = CustomTrainer(
+    model=model,
+    args=training_args,
+    train_dataset=train_dataset,
+    eval_dataset=eval_dataset,
+    data_collator=data_collator,
+    compute_metrics=compute_metrics,
+    callbacks=[StyleCallback(), TrainingMonitorCallback()],
+)
+
+
 # 5. トレーニング設定
-
-
+### 5.1 トレーニング引数設定
 # Split dataset into training and evaluation sets
 dataset_size = len(tokenized_dataset)
 indices = np.random.permutation(dataset_size)
@@ -797,12 +812,10 @@ train_dataset = tokenized_dataset.select(indices[:split_idx])
 # Limit evaluation dataset size
 eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])  # Maximum 50 samples
 
-
 logging.info(f"Training dataset size: {len(train_dataset)}")
 logging.info(f"Evaluation dataset size: {len(eval_dataset)}")
 
-# Disable wandb via environment variable (add before training_args)
-import os
+# Disable wandb via environment variable
 os.environ["WANDB_DISABLED"] = "true"
 
 # Update training arguments
@@ -841,7 +854,7 @@ training_args = TrainingArguments(
 )
 
 
-
+### 5.2 データローダーとコレータ設定
 # Modify data collator
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
@@ -849,43 +862,7 @@ data_collator = DataCollatorForLanguageModeling(
     pad_to_multiple_of=8
 )
 
-
-
-
-
-# 6. カスタムトレーナーとトレーニング実行
-
-
-
-class CustomTrainer(Trainer):
-    def training_step(self, *args, **kwargs):
-        loss = super().training_step(*args, **kwargs)
-        if self.state.global_step % 50 == 0:
-            clear_memory()
-            gc.collect()
-            torch.cuda.empty_cache()
-        return loss
-
-# Create custom Trainer class for evaluation
-class CustomTrainer(Trainer):
-    def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
-        eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
-        if eval_dataset is not None:
-            # Limit evaluation dataset to 100 samples
-            eval_dataset = eval_dataset.select(range(min(100, len(eval_dataset))))
-        return super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
-
-# Update trainer settings
-trainer = CustomTrainer(
-    model=model,
-    args=training_args,
-    train_dataset=train_dataset,
-    eval_dataset=eval_dataset,
-    data_collator=data_collator,
-    compute_metrics=compute_metrics,
-    callbacks=[StyleCallback(), TrainingMonitorCallback()],
-)
-
+### 5.3 トレーニング実行と例外処理
 # Start training
 logging.info("Starting training...")
 try:
@@ -945,10 +922,9 @@ try:
     # Start training (or resume)
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
     logging.info("Training completed successfully!")
-    
-    # Save settings (as JSON)
-    import json
 
+### 5.4 モデル保存と設定エクスポート
+    # Save settings (as JSON)
     def convert_to_serializable(obj):
         if isinstance(obj, set):
             return list(obj)
@@ -974,33 +950,16 @@ try:
         }
     }
     
+    # Save configurations
     with open(os.path.join(training_args.output_dir, "training_config.json"), "w", encoding="utf-8") as f:
         json.dump(config_dict, f, indent=2, ensure_ascii=False)
     
-    # Save model
+    # Save model and settings
     trainer.save_model()
-    # Save settings
     model.config.save_pretrained(training_args.output_dir)
     tokenizer.save_pretrained(training_args.output_dir)
     logging.info("Model and configuration saved successfully!")
 
 except Exception as e:
     logging.error(f"An error occurred: {str(e)}")
-    # Checkpoints are preserved even if an error occurs
-    raise 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    raise

@@ -66,7 +66,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 api_keys = get_api_keys()
 os.environ["HUGGINGFACE_TOKEN"] = api_keys['huggingface_api_key']
 
-# 2.モデルとトークナイザーの基本設定 および　データ準備と前処理
+# 2.1 モデルとトークナイザーの基本設定 
 # Model and tokenizer preparation
 model_name = "google/gemma-2-2b-jpn-it"
 tokenizer = AutoTokenizer.from_pretrained(
@@ -85,6 +85,7 @@ tokenizer.add_special_tokens({
     ]
 })
 
+# 2.2 データ準備と前処理
 
 def validate_message_format(message):
     """Validate message format"""
@@ -988,18 +989,6 @@ except Exception as e:
     logging.error(f"An error occurred: {str(e)}")
     # Checkpoints are preserved even if an error occurs
     raise 
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
