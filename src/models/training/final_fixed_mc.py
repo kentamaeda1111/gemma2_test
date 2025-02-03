@@ -1,5 +1,5 @@
 # 1.初期設定とインポート部分
-### 1.1 インポートとグローバル設定
+### 1.1 ライブラリインポートとグローバル定数設定
 import torch
 from transformers import (
     AutoModelForCausalLM,
@@ -31,7 +31,7 @@ DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"
 MAX_SEQUENCE_LENGTH = 256
 TOKENIZE_MAX_LENGTH = 256  
 
-### 1.2 ディレクトリ設定とロギング設定
+### 1.2 出力ディレクトリとロギング設定
 # ディレクトリ設定
 BASE_OUTPUT_DIR = "models/kaggle_model_ver2"  
 MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
@@ -58,7 +58,7 @@ logging.info(f"Using dialogue file: {DIALOGUE_JSON_PATH}")
 logging.info(f"Max sequence length: {MAX_SEQUENCE_LENGTH}")
 logging.info(f"Output directory: {BASE_OUTPUT_DIR}")
 
-### 1.3 環境変数とAPI設定
+### 1.3 環境設定とAPI認証
 # Environment variables and warning settings
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -85,7 +85,7 @@ tokenizer.add_special_tokens({
     ]
 })
 
-### 2.2 データセット準備
+### 2.2 データセット準備と検証
 def validate_message_format(message):
     """Validate message format"""
     if not isinstance(message, dict):
@@ -160,7 +160,7 @@ print("\nDataset features:")
 print(dataset.features)
 dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
 
-### 2.3 データ前処理と検証
+### 2.3 トークン化関数の定義
 
 def tokenize_function(examples):
     result = tokenizer(
@@ -186,7 +186,7 @@ def preprocess_function(examples):
     )
 
 
-### 2.4 データセット最適化
+### 2.4 データセットのトークン化と検証
 # Optimize dataset processing
 tokenized_dataset = dataset.map(
     tokenize_function,
@@ -221,7 +221,6 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_quant_storage=torch.uint8,
 )
 
-# kaggleでは以下がオン
 ### 3.2 モデルロードと初期化
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
@@ -231,10 +230,7 @@ model = AutoModelForCausalLM.from_pretrained(
     attn_implementation='eager'
 )
 
-# # Prepare model for LoRA and disable cache
-# model = prepare_model_for_kbit_training(model)
 
-# kaggle環境の場合は上記をつけて以下を消す
 for param in model.parameters():
     param.requires_grad = True
 
@@ -412,6 +408,12 @@ class TrainingMonitorCallback(TrainerCallback):
         self.max_stable_checkpoints = 5  # 安定チェックポイントの最大数を設定
         self.error_count = 0  # エラー回数を追跡
         self.max_consecutive_errors = 3  # 連続エラーの許容回数
+        
+        # バランス監視用の設定を追加
+        self.variance_bias_window = 10  # より長いウィンドウで傾向を見る
+        self.train_losses = []  # 訓練損失の履歴
+        self.eval_losses = []   # 評価損失の履歴
+        self.optimal_gap_range = (0.1, 0.3)  # 訓練損失と評価損失の理想的な差分範囲
     
     def _calculate_stability_metrics(self, state):
         """安定性メトリクスを計算"""
@@ -433,30 +435,61 @@ class TrainingMonitorCallback(TrainerCallback):
             'grad_norm_mean': grad_norm_mean
         }
     
+    def _calculate_variance_bias_metrics(self):
+        """分散と偏りのバランスを計算"""
+        if len(self.train_losses) < self.variance_bias_window or \
+           len(self.eval_losses) < self.variance_bias_window:
+            return None
+            
+        recent_train = self.train_losses[-self.variance_bias_window:]
+        recent_eval = self.eval_losses[-self.variance_bias_window:]
+        
+        # 訓練損失と評価損失の差（バイアスの指標）
+        loss_gap = np.mean(recent_eval) - np.mean(recent_train)
+        
+        # 損失の変動（分散の指標）
+        train_variance = np.var(recent_train)
+        eval_variance = np.var(recent_eval)
+        
+        return {
+            'loss_gap': loss_gap,
+            'train_variance': train_variance,
+            'eval_variance': eval_variance,
+            'total_variance': (train_variance + eval_variance) / 2
+        }
+    
+    def _is_balanced_state(self, variance_bias_metrics):
+        """バランスの取れた状態かを判断"""
+        if variance_bias_metrics is None:
+            return False
+            
+        # 理想的な差分範囲内にあるか
+        good_gap = (self.optimal_gap_range[0] <= variance_bias_metrics['loss_gap'] <= self.optimal_gap_range[1])
+        
+        # 分散が適度に小さいか
+        stable_variance = variance_bias_metrics['total_variance'] < 0.1
+        
+        # 訓練と評価の分散が近いか（安定性の指標）
+        variance_ratio = min(variance_bias_metrics['train_variance'], variance_bias_metrics['eval_variance']) / \
+                        max(variance_bias_metrics['train_variance'], variance_bias_metrics['eval_variance'])
+        balanced_variance = variance_ratio > 0.7  # 70%以上の類似性
+        
+        return good_gap and stable_variance and balanced_variance
+    
     def _should_save_checkpoint(self, state, metrics):
-        """チェックポイント保存の判断"""
-        if metrics is None:
-            return False
-            
-        # 安定チェックポイントの数が上限に達している場合は古いものを削除
-        if len(self.stable_checkpoints) >= self.max_stable_checkpoints:
-            oldest_checkpoint = self.stable_checkpoints.pop(0)
-            if os.path.exists(oldest_checkpoint['path']):
-                shutil.rmtree(oldest_checkpoint['path'])
-            logging.info(f"Removed old stable checkpoint: {oldest_checkpoint['path']}")
+        """チェックポイント保存の判断を拡張"""
+        # 既存の条件をチェック
+        basic_conditions = super()._should_save_checkpoint(state, metrics)
         
-        # 前回のチェックポイントから十分な間隔が経過していない場合はスキップ
-        if state.global_step - self.last_checkpoint_step < self.min_steps_between_checkpoints:
-            return False
-            
-        # 条件1: perplexityとeval_lossが良好
-        good_perplexity = metrics['perplexity_mean'] < self.perplexity_threshold
-        stable_eval_loss = metrics['eval_loss_std'] < self.eval_loss_variance_threshold
+        # バランス状態もチェック
+        variance_bias_metrics = self._calculate_variance_bias_metrics()
+        balanced_state = self._is_balanced_state(variance_bias_metrics)
         
-        # 条件2: grad_normが適正範囲内
-        good_grad_norm = (self.grad_norm_bounds[0] <= metrics['grad_norm_mean'] <= self.grad_norm_bounds[1])
+        if balanced_state:
+            logging.info(f"Found balanced state at step {state.global_step}")
+            logging.info(f"Variance-Bias metrics: {variance_bias_metrics}")
         
-        return good_perplexity and stable_eval_loss and good_grad_norm
+        return basic_conditions or balanced_state  # どちらかの条件を満たせば保存
     
     def _safe_save_checkpoint(self, checkpoint_dir, state, metrics, stability_metrics):
         """安全にチェックポイントを保存"""
