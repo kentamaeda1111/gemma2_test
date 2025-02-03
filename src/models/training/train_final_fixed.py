@@ -1,7 +1,4 @@
 #train_finalをkaggleでも使えるよにしたやつ。ただT4x2用だからGPU二つある
-
-# 1.初期設定とインポート部分
-### 1.1 インポートとグローバル設定
 import torch
 from transformers import (
     AutoModelForCausalLM,
@@ -30,19 +27,18 @@ import gc
 # Global Setting
 DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
 MAX_SEQUENCE_LENGTH = 512
-TOKENIZE_MAX_LENGTH = 512  
+TOKENIZE_MAX_LENGTH = 512  # 追加: トークン化時の最大長
 
-### 1.2 ディレクトリ設定とロギング設定
-# ディレクトリ設定
+# Setup output directory paths
 BASE_OUTPUT_DIR = "models/kaggle_model_ver2"  
 MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
-LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs" 
+LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
 
-# ディレクトリの作成
+# Create directories
 for dir_path in [BASE_OUTPUT_DIR, MODEL_OUTPUT_DIR, LOG_OUTPUT_DIR]:
     os.makedirs(dir_path, exist_ok=True)
 
-# ロギング設定
+# Setup logging configuration immediately after directory creation
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -52,14 +48,12 @@ logging.basicConfig(
     ]
 )
 
-
-# Initial logging messages
+# Initial logging messages to verify logging is working
 logging.info("Training script started")
 logging.info(f"Using dialogue file: {DIALOGUE_JSON_PATH}")
 logging.info(f"Max sequence length: {MAX_SEQUENCE_LENGTH}")
 logging.info(f"Output directory: {BASE_OUTPUT_DIR}")
 
-### 1.3 環境変数とAPI設定
 # Environment variables and warning settings
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -68,25 +62,6 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 api_keys = get_api_keys()
 os.environ["HUGGINGFACE_TOKEN"] = api_keys['huggingface_api_key']
 
-# 2. データパイプライン
-### 2.1 トークナイザー設定
-# Model and tokenizer preparation
-model_name = "google/gemma-2-2b-jpn-it"
-tokenizer = AutoTokenizer.from_pretrained(
-    model_name,
-    token=os.environ["HUGGINGFACE_TOKEN"],  
-    trust_remote_code=True
-)
-
-
-# Add special tokens to tokenizer
-tokenizer.add_special_tokens({
-    'additional_special_tokens': [
-        '。', '、', '！', '？',  # Punctuation marks
-    ]
-})
-
-### 2.2 データセット準備
 def validate_message_format(message):
     """Validate message format"""
     if not isinstance(message, dict):
@@ -152,6 +127,56 @@ def prepare_dataset():
         
     logging.info(f"Processed {len(conversations)} valid conversations")
     return Dataset.from_list(conversations)
+
+# Model and tokenizer preparation
+model_name = "google/gemma-2-2b-jpn-it"
+tokenizer = AutoTokenizer.from_pretrained(
+    model_name,
+    token=os.environ["HUGGINGFACE_TOKEN"],  
+    trust_remote_code=True
+)
+
+# Optimize BitsAndBytesConfig settings
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_use_double_quant=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.float16,
+    bnb_4bit_quant_storage=torch.uint8,
+)
+
+# Load model with modifications
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    token=os.environ["HUGGINGFACE_TOKEN"],  
+    quantization_config=bnb_config,
+    device_map="balanced",
+    torch_dtype=torch.float16,
+    attn_implementation='sdpa',
+    max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}
+)
+
+# Prepare model for LoRA and disable cache
+model = prepare_model_for_kbit_training(model)
+model.config.use_cache = False
+
+# Adjust LoRA configuration
+lora_config = LoraConfig(
+    r=16,
+    lora_alpha=32,
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+    lora_dropout=0.1,
+    bias="none",
+    task_type="CAUSAL_LM",
+)
+
+# Create LoRA model
+model = get_peft_model(model, lora_config)
+
+# Memory efficiency settings
+model.config.use_cache = False
+
+# Dataset preparation
 dataset = prepare_dataset()
 
 # Check dataset structure
@@ -159,10 +184,11 @@ print("Dataset structure:")
 print(dataset[0])  # Display first element
 print("\nDataset features:")
 print(dataset.features)
+
+# Optimize dataset batch processing
 dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
 
-### 2.3 データ前処理と検証
-
+# Optimize tokenize function
 def tokenize_function(examples):
     result = tokenizer(
         examples['text'],
@@ -173,6 +199,60 @@ def tokenize_function(examples):
         return_tensors=None,
     )
     return result
+
+# Optimize dataset processing
+tokenized_dataset = dataset.map(
+    tokenize_function,
+    batched=True,
+    batch_size=16,
+    num_proc=2,
+    load_from_cache_file=True,
+    desc="Tokenizing datasets",
+    remove_columns=dataset.column_names,
+)
+
+# Add memory usage monitoring log
+def log_memory_usage():
+    import psutil
+    import torch
+    
+    # CPU memory
+    process = psutil.Process()
+    cpu_memory = process.memory_info().rss / 1024 / 1024  # MB
+    
+    # GPU memory
+    gpu_memory = []
+    if torch.cuda.is_available():
+        for i in range(torch.cuda.device_count()):
+            gpu_memory.append({
+                'device': i,
+                'allocated': torch.cuda.memory_allocated(i) / 1024 / 1024,  # MB
+                'reserved': torch.cuda.memory_reserved(i) / 1024 / 1024,    # MB
+                'max_allocated': torch.cuda.max_memory_allocated(i) / 1024 / 1024  # MB
+            })
+    
+    logging.info(f"CPU Memory usage: {cpu_memory:.2f} MB")
+    for gpu in gpu_memory:
+        logging.info(f"GPU {gpu['device']} Memory:")
+        logging.info(f"  - Allocated: {gpu['allocated']:.2f} MB")
+        logging.info(f"  - Reserved: {gpu['reserved']:.2f} MB")
+        logging.info(f"  - Max Allocated: {gpu['max_allocated']:.2f} MB")
+
+# Log dataset size
+logging.info(f"Total dataset size: {len(dataset)}")
+log_memory_usage()
+
+# Add dataset validation
+def validate_dataset(dataset):
+    # Check first element
+    first_item = dataset[0]
+    print("Validated first item structure:")
+    print(f"Keys: {first_item.keys()}")
+    print(f"input_ids type: {type(first_item['input_ids'])}")
+    print(f"input_ids length: {len(first_item['input_ids'])}")
+    return dataset
+
+tokenized_dataset = validate_dataset(tokenized_dataset)
 
 # Add dataset preprocessing
 def preprocess_function(examples):
@@ -255,32 +335,12 @@ def preprocess_function(examples):
     examples['attention_mask'] = new_attention_masks
     return examples
 
-
-### 2.4 データセット最適化
-# Optimize dataset processing
-tokenized_dataset = dataset.map(
-    tokenize_function,
-    batched=True,
-    batch_size=16,
-    num_proc=2,
-    load_from_cache_file=True,
-    desc="Tokenizing datasets",
-    remove_columns=dataset.column_names,
-)
-
-# Add dataset validation
-def validate_dataset(dataset):
-    # Check first element
-    first_item = dataset[0]
-    print("Validated first item structure:")
-    print(f"Keys: {first_item.keys()}")
-    print(f"input_ids type: {type(first_item['input_ids'])}")
-    print(f"input_ids length: {len(first_item['input_ids'])}")
-    return dataset
-
-
-
-tokenized_dataset = validate_dataset(tokenized_dataset)
+# Add special tokens to tokenizer
+tokenizer.add_special_tokens({
+    'additional_special_tokens': [
+        '。', '、', '！', '？',  # Punctuation marks
+    ]
+})
 
 
 tokenized_dataset = tokenized_dataset.map(
@@ -289,50 +349,66 @@ tokenized_dataset = tokenized_dataset.map(
     desc="Applying attention masking"
 )
 
+# Create log directory
+log_dir = f"{BASE_OUTPUT_DIR}/logs"
+os.makedirs(log_dir, exist_ok=True)
 
-# 3. モデル設定
-### 3.1 量子化設定（BitsAndBytes）
-# Optimize BitsAndBytesConfig settings
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_use_double_quant=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.float16,
-    bnb_4bit_quant_storage=torch.uint8,
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(os.path.join(log_dir, f'training_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')),
+        logging.StreamHandler()
+    ]
 )
 
-### 3.2 モデルロードと初期化
-# Load model with modifications
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    token=os.environ["HUGGINGFACE_TOKEN"],  
-    quantization_config=bnb_config,
-    device_map="balanced",
-    torch_dtype=torch.float16,
-    attn_implementation='sdpa',
-    max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}
+# Update training arguments
+training_args = TrainingArguments(
+    output_dir=MODEL_OUTPUT_DIR,  
+    num_train_epochs=30,
+    learning_rate=8e-5,
+    weight_decay=0.06,
+    warmup_ratio=0.25,
+    lr_scheduler_type="cosine_with_restarts",
+    evaluation_strategy="steps",
+    eval_steps=20,
+    save_strategy="steps",
+    save_steps=20,
+    gradient_accumulation_steps=8,
+    max_steps=-1,
+    disable_tqdm=False,
+    logging_dir=LOG_OUTPUT_DIR,   
+    logging_strategy="steps",
+    logging_steps=50,
+    no_cuda=False,
+    dataloader_num_workers=1,
+    report_to=[],
+    run_name=None,
+    per_device_train_batch_size=2,
+    per_device_eval_batch_size=1,
+    gradient_checkpointing=True,
+    max_grad_norm=0.5,
+    dataloader_pin_memory=True,
+    save_total_limit=2,
+    fp16=True,
+    optim="adamw_torch_fused",
+    eval_accumulation_steps=4,
+    load_best_model_at_end=True,
+    metric_for_best_model="combined_score",
 )
 
-# Prepare model for LoRA and disable cache
-model = prepare_model_for_kbit_training(model)
-model.config.use_cache = False
+# Disable wandb via environment variable (add before training_args)
+import os
+os.environ["WANDB_DISABLED"] = "true"
 
-### 3.3 LoRA設定
-# Adjust LoRA configuration
-lora_config = LoraConfig(
-    r=16,
-    lora_alpha=32,
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
-    lora_dropout=0.1,
-    bias="none",
-    task_type="CAUSAL_LM",
+# Modify data collator
+data_collator = DataCollatorForLanguageModeling(
+    tokenizer=tokenizer,
+    mlm=False,
+    pad_to_multiple_of=8
 )
 
-# Create LoRA model
-model = get_peft_model(model, lora_config)
-
-# 4. トレーニングインフラ
-### 4.1 評価メトリクス定義
+# Update evaluation metrics
 def compute_metrics(eval_preds):
     logits, labels = eval_preds  # Get logits and labels from eval_preds
     
@@ -435,48 +511,31 @@ def compute_metrics(eval_preds):
             if not sentences:
                 return 0.0
             
-            # 質問文判定の改善
-            question_markers = {
-                'explicit': ['？', '?'],  # 明示的な質問符号
-                'patterns': [
-                    'かね', 'だろうか', 'ではないか', 'のか', 
-                    'と思わないか', '考えてみよう',
-                    'どう', 'いかが', 'なぜ', 'どのように',
-                    '問', '教えて', '聞かせて'
-                ]
-            }
+            # Add more detailed evaluation criteria
+            scores = []
             
-            def is_question(sentence):
-                # 明示的な質問符号のチェック
-                if any(marker in sentence for marker in question_markers['explicit']):
-                    return True
-                # 質問パターンのチェック
-                if any(pattern in sentence for pattern in question_markers['patterns']):
-                    return True
-                return False
-            
-            # 各文を評価
-            questions = sum(1 for s in sentences if is_question(s))
-            total_sentences = len([s for s in sentences if s.strip()])
-            ratio = questions / total_sentences if total_sentences else 0
-            
-            # 理想の比率(0.3)からの距離に基づいてスコアを計算
+            # 1. Balance between questions and statements
+            questions = sum(1 for s in sentences if any(p in s for p in sentence_end_patterns['question_patterns']))
+            ratio = questions / len(sentences) if sentences else 0
             balance_score = max(0.0, 1.0 - min(abs(0.3 - ratio), 0.2) * 2)
+            scores.append(balance_score)
             
             # 2. Sentence length change
             lengths = [len(s.strip()) for s in sentences if s.strip()]
             length_variance = np.var(lengths) if len(lengths) > 1 else 0
             length_score = 1.0 / (1.0 + length_variance/500)  # Higher score if variance is small
+            scores.append(length_score)
             
             # 3. Use of conjunctions
             conjunctions = ['しかし', 'だから', 'また', 'そして', 'したがって']
             conj_count = sum(1 for s in sentences if any(c in s for c in conjunctions))
             conj_ratio = conj_count / len(sentences)
             conj_score = min(1.0, conj_ratio * 2)  # Evaluate moderate usage
+            scores.append(conj_score)
             
             # Weighted average of scores
             weights = [0.5, 0.25, 0.25]  # Balance, length, conjunction weights
-            final_score = sum(s * w for s, w in zip([balance_score, length_score, conj_score], weights))
+            final_score = sum(s * w for s, w in zip(scores, weights))
             
             return max(0.1, min(1.0, final_score))  # Limit to range 0.1 to 1.0
         
@@ -494,43 +553,7 @@ def compute_metrics(eval_preds):
             'combined_score': combined_score
         }
 
-
-### 4.2 メモリ管理とモニタリング
-def log_memory_usage():
-    import psutil
-    import torch
-    
-    # CPU memory
-    process = psutil.Process()
-    cpu_memory = process.memory_info().rss / 1024 / 1024  # MB
-    
-    # GPU memory
-    gpu_memory = []
-    if torch.cuda.is_available():
-        for i in range(torch.cuda.device_count()):
-            gpu_memory.append({
-                'device': i,
-                'allocated': torch.cuda.memory_allocated(i) / 1024 / 1024,  # MB
-                'reserved': torch.cuda.memory_reserved(i) / 1024 / 1024,    # MB
-                'max_allocated': torch.cuda.max_memory_allocated(i) / 1024 / 1024  # MB
-            })
-    
-    logging.info(f"CPU Memory usage: {cpu_memory:.2f} MB")
-    for gpu in gpu_memory:
-        logging.info(f"GPU {gpu['device']} Memory:")
-        logging.info(f"  - Allocated: {gpu['allocated']:.2f} MB")
-        logging.info(f"  - Reserved: {gpu['reserved']:.2f} MB")
-        logging.info(f"  - Max Allocated: {gpu['max_allocated']:.2f} MB")
-
-# Log dataset size
-logging.info(f"Total dataset size: {len(dataset)}")
-log_memory_usage()
-
-def clear_memory():
-    gc.collect()
-    torch.cuda.empty_cache()
-
-### 4.3 コールバック実装
+# Update custom callbacks
 class StyleCallback(TrainerCallback):
     def __init__(self):
         self.style_scores = []
@@ -556,7 +579,6 @@ class StyleCallback(TrainerCallback):
         logging.info(f"Average Dialogue Flow: {avg_flow:.3f}")
 
 # Extend custom callbacks
-
 class TrainingMonitorCallback(TrainerCallback):
     def __init__(self):
         # Import psutil here as well for safety
@@ -769,9 +791,23 @@ class TrainingMonitorCallback(TrainerCallback):
     def _get_total_ram(self):
         return psutil.virtual_memory().total / (1024 * 1024 * 1024)  # GB
 
+# Split dataset into training and evaluation sets
+dataset_size = len(tokenized_dataset)
+indices = np.random.permutation(dataset_size)
+split_idx = int(dataset_size * 0.8)
 
-### 4.4 カスタムトレーナー定義
-# Training step customization
+train_dataset = tokenized_dataset.select(indices[:split_idx])
+# Limit evaluation dataset size
+eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])  # Maximum 50 samples
+
+logging.info(f"Training dataset size: {len(train_dataset)}")
+logging.info(f"Evaluation dataset size: {len(eval_dataset)}")
+
+# Add memory cleanup
+def clear_memory():
+    gc.collect()
+    torch.cuda.empty_cache()
+    
 class CustomTrainer(Trainer):
     def training_step(self, *args, **kwargs):
         loss = super().training_step(*args, **kwargs)
@@ -781,7 +817,7 @@ class CustomTrainer(Trainer):
             torch.cuda.empty_cache()
         return loss
 
-# Evaluation customization
+# Create custom Trainer class for evaluation
 class CustomTrainer(Trainer):
     def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
         eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
@@ -790,7 +826,7 @@ class CustomTrainer(Trainer):
             eval_dataset = eval_dataset.select(range(min(100, len(eval_dataset))))
         return super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
 
-# Trainer initialization
+# Update trainer settings
 trainer = CustomTrainer(
     model=model,
     args=training_args,
@@ -801,68 +837,6 @@ trainer = CustomTrainer(
     callbacks=[StyleCallback(), TrainingMonitorCallback()],
 )
 
-
-# 5. トレーニング設定
-### 5.1 トレーニング引数設定
-# Split dataset into training and evaluation sets
-dataset_size = len(tokenized_dataset)
-indices = np.random.permutation(dataset_size)
-split_idx = int(dataset_size * 0.8)
-train_dataset = tokenized_dataset.select(indices[:split_idx])
-# Limit evaluation dataset size
-eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])  # Maximum 50 samples
-
-logging.info(f"Training dataset size: {len(train_dataset)}")
-logging.info(f"Evaluation dataset size: {len(eval_dataset)}")
-
-# Disable wandb via environment variable
-os.environ["WANDB_DISABLED"] = "true"
-
-# Update training arguments
-training_args = TrainingArguments(
-    output_dir=MODEL_OUTPUT_DIR,  
-    num_train_epochs=30,
-    learning_rate=8e-5,
-    weight_decay=0.06,
-    warmup_ratio=0.25,
-    lr_scheduler_type="cosine_with_restarts",
-    evaluation_strategy="steps",
-    eval_steps=20,
-    save_strategy="steps",
-    save_steps=20,
-    gradient_accumulation_steps=8,
-    max_steps=-1,
-    disable_tqdm=False,
-    logging_dir=LOG_OUTPUT_DIR,   
-    logging_strategy="steps",
-    logging_steps=50,
-    no_cuda=False,
-    dataloader_num_workers=1,
-    report_to=[],
-    run_name=None,
-    per_device_train_batch_size=2,
-    per_device_eval_batch_size=1,
-    gradient_checkpointing=True,
-    max_grad_norm=0.5,
-    dataloader_pin_memory=True,
-    save_total_limit=2,
-    fp16=True,
-    optim="adamw_torch_fused",
-    eval_accumulation_steps=4,
-    load_best_model_at_end=True,
-    metric_for_best_model="combined_score",
-)
-
-
-### 5.2 データローダーとコレータ設定
-# Modify data collator
-data_collator = DataCollatorForLanguageModeling(
-    tokenizer=tokenizer,
-    mlm=False,
-    pad_to_multiple_of=8
-)
-
-### 5.3 トレーニング実行と例外処理
 # Start training
 logging.info("Starting training...")
 try:
@@ -922,9 +896,10 @@ try:
     # Start training (or resume)
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
     logging.info("Training completed successfully!")
-
-### 5.4 モデル保存と設定エクスポート
+    
     # Save settings (as JSON)
+    import json
+
     def convert_to_serializable(obj):
         if isinstance(obj, set):
             return list(obj)
@@ -950,16 +925,17 @@ try:
         }
     }
     
-    # Save configurations
     with open(os.path.join(training_args.output_dir, "training_config.json"), "w", encoding="utf-8") as f:
         json.dump(config_dict, f, indent=2, ensure_ascii=False)
     
-    # Save model and settings
+    # Save model
     trainer.save_model()
+    # Save settings
     model.config.save_pretrained(training_args.output_dir)
     tokenizer.save_pretrained(training_args.output_dir)
     logging.info("Model and configuration saved successfully!")
 
 except Exception as e:
     logging.error(f"An error occurred: {str(e)}")
-    raise
+    # Checkpoints are preserved even if an error occurs
+    raise 
