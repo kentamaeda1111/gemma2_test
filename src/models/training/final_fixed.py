@@ -330,6 +330,7 @@ def clear_memory():
     torch.cuda.empty_cache()
 
 
+
 ### 4.3 トレーニング引数設定
 # Split dataset into training and evaluation sets
 dataset_size = len(tokenized_dataset)
