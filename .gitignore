@@ -17,3 +17,18 @@ others/**
 # OS specific 
 .DS_Store
 Thumbs.db 
+
+# Large files
+*.model
+*.bin
+*.h5
+*.pkl
+*.zip
+*.tar.gz
+
+# Model directories
+models/
+gemma_trained_model/
+**/checkpoint-*/
+**/optimizer.pt
+**/pytorch_model.bin 
