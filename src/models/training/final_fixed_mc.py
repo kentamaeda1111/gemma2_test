@@ -225,8 +225,9 @@ bnb_config = BitsAndBytesConfig(
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
     token=os.environ["HUGGINGFACE_TOKEN"],  
+    quantization_config=bnb_config,
     device_map="auto",
-    torch_dtype=torch.bfloat16,  # float16からbfloat16に変更
+    torch_dtype=torch.bfloat16,
     attn_implementation='eager'
 )
 

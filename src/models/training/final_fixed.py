@@ -357,7 +357,7 @@ training_args = TrainingArguments(
     evaluation_strategy="steps",
     eval_steps=100,
     save_strategy="steps",
-    save_steps=100,
+    save_steps=100,              # 100ステップごとに保存
     gradient_accumulation_steps=8,    # バッチサイズを小さくした分、これを8に増やして補完
     max_steps=-1,
     disable_tqdm=False,
@@ -373,13 +373,15 @@ training_args = TrainingArguments(
     gradient_checkpointing=True,
     max_grad_norm=1.0,             # 0.5から1.0に増加
     dataloader_pin_memory=True,
-    save_total_limit=2,
+    save_total_limit=5,          # 2から5に増加
     fp16=False,
     bf16=True,
     optim="adamw_torch_fused",
     eval_accumulation_steps=4,
     load_best_model_at_end=True,
-    metric_for_best_model="perplexity",
+    metric_for_best_model="loss",
+    greater_is_better=False,     # lossが小さいほど良い
+    early_stopping_patience=5,   # 5回連続で改善がなければ終了
 )
 
 
@@ -510,6 +512,29 @@ class CustomTrainer(Trainer):
             eval_dataset = eval_dataset.select(range(min(100, len(eval_dataset))))
         return super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
 
+# Early Stopping Callbackを追加
+class EarlyStoppingCallback(TrainerCallback):
+    def __init__(self, early_stopping_patience=5, early_stopping_threshold=0.001):
+        self.early_stopping_patience = early_stopping_patience
+        self.early_stopping_threshold = early_stopping_threshold
+        self.early_stopping_counter = 0
+        self.best_loss = float('inf')
+        self.best_checkpoint = None
+        
+    def on_evaluate(self, args, state, control, metrics, **kwargs):
+        eval_loss = metrics.get("eval_loss")
+        if eval_loss is not None:
+            if eval_loss < self.best_loss - self.early_stopping_threshold:
+                self.best_loss = eval_loss
+                self.early_stopping_counter = 0
+                self.best_checkpoint = f"checkpoint-{state.global_step}"
+            else:
+                self.early_stopping_counter += 1
+                
+            if self.early_stopping_counter >= self.early_stopping_patience:
+                control.should_training_stop = True
+                logging.info(f"Early stopping triggered. Best checkpoint: {self.best_checkpoint}")
+
 # Trainer initialization
 trainer = CustomTrainer(
     model=model,
@@ -518,7 +543,10 @@ trainer = CustomTrainer(
     eval_dataset=eval_dataset,
     data_collator=data_collator,
     compute_metrics=compute_metrics,
-    callbacks=[TrainingMonitorCallback()],
+    callbacks=[
+        TrainingMonitorCallback(),
+        EarlyStoppingCallback(early_stopping_patience=5)
+    ],
 )
 
 
