@@ -162,33 +162,19 @@ print(dataset.features)
 dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
 
 ### 2.3 データ前処理と検証
-
 def tokenize_function(examples):
+    """データセットのトークン化処理"""
     result = tokenizer(
         examples['text'],
         truncation=True,
-        max_length=TOKENIZE_MAX_LENGTH,      # 256 から TOKENIZE_MAX_LENGTH に変更
+        max_length=TOKENIZE_MAX_LENGTH,
         padding='max_length',
         add_special_tokens=True,
         return_tensors=None,
     )
     return result
 
-# Add dataset preprocessing
-def preprocess_function(examples):
-    """シンプルな前処理"""
-    return tokenizer(
-        examples['text'],
-        truncation=True,
-        max_length=TOKENIZE_MAX_LENGTH,
-        padding='max_length',
-        add_special_tokens=True,
-        return_tensors=None
-    )
-
-
-### 2.4 データセット最適化
-# Optimize dataset processing
+# トークン化の実行
 tokenized_dataset = dataset.map(
     tokenize_function,
     batched=True,
@@ -199,9 +185,8 @@ tokenized_dataset = dataset.map(
     remove_columns=dataset.column_names,
 )
 
-# Add dataset validation
+# データセットの検証
 def validate_dataset(dataset):
-    # Check first element
     first_item = dataset[0]
     print("Validated first item structure:")
     print(f"Keys: {first_item.keys()}")
@@ -209,17 +194,8 @@ def validate_dataset(dataset):
     print(f"input_ids length: {len(first_item['input_ids'])}")
     return dataset
 
-
-
+# データセットの検証を実行
 tokenized_dataset = validate_dataset(tokenized_dataset)
-
-
-tokenized_dataset = tokenized_dataset.map(
-    preprocess_function,
-    batched=True,
-    desc="Applying attention masking"
-)
-
 
 # 3. モデル設定
 ### 3.1 量子化設定（BitsAndBytes）
