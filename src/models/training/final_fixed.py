@@ -209,17 +209,7 @@ def validate_dataset(dataset):
     print(f"input_ids length: {len(first_item['input_ids'])}")
     return dataset
 
-
-
 tokenized_dataset = validate_dataset(tokenized_dataset)
-
-
-tokenized_dataset = tokenized_dataset.map(
-    preprocess_function,
-    batched=True,
-    desc="Applying attention masking"
-)
-
 
 # 3. モデル設定
 ### 3.1 量子化設定（BitsAndBytes）
