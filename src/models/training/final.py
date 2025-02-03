@@ -530,7 +530,60 @@ def clear_memory():
     gc.collect()
     torch.cuda.empty_cache()
 
-### 4.3 コールバック実装
+
+### 4.3 トレーニング引数設定
+# Split dataset into training and evaluation sets
+dataset_size = len(tokenized_dataset)
+indices = np.random.permutation(dataset_size)
+split_idx = int(dataset_size * 0.8)
+train_dataset = tokenized_dataset.select(indices[:split_idx])
+# Limit evaluation dataset size
+eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])  # Maximum 50 samples
+
+logging.info(f"Training dataset size: {len(train_dataset)}")
+logging.info(f"Evaluation dataset size: {len(eval_dataset)}")
+
+# Disable wandb via environment variable
+os.environ["WANDB_DISABLED"] = "true"
+
+# Update training arguments
+training_args = TrainingArguments(
+    output_dir=MODEL_OUTPUT_DIR,  
+    num_train_epochs=30,
+    learning_rate=8e-5,
+    weight_decay=0.06,
+    warmup_ratio=0.25,
+    lr_scheduler_type="cosine_with_restarts",
+    evaluation_strategy="steps",
+    eval_steps=20,
+    save_strategy="steps",
+    save_steps=20,
+    gradient_accumulation_steps=8,
+    max_steps=-1,
+    disable_tqdm=False,
+    logging_dir=LOG_OUTPUT_DIR,   
+    logging_strategy="steps",
+    logging_steps=50,
+    no_cuda=False,
+    dataloader_num_workers=1,
+    report_to=[],
+    run_name=None,
+    per_device_train_batch_size=2,
+    per_device_eval_batch_size=1,
+    gradient_checkpointing=True,
+    max_grad_norm=0.5,
+    dataloader_pin_memory=True,
+    save_total_limit=2,
+    fp16=True,
+    optim="adamw_torch_fused",
+    eval_accumulation_steps=4,
+    load_best_model_at_end=True,
+    metric_for_best_model="combined_score",
+)
+
+
+
+### 4.4 コールバック実装
 class StyleCallback(TrainerCallback):
     def __init__(self):
         self.style_scores = []
@@ -769,8 +822,13 @@ class TrainingMonitorCallback(TrainerCallback):
     def _get_total_ram(self):
         return psutil.virtual_memory().total / (1024 * 1024 * 1024)  # GB
 
+### 4.5 カスタムトレーナー定義とコレータ設定
+data_collator = DataCollatorForLanguageModeling(
+    tokenizer=tokenizer,
+    mlm=False,
+    pad_to_multiple_of=8
+)
 
-### 4.4 カスタムトレーナー定義
 # Training step customization
 class CustomTrainer(Trainer):
     def training_step(self, *args, **kwargs):
@@ -802,67 +860,10 @@ trainer = CustomTrainer(
 )
 
 
-# 5. トレーニング設定
-### 5.1 トレーニング引数設定
-# Split dataset into training and evaluation sets
-dataset_size = len(tokenized_dataset)
-indices = np.random.permutation(dataset_size)
-split_idx = int(dataset_size * 0.8)
-train_dataset = tokenized_dataset.select(indices[:split_idx])
-# Limit evaluation dataset size
-eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])  # Maximum 50 samples
-
-logging.info(f"Training dataset size: {len(train_dataset)}")
-logging.info(f"Evaluation dataset size: {len(eval_dataset)}")
-
-# Disable wandb via environment variable
-os.environ["WANDB_DISABLED"] = "true"
-
-# Update training arguments
-training_args = TrainingArguments(
-    output_dir=MODEL_OUTPUT_DIR,  
-    num_train_epochs=30,
-    learning_rate=8e-5,
-    weight_decay=0.06,
-    warmup_ratio=0.25,
-    lr_scheduler_type="cosine_with_restarts",
-    evaluation_strategy="steps",
-    eval_steps=20,
-    save_strategy="steps",
-    save_steps=20,
-    gradient_accumulation_steps=8,
-    max_steps=-1,
-    disable_tqdm=False,
-    logging_dir=LOG_OUTPUT_DIR,   
-    logging_strategy="steps",
-    logging_steps=50,
-    no_cuda=False,
-    dataloader_num_workers=1,
-    report_to=[],
-    run_name=None,
-    per_device_train_batch_size=2,
-    per_device_eval_batch_size=1,
-    gradient_checkpointing=True,
-    max_grad_norm=0.5,
-    dataloader_pin_memory=True,
-    save_total_limit=2,
-    fp16=True,
-    optim="adamw_torch_fused",
-    eval_accumulation_steps=4,
-    load_best_model_at_end=True,
-    metric_for_best_model="combined_score",
-)
+# 5. トレーニング実行
+### 5.1 トレーニング実行と例外処理
 
 
-### 5.2 データローダーとコレータ設定
-# Modify data collator
-data_collator = DataCollatorForLanguageModeling(
-    tokenizer=tokenizer,
-    mlm=False,
-    pad_to_multiple_of=8
-)
-
-### 5.3 トレーニング実行と例外処理
 # Start training
 logging.info("Starting training...")
 try:
@@ -922,8 +923,8 @@ try:
     # Start training (or resume)
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
     logging.info("Training completed successfully!")
-
-### 5.4 モデル保存と設定エクスポート
+    
+    ### 5.2 モデル保存と設定エクスポート
     # Save settings (as JSON)
     def convert_to_serializable(obj):
         if isinstance(obj, set):

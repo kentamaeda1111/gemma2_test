@@ -26,8 +26,8 @@ import gc
 
 # Global Setting
 DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
-MAX_SEQUENCE_LENGTH = 512
-TOKENIZE_MAX_LENGTH = 512  # 追加: トークン化時の最大長
+MAX_SEQUENCE_LENGTH = 256
+TOKENIZE_MAX_LENGTH = 256  # 追加: トークン化時の最大長
 
 # Setup output directory paths
 BASE_OUTPUT_DIR = "models/kaggle_model_ver2"  
