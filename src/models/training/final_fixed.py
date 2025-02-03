@@ -162,19 +162,33 @@ print(dataset.features)
 dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
 
 ### 2.3 データ前処理と検証
+
 def tokenize_function(examples):
-    """データセットのトークン化処理"""
     result = tokenizer(
         examples['text'],
         truncation=True,
-        max_length=TOKENIZE_MAX_LENGTH,
+        max_length=TOKENIZE_MAX_LENGTH,      # 256 から TOKENIZE_MAX_LENGTH に変更
         padding='max_length',
         add_special_tokens=True,
         return_tensors=None,
     )
     return result
 
-# トークン化の実行
+# Add dataset preprocessing
+def preprocess_function(examples):
+    """シンプルな前処理"""
+    return tokenizer(
+        examples['text'],
+        truncation=True,
+        max_length=TOKENIZE_MAX_LENGTH,
+        padding='max_length',
+        add_special_tokens=True,
+        return_tensors=None
+    )
+
+
+### 2.4 データセット最適化
+# Optimize dataset processing
 tokenized_dataset = dataset.map(
     tokenize_function,
     batched=True,
@@ -185,8 +199,9 @@ tokenized_dataset = dataset.map(
     remove_columns=dataset.column_names,
 )
 
-# データセットの検証
+# Add dataset validation
 def validate_dataset(dataset):
+    # Check first element
     first_item = dataset[0]
     print("Validated first item structure:")
     print(f"Keys: {first_item.keys()}")
@@ -194,8 +209,17 @@ def validate_dataset(dataset):
     print(f"input_ids length: {len(first_item['input_ids'])}")
     return dataset
 
-# データセットの検証を実行
+
+
 tokenized_dataset = validate_dataset(tokenized_dataset)
+
+
+tokenized_dataset = tokenized_dataset.map(
+    preprocess_function,
+    batched=True,
+    desc="Applying attention masking"
+)
+
 
 # 3. モデル設定
 ### 3.1 量子化設定（BitsAndBytes）
@@ -210,27 +234,29 @@ bnb_config = BitsAndBytesConfig(
 
 ### 3.2 モデルロードと初期化
 # Load model with modifications
-# model = AutoModelForCausalLM.from_pretrained(
-#     model_name,
-#     token=os.environ["HUGGINGFACE_TOKEN"],  
-#     quantization_config=bnb_config,
-#     device_map="balanced",
-#     torch_dtype=torch.float16,
-#     attn_implementation='sdpa',
-#     max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}
-# )
-
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
     token=os.environ["HUGGINGFACE_TOKEN"],  
-    device_map="auto",
+    quantization_config=bnb_config,
+    device_map="balanced",
     torch_dtype=torch.float16,
-    attn_implementation='sdpa'
+    attn_implementation='eager',
+    max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}
 )
 
 # Prepare model for LoRA and disable cache
 model = prepare_model_for_kbit_training(model)
 model.config.use_cache = False
+model.gradient_checkpointing_enable()
+model.enable_input_require_grads()
+
+# パラメータの勾配計算が有効になっているか確認
+def check_requires_grad(model):
+    for name, param in model.named_parameters():
+        if not param.requires_grad:
+            logging.warning(f"Parameter {name} does not require gradients")
+
+check_requires_grad(model)
 
 ### 3.3 LoRA設定
 # Adjust LoRA configuration
