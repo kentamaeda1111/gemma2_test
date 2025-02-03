@@ -210,14 +210,22 @@ bnb_config = BitsAndBytesConfig(
 
 ### 3.2 モデルロードと初期化
 # Load model with modifications
+# model = AutoModelForCausalLM.from_pretrained(
+#     model_name,
+#     token=os.environ["HUGGINGFACE_TOKEN"],  
+#     quantization_config=bnb_config,
+#     device_map="balanced",
+#     torch_dtype=torch.float16,
+#     attn_implementation='sdpa',
+#     max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}
+# )
+
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
     token=os.environ["HUGGINGFACE_TOKEN"],  
-    quantization_config=bnb_config,
-    device_map="balanced",
+    device_map="auto",
     torch_dtype=torch.float16,
-    attn_implementation='sdpa',
-    max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}
+    attn_implementation='sdpa'
 )
 
 # Prepare model for LoRA and disable cache
