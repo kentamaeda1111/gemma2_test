@@ -224,22 +224,11 @@ bnb_config = BitsAndBytesConfig(
 
 # kaggleでは以下がオン
 ### 3.2 モデルロードと初期化
-# Load model with modifications
-# model = AutoModelForCausalLM.from_pretrained(
-#     model_name,
-#     token=os.environ["HUGGINGFACE_TOKEN"],  
-#     quantization_config=bnb_config,
-#     device_map="balanced",
-#     torch_dtype=torch.float16,
-#     attn_implementation='eager',
-#     max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}
-# )
-
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
     token=os.environ["HUGGINGFACE_TOKEN"],  
     device_map="auto",
-    torch_dtype=torch.float16,
+    torch_dtype=torch.bfloat16,  # float16からbfloat16に変更
     attn_implementation='eager'
 )
 
@@ -386,7 +375,7 @@ training_args = TrainingArguments(
     save_total_limit=2,
     # fp16=True, kaggleではこっちがオンでbf16はなかった
     fp16=False,
-    bf16=True,
+    bf16=True,  # bfloat16を使用
     optim="adamw_torch_fused",
     eval_accumulation_steps=4,
     load_best_model_at_end=True,
@@ -536,7 +525,6 @@ trainer = CustomTrainer(
 # 5. トレーニング実行
 ### 5.1 トレーニング実行と例外処理
 
-
 # Start training
 logging.info("Starting training...")
 try:
@@ -580,18 +568,9 @@ try:
             else:
                 logging.warning("Invalid checkpoint state found. Please check manually.")
                 logging.warning(f"Checkpoint directory: {checkpoint_dir}")
-                if not is_kaggle:  
-                    user_input = input("Do you want to continue and overwrite? (yes/no): ")
-                    if user_input.lower() != 'yes':
-                        logging.info("Aborting to protect existing data.")
-                        exit(0)
         else:
             logging.warning("Checkpoint directory exists but no checkpoints found.")
-            if not is_kaggle:  
-                user_input = input("Do you want to continue and overwrite the directory? (yes/no): ")
-                if user_input.lower() != 'yes':
-                    logging.info("Aborting to protect existing data.")
-                    exit(0)
+            logging.info("Continuing with training...")  # 追加: 自動的に続行
 
     # Start training (or resume)
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
