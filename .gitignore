@@ -26,9 +26,4 @@ Thumbs.db
 *.zip
 *.tar.gz
 
-# Model directories
-models/
-gemma_trained_model/
-**/checkpoint-*/
-**/optimizer.pt
-**/pytorch_model.bin 
+#
