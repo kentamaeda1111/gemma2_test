@@ -242,8 +242,13 @@ model = AutoModelForCausalLM.from_pretrained(
     attn_implementation='sdpa'
 )
 
-# Prepare model for LoRA and disable cache
-model = prepare_model_for_kbit_training(model)
+# # Prepare model for LoRA and disable cache
+# model = prepare_model_for_kbit_training(model)
+
+# 上記を消して以下をつけた。
+for param in model.parameters():
+    param.requires_grad = True
+
 model.config.use_cache = False
 model.gradient_checkpointing_enable()
 model.enable_input_require_grads()
@@ -447,13 +452,31 @@ class TrainingMonitorCallback(TrainerCallback):
             if gpu_memory is not None:
                 self.metrics_history['gpu_memory_usage'].append(gpu_memory)
             
-            # Log current metrics
-            logging.info(
-                f"Step {step} - "
-                f"Loss: {logs.get('loss', 'N/A'):.4f}, "
-                f"LR: {logs.get('learning_rate', 'N/A'):.2e}, "
-                f"Grad Norm: {logs.get('grad_norm', 'N/A'):.4f}"
-            )
+            # Log current metrics with type checking
+            log_message = f"Step {step}"
+            
+            if 'loss' in logs:
+                loss_value = logs['loss']
+                if isinstance(loss_value, (int, float)):
+                    log_message += f" - Loss: {loss_value:.4f}"
+                else:
+                    log_message += f" - Loss: {loss_value}"
+            
+            if 'learning_rate' in logs:
+                lr_value = logs['learning_rate']
+                if isinstance(lr_value, (int, float)):
+                    log_message += f" - LR: {lr_value:.2e}"
+                else:
+                    log_message += f" - LR: {lr_value}"
+            
+            if 'grad_norm' in logs:
+                grad_value = logs['grad_norm']
+                if isinstance(grad_value, (int, float)):
+                    log_message += f" - Grad Norm: {grad_value:.4f}"
+                else:
+                    log_message += f" - Grad Norm: {grad_value}"
+            
+            logging.info(log_message)
     
     def on_train_end(self, args, state, control, **kwargs):
         training_duration = datetime.now() - self.train_start_time
