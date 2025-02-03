@@ -29,8 +29,8 @@ import gc
 
 # Global Setting
 DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
-MAX_SEQUENCE_LENGTH = 512
-TOKENIZE_MAX_LENGTH = 512  
+MAX_SEQUENCE_LENGTH = 256
+TOKENIZE_MAX_LENGTH = 256  
 
 ### 1.2 ディレクトリ設定とロギング設定
 # ディレクトリ設定
@@ -923,7 +923,7 @@ try:
     # Start training (or resume)
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
     logging.info("Training completed successfully!")
-    
+
     ### 5.2 モデル保存と設定エクスポート
     # Save settings (as JSON)
     def convert_to_serializable(obj):
