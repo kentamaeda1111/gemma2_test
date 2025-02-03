@@ -222,6 +222,7 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_quant_storage=torch.uint8,
 )
 
+# kaggleでは以下がオン
 ### 3.2 モデルロードと初期化
 # Load model with modifications
 # model = AutoModelForCausalLM.from_pretrained(
@@ -239,13 +240,13 @@ model = AutoModelForCausalLM.from_pretrained(
     token=os.environ["HUGGINGFACE_TOKEN"],  
     device_map="auto",
     torch_dtype=torch.float16,
-    attn_implementation='sdpa'
+    attn_implementation='eager'
 )
 
 # # Prepare model for LoRA and disable cache
 # model = prepare_model_for_kbit_training(model)
 
-# 上記を消して以下をつけた。
+# kaggle環境の場合は上記をつけて以下を消す
 for param in model.parameters():
     param.requires_grad = True
 
@@ -383,7 +384,9 @@ training_args = TrainingArguments(
     max_grad_norm=0.5,
     dataloader_pin_memory=True,
     save_total_limit=2,
-    fp16=True,
+    # fp16=True, kaggleではこっちがオンでbf16はなかった
+    fp16=False,
+    bf16=True,
     optim="adamw_torch_fused",
     eval_accumulation_steps=4,
     load_best_model_at_end=True,
