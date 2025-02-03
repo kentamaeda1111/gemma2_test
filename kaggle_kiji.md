@@ -3,6 +3,7 @@ https://claude.ai/chat/8a218fa1-4ac5-488f-8392-8641bea53dc0
 
 
 ※この記事は以下のコンペ向けに作った提出物です。
+inference以外のコードはgithubを確認してください。
 
 https://www.kaggle.com/competitions/gemma-language-tuning
 

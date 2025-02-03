@@ -221,7 +221,7 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_quant_storage=torch.uint8,
 )
 
-### 3.2 モデルロードと初期化
+### 3.2 モデルロードと学習設定
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
     token=os.environ["HUGGINGFACE_TOKEN"],  
@@ -246,7 +246,7 @@ def check_requires_grad(model):
 
 check_requires_grad(model)
 
-### 3.3 LoRA設定
+### 3.3 LoRA設定とモデル変換
 # Adjust LoRA configuration
 lora_config = LoraConfig(
     r=8,                # 16から8に減少
@@ -289,7 +289,7 @@ def compute_metrics(eval_preds):
         }
 
 
-### 4.2 メモリ管理とモニタリング
+### 4.2 システムリソース監視
 def log_memory_usage():
     import psutil
     import torch
@@ -326,7 +326,7 @@ def clear_memory():
 
 
 
-### 4.3 トレーニング引数設定
+### 4.3 データセット分割とトレーニング設定
 # Split dataset into training and evaluation sets
 dataset_size = len(tokenized_dataset)
 indices = np.random.permutation(dataset_size)
@@ -379,7 +379,7 @@ training_args = TrainingArguments(
 
 
 
-### 4.4 コールバック実装
+### 4.4 トレーニング監視システム実装
 class TrainingMonitorCallback(TrainerCallback):
     def __init__(self):
         self.train_start_time = None
@@ -609,7 +609,7 @@ class TrainingMonitorCallback(TrainerCallback):
         except Exception as e:
             logging.error(f"Error logging final metrics: {str(e)}")
 
-### 4.5 カスタムトレーナー定義とコレータ設定
+### 4.5 トレーナー実装と初期化
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
     mlm=False,
@@ -645,7 +645,7 @@ trainer = CustomTrainer(
 
 
 # 5. トレーニング実行
-### 5.1 トレーニング実行と例外処理
+### 5.1 チェックポイント管理とトレーニング実行
 
 # Start training
 logging.info("Starting training...")
@@ -698,7 +698,7 @@ try:
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
     logging.info("Training completed successfully!")
 
-    ### 5.2 モデル保存と設定エクスポート
+    ### 5.2 ベストモデルと設定の保存
     # Save settings (as JSON)
     def convert_to_serializable(obj):
         if isinstance(obj, set):
