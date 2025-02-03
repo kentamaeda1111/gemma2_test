@@ -231,10 +231,7 @@ model = AutoModelForCausalLM.from_pretrained(
     attn_implementation='eager'
 )
 
-
-for param in model.parameters():
-    param.requires_grad = True
-
+model = prepare_model_for_kbit_training(model)
 model.config.use_cache = False
 model.gradient_checkpointing_enable()
 model.enable_input_require_grads()
