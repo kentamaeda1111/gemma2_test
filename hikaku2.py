@@ -24,6 +24,7 @@ from pathlib import Path
 from src.utils.config import get_api_keys
 import psutil
 import gc
+import shutil
 
 # Global Setting
 DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  
@@ -229,10 +230,6 @@ model = AutoModelForCausalLM.from_pretrained(
     attn_implementation='eager'
 )
 
-# # Prepare model for LoRA and disable cache
-# model = prepare_model_for_kbit_training(model)
-
-# kaggle環境の場合は上記をつけて以下を消す
 for param in model.parameters():
     param.requires_grad = True
 
@@ -370,15 +367,13 @@ training_args = TrainingArguments(
     gradient_checkpointing=True,
     max_grad_norm=1.0,             # 0.5から1.0に増加
     dataloader_pin_memory=True,
-    save_total_limit=5,          # 2から5に増加
+    save_total_limit=10,  # 10に増やす
     fp16=False,
     bf16=True,
-    optim="adamw_torch_fused",
+    optim="adamw_torch",
     eval_accumulation_steps=4,
     load_best_model_at_end=True,
-    metric_for_best_model="loss",
-    greater_is_better=False,     # lossが小さいほど良い
-    early_stopping_patience=5,   # 5回連続で改善がなければ終了
+    metric_for_best_model="perplexity",
 )
 
 
@@ -398,93 +393,220 @@ class TrainingMonitorCallback(TrainerCallback):
         }
         self.output_dir = Path(f"{BASE_OUTPUT_DIR}/training_progress")
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 安定性監視用の設定
+        self.window_size = 5  # 移動平均のウィンドウサイズ
+        self.last_checkpoint_step = 0
+        self.min_steps_between_checkpoints = 100  # チェックポイント間の最小ステップ数
+        self.stable_checkpoints = []  # 安定したチェックポイントを記録
+        
+        # メトリクスの閾値設定
+        self.perplexity_threshold = 2.5  # 良好なperplexityの閾値
+        self.eval_loss_variance_threshold = 0.1  # eval_lossの許容変動幅
+        self.grad_norm_bounds = (0.1, 2.0)  # grad_normの適正範囲
+        self.max_stable_checkpoints = 5  # 安定チェックポイントの最大数を設定
+        self.error_count = 0  # エラー回数を追跡
+        self.max_consecutive_errors = 3  # 連続エラーの許容回数
+        
+        # バランス監視用の設定を追加
+        self.variance_bias_window = 10  # より長いウィンドウで傾向を見る
+        self.train_losses = []  # 訓練損失の履歴
+        self.eval_losses = []   # 評価損失の履歴
+        self.optimal_gap_range = (0.1, 0.3)  # 訓練損失と評価損失の理想的な差分範囲
     
-    def _record_gpu_memory(self):
-        """Record GPU memory usage"""
-        if torch.cuda.is_available():
-            memory_allocated = []
-            for i in range(torch.cuda.device_count()):
-                memory_allocated.append(
-                    torch.cuda.memory_allocated(i) / (1024 * 1024 * 1024)  # Convert to GB
+    def _calculate_stability_metrics(self, state):
+        """安定性メトリクスを計算"""
+        if len(self.metrics_history['perplexity']) < self.window_size:
+            return None
+            
+        recent_perplexity = self.metrics_history['perplexity'][-self.window_size:]
+        recent_eval_loss = self.metrics_history['eval_loss'][-self.window_size:]
+        recent_grad_norm = self.metrics_history['grad_norm'][-self.window_size:]
+        
+        # 移動平均と標準偏差を計算
+        perplexity_mean = np.mean(recent_perplexity)
+        eval_loss_std = np.std(recent_eval_loss)
+        grad_norm_mean = np.mean(recent_grad_norm)
+        
+        return {
+            'perplexity_mean': perplexity_mean,
+            'eval_loss_std': eval_loss_std,
+            'grad_norm_mean': grad_norm_mean
+        }
+    
+    def _calculate_variance_bias_metrics(self):
+        """分散と偏りのバランスを計算"""
+        if len(self.train_losses) < self.variance_bias_window or \
+           len(self.eval_losses) < self.variance_bias_window:
+            return None
+            
+        recent_train = self.train_losses[-self.variance_bias_window:]
+        recent_eval = self.eval_losses[-self.variance_bias_window:]
+        
+        # 訓練損失と評価損失の差（バイアスの指標）
+        loss_gap = np.mean(recent_eval) - np.mean(recent_train)
+        
+        # 損失の変動（分散の指標）
+        train_variance = np.var(recent_train)
+        eval_variance = np.var(recent_eval)
+        
+        return {
+            'loss_gap': loss_gap,
+            'train_variance': train_variance,
+            'eval_variance': eval_variance,
+            'total_variance': (train_variance + eval_variance) / 2
+        }
+    
+    def _is_balanced_state(self, variance_bias_metrics):
+        """バランスの取れた状態かを判断"""
+        if variance_bias_metrics is None:
+            return False
+            
+        # 理想的な差分範囲内にあるか
+        good_gap = (self.optimal_gap_range[0] <= variance_bias_metrics['loss_gap'] <= self.optimal_gap_range[1])
+        
+        # 分散が適度に小さいか
+        stable_variance = variance_bias_metrics['total_variance'] < 0.1
+        
+        # 訓練と評価の分散が近いか（安定性の指標）
+        variance_ratio = min(variance_bias_metrics['train_variance'], variance_bias_metrics['eval_variance']) / \
+                        max(variance_bias_metrics['train_variance'], variance_bias_metrics['eval_variance'])
+        balanced_variance = variance_ratio > 0.7  # 70%以上の類似性
+        
+        return good_gap and stable_variance and balanced_variance
+    
+    def _should_save_checkpoint(self, state, metrics):
+        """チェックポイント保存の判断を拡張"""
+        # 既存の条件をチェック
+        basic_conditions = super()._should_save_checkpoint(state, metrics)
+        
+        # バランス状態もチェック
+        variance_bias_metrics = self._calculate_variance_bias_metrics()
+        balanced_state = self._is_balanced_state(variance_bias_metrics)
+        
+        if balanced_state:
+            logging.info(f"Found balanced state at step {state.global_step}")
+            logging.info(f"Variance-Bias metrics: {variance_bias_metrics}")
+        
+        return basic_conditions or balanced_state  # どちらかの条件を満たせば保存
+    
+    def _safe_save_checkpoint(self, checkpoint_dir, state, metrics, stability_metrics):
+        """安全にチェックポイントを保存"""
+        try:
+            # チェックポイントディレクトリの作成を試みる
+            os.makedirs(checkpoint_dir, exist_ok=True)
+            
+            # モデルの保存を試みる
+            try:
+                self.trainer.save_model(checkpoint_dir)
+            except Exception as e:
+                logging.error(f"Failed to save model checkpoint: {str(e)}")
+                return False
+            
+            # メトリクス情報の保存を試みる
+            try:
+                metrics_path = os.path.join(checkpoint_dir, "stability_metrics.json")
+                with open(metrics_path, 'w') as f:
+                    json.dump({
+                        'step': state.global_step,
+                        'metrics': stability_metrics,
+                        'eval_metrics': metrics,
+                        'timestamp': datetime.now().isoformat()
+                    }, f, indent=2)
+            except Exception as e:
+                logging.error(f"Failed to save metrics: {str(e)}")
+                # メトリクスの保存に失敗してもチェックポイントは有効
+                
+            return True
+            
+        except Exception as e:
+            self.error_count += 1
+            logging.error(f"Checkpoint creation failed (attempt {self.error_count}): {str(e)}")
+            if self.error_count >= self.max_consecutive_errors:
+                logging.warning("Too many consecutive checkpoint errors. Will skip future checkpoint attempts.")
+            return False
+    
+    def _safe_remove_checkpoint(self, checkpoint_path):
+        """安全にチェックポイントを削除"""
+        try:
+            if os.path.exists(checkpoint_path):
+                shutil.rmtree(checkpoint_path)
+                logging.info(f"Successfully removed old checkpoint: {checkpoint_path}")
+        except Exception as e:
+            logging.error(f"Failed to remove old checkpoint {checkpoint_path}: {str(e)}")
+    
+    def on_evaluate(self, args, state, control, metrics=None, **kwargs):
+        """評価時のチェックポイント判断"""
+        if not metrics:
+            return
+        
+        try:
+            stability_metrics = self._calculate_stability_metrics(state)
+            if stability_metrics and self._should_save_checkpoint(state, stability_metrics):
+                # 安定したチェックポイントとして保存を試みる
+                checkpoint_dir = os.path.join(
+                    args.output_dir,
+                    f"stable_checkpoint-{state.global_step}"
                 )
-            return memory_allocated
-        return None
-
-    def on_train_begin(self, args, state, control, **kwargs):
-        self.train_start_time = datetime.now()
-        logging.info("Training started at: %s", self.train_start_time)
-    
-    def on_log(self, args, state, control, logs=None, **kwargs):
-        if logs:
-            # Record basic metrics
-            step = state.global_step
-            self.metrics_history['step'].append(step)
-            
-            # Training loss
-            if 'loss' in logs:
-                self.metrics_history['train_loss'].append(logs['loss'])
-            
-            # Learning rate
-            if 'learning_rate' in logs:
-                self.metrics_history['learning_rate'].append(logs['learning_rate'])
-            
-            # Gradient norm
-            if 'grad_norm' in logs:
-                self.metrics_history['grad_norm'].append(logs['grad_norm'])
-            
-            # Evaluation metrics
-            if 'eval_loss' in logs:
-                self.metrics_history['eval_loss'].append(logs['eval_loss'])
-            if 'eval_perplexity' in logs:
-                self.metrics_history['perplexity'].append(logs['eval_perplexity'])
-            
-            # GPU memory usage
-            gpu_memory = self._record_gpu_memory()
-            if gpu_memory is not None:
-                self.metrics_history['gpu_memory_usage'].append(gpu_memory)
-            
-            # Log current metrics with type checking
-            log_message = f"Step {step}"
-            
-            if 'loss' in logs:
-                loss_value = logs['loss']
-                if isinstance(loss_value, (int, float)):
-                    log_message += f" - Loss: {loss_value:.4f}"
-                else:
-                    log_message += f" - Loss: {loss_value}"
-            
-            if 'learning_rate' in logs:
-                lr_value = logs['learning_rate']
-                if isinstance(lr_value, (int, float)):
-                    log_message += f" - LR: {lr_value:.2e}"
-                else:
-                    log_message += f" - LR: {lr_value}"
-            
-            if 'grad_norm' in logs:
-                grad_value = logs['grad_norm']
-                if isinstance(grad_value, (int, float)):
-                    log_message += f" - Grad Norm: {grad_value:.4f}"
-                else:
-                    log_message += f" - Grad Norm: {grad_value}"
-            
-            logging.info(log_message)
+                
+                if self._safe_save_checkpoint(checkpoint_dir, state, metrics, stability_metrics):
+                    self.stable_checkpoints.append({
+                        'step': state.global_step,
+                        'path': checkpoint_dir,
+                        'metrics': stability_metrics
+                    })
+                    self.last_checkpoint_step = state.global_step
+                    self.error_count = 0  # 成功したらエラーカウントをリセット
+                    logging.info(f"Saved stable checkpoint at step {state.global_step}")
+                    logging.info(f"Stability metrics: {stability_metrics}")
+                
+        except Exception as e:
+            logging.error(f"Error during evaluation callback: {str(e)}")
+            # エラーが発生しても処理を継続
     
     def on_train_end(self, args, state, control, **kwargs):
-        training_duration = datetime.now() - self.train_start_time
-        
-        # Save training history
-        history_file = self.output_dir / 'training_metrics.json'
-        with open(history_file, 'w', encoding='utf-8') as f:
-            json.dump(self.metrics_history, f, indent=2)
-        
-        # Log final summary
-        logging.info(f"Training completed. Duration: {training_duration}")
-        if self.metrics_history['train_loss']:
-            logging.info(f"Final training loss: {self.metrics_history['train_loss'][-1]:.4f}")
-        if self.metrics_history['eval_loss']:
-            logging.info(f"Final evaluation loss: {self.metrics_history['eval_loss'][-1]:.4f}")
-        if self.metrics_history['perplexity']:
-            logging.info(f"Final perplexity: {self.metrics_history['perplexity'][-1]:.4f}")
+        """トレーニング終了時の処理"""
+        try:
+            training_duration = datetime.now() - self.train_start_time
+            
+            # 安定したチェックポイントの概要を保存
+            try:
+                checkpoints_summary = os.path.join(self.output_dir, 'stable_checkpoints_summary.json')
+                with open(checkpoints_summary, 'w') as f:
+                    json.dump({
+                        'total_checkpoints': len(self.stable_checkpoints),
+                        'checkpoints': self.stable_checkpoints
+                    }, f, indent=2)
+            except Exception as e:
+                logging.error(f"Failed to save checkpoints summary: {str(e)}")
+            
+            # メトリクス履歴の保存を試みる
+            try:
+                history_file = self.output_dir / 'training_metrics.json'
+                with open(history_file, 'w', encoding='utf-8') as f:
+                    json.dump(self.metrics_history, f, indent=2)
+            except Exception as e:
+                logging.error(f"Failed to save training metrics: {str(e)}")
+            
+            # 終了ログの出力
+            logging.info(f"Training completed. Duration: {training_duration}")
+            self._log_final_metrics()
+            
+        except Exception as e:
+            logging.error(f"Error during training end callback: {str(e)}")
+    
+    def _log_final_metrics(self):
+        """最終メトリクスのログ出力"""
+        try:
+            if self.metrics_history['train_loss']:
+                logging.info(f"Final training loss: {self.metrics_history['train_loss'][-1]:.4f}")
+            if self.metrics_history['eval_loss']:
+                logging.info(f"Final evaluation loss: {self.metrics_history['eval_loss'][-1]:.4f}")
+            if self.metrics_history['perplexity']:
+                logging.info(f"Final perplexity: {self.metrics_history['perplexity'][-1]:.4f}")
+            logging.info(f"Total stable checkpoints saved: {len(self.stable_checkpoints)}")
+        except Exception as e:
+            logging.error(f"Error logging final metrics: {str(e)}")
 
 ### 4.5 トレーナー実装と初期化
 data_collator = DataCollatorForLanguageModeling(
@@ -509,29 +631,6 @@ class CustomTrainer(Trainer):
             eval_dataset = eval_dataset.select(range(min(100, len(eval_dataset))))
         return super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
 
-# Early Stopping Callbackを追加
-class EarlyStoppingCallback(TrainerCallback):
-    def __init__(self, early_stopping_patience=5, early_stopping_threshold=0.001):
-        self.early_stopping_patience = early_stopping_patience
-        self.early_stopping_threshold = early_stopping_threshold
-        self.early_stopping_counter = 0
-        self.best_loss = float('inf')
-        self.best_checkpoint = None
-        
-    def on_evaluate(self, args, state, control, metrics, **kwargs):
-        eval_loss = metrics.get("eval_loss")
-        if eval_loss is not None:
-            if eval_loss < self.best_loss - self.early_stopping_threshold:
-                self.best_loss = eval_loss
-                self.early_stopping_counter = 0
-                self.best_checkpoint = f"checkpoint-{state.global_step}"
-            else:
-                self.early_stopping_counter += 1
-                
-            if self.early_stopping_counter >= self.early_stopping_patience:
-                control.should_training_stop = True
-                logging.info(f"Early stopping triggered. Best checkpoint: {self.best_checkpoint}")
-
 # Trainer initialization
 trainer = CustomTrainer(
     model=model,
@@ -540,10 +639,7 @@ trainer = CustomTrainer(
     eval_dataset=eval_dataset,
     data_collator=data_collator,
     compute_metrics=compute_metrics,
-    callbacks=[
-        TrainingMonitorCallback(),
-        EarlyStoppingCallback(early_stopping_patience=5)
-    ],
+    callbacks=[TrainingMonitorCallback()],
 )
 
 
@@ -632,10 +728,27 @@ try:
     with open(os.path.join(training_args.output_dir, "training_config.json"), "w", encoding="utf-8") as f:
         json.dump(config_dict, f, indent=2, ensure_ascii=False)
     
-    # Save model and settings
-    trainer.save_model()
-    model.config.save_pretrained(training_args.output_dir)
-    tokenizer.save_pretrained(training_args.output_dir)
+    # トレーナーが保持している最良のモデルを保存
+    # load_best_model_at_end=Trueにより、この時点で既にbestモデルがロードされている
+    best_model_path = os.path.join(training_args.output_dir, "best_model")
+    os.makedirs(best_model_path, exist_ok=True)
+    
+    # Save best model and its configuration
+    trainer.model.save_pretrained(best_model_path)
+    model.config.save_pretrained(best_model_path)
+    tokenizer.save_pretrained(best_model_path)
+    
+    # Save a marker file indicating this is the best model
+    with open(os.path.join(best_model_path, "best_model_info.json"), "w", encoding="utf-8") as f:
+        best_metrics = {
+            "best_metric": trainer.state.best_metric,
+            "best_model_checkpoint": trainer.state.best_model_checkpoint,
+            "best_perplexity": trainer.state.best_metric
+        }
+        json.dump(best_metrics, f, indent=2)
+    
+    logging.info(f"Best model saved to {best_model_path}")
+    logging.info(f"Best perplexity: {trainer.state.best_metric}")
     logging.info("Model and configuration saved successfully!")
 
 except Exception as e:
