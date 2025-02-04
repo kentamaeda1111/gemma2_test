@@ -17,13 +17,3 @@ others/**
 # OS specific 
 .DS_Store
 Thumbs.db 
-
-# Large files
-*.model
-*.bin
-*.h5
-*.pkl
-*.zip
-*.tar.gz
-
-#
