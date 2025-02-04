@@ -1,3 +1,5 @@
+#評価のところをさらにおおきくかなり大きく変えた
+
 # 1.初期設定とインポート部分
 ### 1.1 ライブラリインポートとグローバル定数設定
 import torch
@@ -86,8 +88,9 @@ tokenizer.add_special_tokens({
 })
 
 ### 2.2 データセット準備と検証
+#""""""""""""""""""""""""""
 def validate_message_format(message):
-    """Validate message format"""
+    """メッセージのフォーマットを検証"""
     if not isinstance(message, dict):
         return False
     if 'role' not in message or 'content' not in message:
@@ -108,12 +111,12 @@ def prepare_dataset():
         for dialogue in dialogue_data:
             messages = dialogue.get('messages', [])
             
-            # Validate message format
+            # メッセージのフォーマットを検証
             if not all(validate_message_format(msg) for msg in messages):
                 logging.warning(f"Skipped dialogue due to invalid message format")
                 continue
                 
-            # Build conversation checking user->model sequence
+            # user->modelの順序を確認しながら会話を構築
             current_conversation = []
             valid_sequence = True
             
@@ -126,16 +129,16 @@ def prepare_dataset():
                     valid_sequence = False
                     break
             
-            # Add only valid conversations
+            # 有効な会話のみを追加
             if valid_sequence and current_conversation:
-                # Apply Gemma chat template
+                # Gemmaのチャットテンプレートを適用
                 formatted_text = tokenizer.apply_chat_template(
                     current_conversation,
                     tokenize=False,
                     add_generation_prompt=True
                 )
                 
-                # Check token count
+                # トークン数をチェック
                 tokens = tokenizer.encode(formatted_text)
                 if len(tokens) <= MAX_SEQUENCE_LENGTH:
                     conversations.append({"text": formatted_text})
@@ -152,15 +155,17 @@ def prepare_dataset():
     logging.info(f"Processed {len(conversations)} valid conversations")
     return Dataset.from_list(conversations)
 dataset = prepare_dataset()
-
-# Check dataset structure
+#""""""""""""""""""""""""""
+# データセットの構造を確認
 print("Dataset structure:")
-print(dataset[0])  # Display first element
+print(dataset[0])  # 最初の要素を表示
 print("\nDataset features:")
 print(dataset.features)
+
+# データセットのバッチ処理を最適化
 dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
 
-### 2.3 トークン化関数の定義
+# トークナイズ関数の修正
 
 def tokenize_function(examples):
     result = tokenizer(
