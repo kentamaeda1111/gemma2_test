@@ -1,0 +1,324 @@
+2025-02-04 18:04:29,664 - INFO - Training script started
+2025-02-04 18:04:29,664 - INFO - Using dialogue file: data/dialogue/processed/kaggle_model.json
+2025-02-04 18:04:29,664 - INFO - Max sequence length: 256
+2025-02-04 18:04:29,664 - INFO - Output directory: models/kaggle_model_ver2
+2025-02-04 18:04:33,106 - WARNING - Skipped conversation due to length: 259 tokens
+2025-02-04 18:04:33,225 - WARNING - Skipped conversation due to length: 262 tokens
+2025-02-04 18:04:33,226 - WARNING - Skipped conversation due to length: 261 tokens
+2025-02-04 18:04:33,228 - WARNING - Skipped conversation due to length: 276 tokens
+2025-02-04 18:04:33,246 - WARNING - Skipped conversation due to length: 275 tokens
+2025-02-04 18:04:33,295 - WARNING - Skipped conversation due to length: 262 tokens
+2025-02-04 18:04:33,320 - WARNING - Skipped conversation due to length: 261 tokens
+2025-02-04 18:04:33,321 - WARNING - Skipped conversation due to length: 257 tokens
+2025-02-04 18:04:33,332 - WARNING - Skipped conversation due to length: 282 tokens
+2025-02-04 18:04:33,337 - WARNING - Skipped conversation due to length: 261 tokens
+2025-02-04 18:04:33,591 - WARNING - Skipped conversation due to length: 267 tokens
+2025-02-04 18:04:33,670 - WARNING - Skipped conversation due to length: 275 tokens
+2025-02-04 18:04:33,670 - WARNING - Skipped conversation due to length: 260 tokens
+2025-02-04 18:04:33,699 - WARNING - Skipped conversation due to length: 265 tokens
+2025-02-04 18:04:33,796 - INFO - Processed 2648 valid conversations
+2025-02-04 18:06:45,712 - INFO - We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+2025-02-04 18:06:47,562 - WARNING - Parameter model.embed_tokens.weight does not require gradients
+2025-02-04 18:06:47,562 - WARNING - Parameter model.layers.0.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,562 - WARNING - Parameter model.layers.0.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,562 - WARNING - Parameter model.layers.0.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,562 - WARNING - Parameter model.layers.0.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,562 - WARNING - Parameter model.layers.0.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,562 - WARNING - Parameter model.layers.0.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,562 - WARNING - Parameter model.layers.0.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,562 - WARNING - Parameter model.layers.0.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,562 - WARNING - Parameter model.layers.0.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,562 - WARNING - Parameter model.layers.0.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,562 - WARNING - Parameter model.layers.0.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.1.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.1.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.1.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.1.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.1.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.1.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.1.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.1.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.1.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.1.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.1.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.2.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.2.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.2.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.2.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.2.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,563 - WARNING - Parameter model.layers.2.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.2.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.2.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.2.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.2.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.2.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.3.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.3.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.3.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.3.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.3.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.3.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.3.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.3.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.3.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.3.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.3.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.4.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,564 - WARNING - Parameter model.layers.4.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.4.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.4.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.4.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.4.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.4.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.4.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.4.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.4.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.4.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.5.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.5.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.5.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.5.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.5.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.5.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,565 - WARNING - Parameter model.layers.5.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.5.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.5.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.5.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.5.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.6.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.6.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.6.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.6.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.6.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.6.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.6.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.6.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.6.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.6.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.6.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.7.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.7.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,566 - WARNING - Parameter model.layers.7.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.7.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.7.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.7.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.7.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.7.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.7.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.7.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.7.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.8.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.8.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.8.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.8.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.8.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.8.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.8.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.8.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.8.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,567 - WARNING - Parameter model.layers.8.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.8.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.9.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.9.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.9.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.9.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.9.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.9.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.9.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.9.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.9.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.9.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.9.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.10.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.10.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.10.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.10.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.10.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,568 - WARNING - Parameter model.layers.10.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.10.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.10.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.10.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.10.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.10.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.11.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.11.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.11.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.11.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.11.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.11.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.11.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.11.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.11.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.11.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.11.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,569 - WARNING - Parameter model.layers.12.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.12.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.12.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.12.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.12.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.12.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.12.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.12.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.12.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.12.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.12.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.13.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.13.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.13.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.13.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.13.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.13.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.13.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,570 - WARNING - Parameter model.layers.13.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.13.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.13.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.13.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.14.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.14.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.14.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.14.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.14.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.14.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.14.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.14.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.14.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.14.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.14.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.15.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.15.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.15.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.15.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,571 - WARNING - Parameter model.layers.15.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.15.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.15.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.15.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.15.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.15.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.15.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.16.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.16.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.16.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.16.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.16.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.16.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.16.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.16.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.16.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.16.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.16.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,572 - WARNING - Parameter model.layers.17.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.17.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.17.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.17.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.17.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.17.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.17.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.17.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.17.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.17.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.17.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.18.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.18.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.18.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.18.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.18.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.18.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,573 - WARNING - Parameter model.layers.18.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.18.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.18.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.18.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.18.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.19.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.19.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.19.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.19.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.19.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.19.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.19.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.19.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.19.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.19.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.19.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.20.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.20.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.20.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,574 - WARNING - Parameter model.layers.20.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.20.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.20.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.20.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.20.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.20.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.20.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.20.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.21.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.21.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.21.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.21.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.21.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.21.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.21.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.21.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.21.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.21.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.21.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,575 - WARNING - Parameter model.layers.22.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.22.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.22.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.22.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.22.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.22.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.22.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.22.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.22.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.22.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.22.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.23.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.23.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.23.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.23.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.23.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.23.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.23.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.23.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,576 - WARNING - Parameter model.layers.23.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.23.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.23.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.24.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.24.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.24.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.24.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.24.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.24.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.24.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.24.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.24.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.24.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.24.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.25.self_attn.q_proj.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.25.self_attn.k_proj.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.25.self_attn.v_proj.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.25.self_attn.o_proj.weight does not require gradients
+2025-02-04 18:06:47,577 - WARNING - Parameter model.layers.25.mlp.gate_proj.weight does not require gradients
+2025-02-04 18:06:47,578 - WARNING - Parameter model.layers.25.mlp.up_proj.weight does not require gradients
+2025-02-04 18:06:47,578 - WARNING - Parameter model.layers.25.mlp.down_proj.weight does not require gradients
+2025-02-04 18:06:47,578 - WARNING - Parameter model.layers.25.input_layernorm.weight does not require gradients
+2025-02-04 18:06:47,578 - WARNING - Parameter model.layers.25.post_attention_layernorm.weight does not require gradients
+2025-02-04 18:06:47,578 - WARNING - Parameter model.layers.25.pre_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,578 - WARNING - Parameter model.layers.25.post_feedforward_layernorm.weight does not require gradients
+2025-02-04 18:06:47,578 - WARNING - Parameter model.norm.weight does not require gradients
+2025-02-04 18:06:47,694 - INFO - Total dataset size: 2648
+2025-02-04 18:06:47,695 - INFO - CPU Memory usage: 1014.38 MB
+2025-02-04 18:06:47,695 - INFO - GPU 0 Memory:
+2025-02-04 18:06:47,695 - INFO -   - Allocated: 3259.25 MB
+2025-02-04 18:06:47,695 - INFO -   - Reserved: 4446.00 MB
+2025-02-04 18:06:47,695 - INFO -   - Max Allocated: 4371.60 MB
+2025-02-04 18:06:47,700 - INFO - Training dataset size: 2118
+2025-02-04 18:06:47,700 - INFO - Evaluation dataset size: 50
+2025-02-04 18:06:47,816 - INFO - Starting training...
+2025-02-04 18:06:47,816 - WARNING - Checkpoint directory exists but no checkpoints found.
+2025-02-04 18:06:47,816 - INFO - Continuing with training...
+2025-02-04 21:32:59,444 - ERROR - Error during training end callback: unsupported operand type(s) for -: 'datetime.datetime' and 'NoneType'
+2025-02-04 21:32:59,506 - INFO - Training completed successfully!
+2025-02-04 21:33:00,027 - INFO - Best model saved to models/kaggle_model_ver2/model/best_model
+2025-02-04 21:33:00,027 - INFO - Best perplexity: 184817200.0
+2025-02-04 21:33:00,027 - INFO - Model and configuration saved successfully!

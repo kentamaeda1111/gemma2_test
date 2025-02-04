@@ -1,0 +1,40 @@
+
+# 1. 最優先度:
+（★1e.）a. 学習の安定性監視システムと閾値設定
+def *calculate*stability_metrics(self, state):
+
+(★1.c)b. 分散とバイアスのバランス監視
+def *calculate*variance_bias_metrics(self):
+
+# 2. 高優先度:
+a. データセットの品質管理
+(★3b.)def prepare_dataset():
+
+(★2.a)b. モデルの量子化とLoRA設定
+bnb_config = BitsAndBytesConfig(
+
+(★1b.)c. トレーニングハイパーパラメータの最適化
+training_args = TrainingArguments(
+
+d. データセット処理の最適化
+tokenized_dataset = dataset.map(
+
+e. モデルの勾配チェックポイントと最適化設定
+model = prepare_model_for_kbit_training(model)
+
+# 3. 中優先度:
+(★2.c)a. エラー耐性とリカバリー
+def *safe*save_checkpoint(self, checkpoint_dir, state, metrics, stability_metrics):
+
+b. カスタムトレーナーの実装
+(★3a.)class CustomTrainer(Trainer):
+
+(★2.b)c. 評価メトリクスの計算とメモリ最適化
+def compute_metrics(eval_preds):
+
+# 4. 低優先度:
+a. チェックポイント管理
+if os.path.exists(checkpoint_dir):
+
+b. メモリ管理とリソース監視
+def log_memory_usage():

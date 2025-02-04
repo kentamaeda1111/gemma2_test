@@ -1,4 +1,4 @@
-#評価のところをさらにおおきくかなり大きく変えた
+#logのプリントができていなかったから修正
 
 # 1.初期設定とインポート部分
 ### 1.1 ライブラリインポートとグローバル定数設定
@@ -165,7 +165,7 @@ print(dataset.features)
 # データセットのバッチ処理を最適化
 dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
 
-# トークナイズ関数の修正
+### 2.3 トークン化関数の定義
 
 def tokenize_function(examples):
     result = tokenizer(
@@ -247,7 +247,33 @@ def check_requires_grad(model):
         if not param.requires_grad:
             logging.warning(f"Parameter {name} does not require gradients")
 
+# LoRAパラメータの設定を確認
+def check_lora_params(model):
+    lora_params_found = False
+    trainable_params_count = 0
+    total_params_count = 0
+    
+    logging.info("Checking LoRA parameters configuration...")
+    
+    for name, param in model.named_parameters():
+        total_params_count += 1
+        if 'lora' in name.lower():
+            lora_params_found = True
+            if param.requires_grad:
+                trainable_params_count += 1
+                logging.info(f"LoRA parameter {name} is trainable")
+            else:
+                logging.warning(f"LoRA parameter {name} is NOT trainable")
+    
+    if not lora_params_found:
+        logging.warning("No LoRA parameters found in the model!")
+    else:
+        logging.info(f"Found {trainable_params_count} trainable LoRA parameters out of {total_params_count} total parameters")
+        percentage = (trainable_params_count / total_params_count) * 100
+        logging.info(f"Percentage of trainable parameters: {percentage:.2f}%")
+
 check_requires_grad(model)
+check_lora_params(model)
 
 ### 3.3 LoRA設定とモデル変換
 # Adjust LoRA configuration
@@ -262,6 +288,10 @@ lora_config = LoraConfig(
 
 # Create LoRA model
 model = get_peft_model(model, lora_config)
+
+# LoRA変換後のパラメータを確認
+logging.info("Checking parameters after LoRA conversion...")
+check_lora_params(model)
 
 # 4. トレーニングインフラ
 ### 4.1 評価メトリクス定義
@@ -417,6 +447,21 @@ class TrainingMonitorCallback(TrainerCallback):
         self.train_losses = []  # 訓練損失の履歴
         self.eval_losses = []   # 評価損失の履歴
         self.optimal_gap_range = (0.1, 0.3)  # 訓練損失と評価損失の理想的な差分範囲
+    
+    def on_train_begin(self, args, state, control, **kwargs):
+        """トレーニング開始時の処理"""
+        self.train_start_time = datetime.now()
+        logging.info(f"Training started at: {self.train_start_time}")
+        
+        # メトリクス履歴の初期化を確認
+        for key in self.metrics_history.keys():
+            if not isinstance(self.metrics_history[key], list):
+                self.metrics_history[key] = []
+        
+        # 出力ディレクトリの存在確認
+        if not self.output_dir.exists():
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+            logging.info(f"Created output directory: {self.output_dir}")
     
     def _calculate_stability_metrics(self, state):
         """安定性メトリクスを計算"""
@@ -611,6 +656,53 @@ class TrainingMonitorCallback(TrainerCallback):
             logging.info(f"Total stable checkpoints saved: {len(self.stable_checkpoints)}")
         except Exception as e:
             logging.error(f"Error logging final metrics: {str(e)}")
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        """ログ出力時のメトリクス記録"""
+        if not logs:
+            return
+        
+        try:
+            # ステップ数の記録
+            self.metrics_history['step'].append(state.global_step)
+            
+            # 訓練関連のメトリクス記録
+            if 'loss' in logs:
+                self.metrics_history['train_loss'].append(logs['loss'])
+                self.train_losses.append(logs['loss'])
+            if 'learning_rate' in logs:
+                self.metrics_history['learning_rate'].append(logs['learning_rate'])
+            if 'grad_norm' in logs:
+                self.metrics_history['grad_norm'].append(logs['grad_norm'])
+            
+            # 評価関連のメトリクス記録
+            if 'eval_loss' in logs:
+                self.metrics_history['eval_loss'].append(logs['eval_loss'])
+                self.eval_losses.append(logs['eval_loss'])
+            if 'eval_perplexity' in logs:
+                self.metrics_history['perplexity'].append(logs['eval_perplexity'])
+            
+            # GPUメモリ使用量の記録
+            if torch.cuda.is_available():
+                gpu_memory = torch.cuda.memory_allocated() / 1024 / 1024  # MB単位
+                self.metrics_history['gpu_memory_usage'].append(gpu_memory)
+            
+            # 定期的なメトリクス保存
+            if state.global_step % 100 == 0:  # 100ステップごとに保存
+                self._save_current_metrics(state.global_step)
+                
+        except Exception as e:
+            logging.error(f"Error recording metrics: {str(e)}")
+
+    def _save_current_metrics(self, step):
+        """現在のメトリクスを保存"""
+        try:
+            metrics_file = self.output_dir / f'metrics_step_{step}.json'
+            with open(metrics_file, 'w', encoding='utf-8') as f:
+                json.dump(self.metrics_history, f, indent=2)
+            logging.info(f"Saved metrics at step {step}")
+        except Exception as e:
+            logging.error(f"Failed to save metrics at step {step}: {str(e)}")
 
 ### 4.5 トレーナー実装と初期化
 data_collator = DataCollatorForLanguageModeling(

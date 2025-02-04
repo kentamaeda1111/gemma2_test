@@ -1,0 +1,5 @@
+{
+  "best_metric": 184817200.0,
+  "best_model_checkpoint": "models/kaggle_model_ver2/model/checkpoint-3700",
+  "best_perplexity": 184817200.0
+}
