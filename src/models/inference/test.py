@@ -37,7 +37,7 @@ check_and_install_requirements()
 
 # Global Settings
 MODEL_VERSION = "model"  
-CHECKPOINT_NUMBER = "checkpoint-780"  # "checkpoint-best_model" から "best_model" に変更
+CHECKPOINT = "checkpoint-780"  
 MAX_HISTORY = 5  
 BASE_MODEL = "google/gemma-2-2b-jpn-it"
 
@@ -49,7 +49,7 @@ if not HF_TOKEN:
     logger.warning("HUGGINGFACE_API_KEY not found in environment variables")
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-MODEL_PATH = os.path.join(ROOT_DIR, "models", MODEL_VERSION, "model", CHECKPOINT_NUMBER)  # checkpoint- プレフィックスを削除
+MODEL_PATH = os.path.join(ROOT_DIR, "models", MODEL_VERSION, CHECKPOINT)  # pathの構造を修正
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -359,25 +359,17 @@ class TrainingMonitorCallback(TrainerCallback):
         if logs is None:
             return
         
-        # デバッグ用のログ出力
-        logging.info(f"Received logs: {logs}")
-        logging.info(f"Current step: {state.global_step}")
-        
-        # 損失値の取得方法を修正
         current_loss = logs.get('loss', None)
-        if current_loss is not None:
-            current_loss = float(current_loss)  # テンソルを float に変換
-        
-        # 学習率の取得方法を修正
-        current_lr = logs.get('learning_rate', None)
-        if current_lr is not None:
-            current_lr = float(current_lr)
         
         # メトリクスの記録
         self.metrics_history['step'].append(state.global_step)
         self.metrics_history['epoch'].append(state.epoch)
-        self.metrics_history['loss'].append(current_loss)  # 修正された損失値
-        self.metrics_history['learning_rate'].append(current_lr)  # 修正された学習率
+        self.metrics_history['loss'].append(current_loss)
+        self.metrics_history['learning_rate'].append(logs.get('learning_rate', None))
+        self.metrics_history['perplexity'].append(
+            torch.exp(torch.tensor(logs.get('eval_loss', 0))).item() 
+            if 'eval_loss' in logs else None
+        )
         
         # Variance と Bias の計算
         if current_loss is not None:
