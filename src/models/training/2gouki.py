@@ -25,7 +25,7 @@ from pathlib import Path
 from src.utils.config import get_api_keys
 
 # グローバル設定
-DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model_50.json"  # 対話データのJSONファイルパス
+DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  # 対話データのJSONファイルパス
 MAX_SEQUENCE_LENGTH = 256  # 1つの対話の最大トークン数
 MAX_TOKENIZE_LENGTH = 256  # トークナイズ時の最大トークン数
 
