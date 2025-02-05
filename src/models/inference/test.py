@@ -37,7 +37,7 @@ check_and_install_requirements()
 
 # Global Settings
 MODEL_VERSION = "kaggle_model_ver2"  
-CHECKPOINT_NUMBER = "1980"  
+CHECKPOINT_NUMBER = "best_model"  # "checkpoint-best_model" から "best_model" に変更
 MAX_HISTORY = 5  
 BASE_MODEL = "google/gemma-2-2b-jpn-it"
 
@@ -49,10 +49,12 @@ if not HF_TOKEN:
     logger.warning("HUGGINGFACE_API_KEY not found in environment variables")
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-MODEL_PATH = os.path.join(ROOT_DIR, "models", MODEL_VERSION, "model", f"checkpoint-{CHECKPOINT_NUMBER}")
+MODEL_PATH = os.path.join(ROOT_DIR, "models", MODEL_VERSION, "model", CHECKPOINT_NUMBER)  # checkpoint- プレフィックスを削除
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # TensorFlow警告を抑制
 
 class ChatAI:
     """
