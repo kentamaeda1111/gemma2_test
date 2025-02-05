@@ -343,9 +343,6 @@ def preprocess_function(examples):
         # claude 修正3(後)
         # ベースのattention maskをより自然な形に
         new_mask = mask.copy()  # 元のマスクを維持
-        # パターンマッチした部分のみ強調
-        for i in range(max(0, pattern_start - 2), min(len(mask), pattern_start + pattern_len + 2)):
-            new_mask[i] = 1.0
         
         # 文を分割
         sentences = text.split('。')
@@ -444,7 +441,7 @@ training_args = TrainingArguments(
     optim="adamw_torch_fused",
     eval_accumulation_steps=8,
     load_best_model_at_end=True,
-    metric_for_best_model="combined_score",  # 新しい評価指標を使用
+    metric_for_best_model="socratic_style",  # 新しい評価指標を使用
 )
 
 # 環境変数でwandbを無効化（training_argsの前に追加）
@@ -458,12 +455,154 @@ data_collator = DataCollatorForLanguageModeling(
     pad_to_multiple_of=8
 )
 
-# 評価メトリクスの修正
+# claude修正案5(前)
+# # 評価メトリクスの修正
+# def compute_metrics(eval_preds):
+#     logits, labels = eval_preds  # eval_predsから logits と labels を取得
+    
+#     # 評価用データセットのサイズ制限を緩和
+#     max_samples = 100
+    
+#     # デコード処理の改善
+#     with torch.no_grad():
+#         logits = torch.tensor(logits).cpu()
+#         predictions = torch.argmax(logits, dim=-1)
+        
+#         # バッチ全体をデコード
+#         decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+        
+#         # より詳細なログ出力を追加
+#         logging.info(f"Sample prediction: {decoded_preds[0][:100]}...")
+        
+#         del logits, predictions  # メモリ解放
+#         torch.cuda.empty_cache()
+#         # 文末パターンをより柔軟に定義
+#         sentence_end_patterns = {
+#             'question_patterns': [
+#                 'かね', 'だろうか', 'ではないか',
+#                 'のか', 'と思わないか', '考えてみよう',
+#             ],
+#             'statement_patterns': [
+#                 'だね', 'なるほど', '興味深い',
+#                 'といえよう', 'というべきだ'
+#             ],
+#             'reflection_patterns': [
+#                 'かもしれない', 'のではないか',
+#                 'と考えられる', 'といえそうだ'
+#             ]
+#         }
+        
+#         # 助動詞パターン
+#         auxiliary_patterns = [
+#             'である', 'だ', 'です', 'ます',
+#             'のだ', 'のです', 'のである'
+#         ]
+        
+#         def calculate_style_consistency(text):
+#             sentences = text.split('。')
+#             if not sentences:
+#                 return 0.0
+                
+#             # 文末スタイルの一貫性を評価
+#             end_style_scores = []
+#             for sent in sentences:
+#                 if not sent.strip():
+#                     continue
+                    
+#                 # 文末パターンの評価（部分一致を許容）
+#                 pattern_found = False
+#                 for pattern_type, patterns in sentence_end_patterns.items():
+#                     if any(p in sent[-10:] for p in patterns):  # 文末10文字以内で検索
+#                         pattern_found = True
+#                         break
+#                 end_style_scores.append(1.0 if pattern_found else 0.0)
+            
+#             # 助動詞の一貫性を評価
+#             aux_style_scores = []
+#             for sent in sentences:
+#                 if not sent.strip():
+#                     continue
+                    
+#                 # 文中での助動詞使用を評価
+#                 aux_found = any(p in sent for p in auxiliary_patterns)
+#                 aux_style_scores.append(1.0 if aux_found else 0.0)
+            
+#             # 文の長さの一貫性を評価
+#             lengths = [len(s.strip()) for s in sentences if s.strip()]
+#             length_variance = np.var(lengths) if lengths else 0
+#             length_score = 1.0 / (1.0 + length_variance/100)  # 分散が小さいほど高スコア
+            
+#             # 総合評価
+#             end_style_avg = np.mean(end_style_scores) if end_style_scores else 0
+#             aux_style_avg = np.mean(aux_style_scores) if aux_style_scores else 0
+            
+#             # 重み付け
+#             weights = {
+#                 'end_style': 0.5,
+#                 'aux_style': 0.3,
+#                 'length_consistency': 0.2
+#             }
+            
+#             return (
+#                 weights['end_style'] * end_style_avg +
+#                 weights['aux_style'] * aux_style_avg +
+#                 weights['length_consistency'] * length_score
+#             )
+        
+#         # 各予測に対してスタイル一貫性を評価
+#         style_scores = [calculate_style_consistency(pred) for pred in decoded_preds]
+        
+#         # 対話の流れも評価
+#         def calculate_dialogue_flow(text):
+#             sentences = text.split('。')
+#             if not sentences:
+#                 return 0.0
+            
+#             # より詳細な評価基準を追加
+#             scores = []
+            
+#             # 1. 質問と説明のバランス（既存の評価）
+#             questions = sum(1 for s in sentences if any(p in s for p in sentence_end_patterns['question_patterns']))
+#             ratio = questions / len(sentences) if sentences else 0
+#             balance_score = max(0.0, 1.0 - min(abs(0.3 - ratio), 0.2) * 2)
+#             scores.append(balance_score)
+            
+#             # 2. 文の長さの変化
+#             lengths = [len(s.strip()) for s in sentences if s.strip()]
+#             length_variance = np.var(lengths) if len(lengths) > 1 else 0
+#             length_score = 1.0 / (1.0 + length_variance/500)  # 分散が小さいほど高スコア
+#             scores.append(length_score)
+            
+#             # 3. 接続詞の使用
+#             conjunctions = ['しかし', 'だから', 'また', 'そして', 'したがって']
+#             conj_count = sum(1 for s in sentences if any(c in s for c in conjunctions))
+#             conj_ratio = conj_count / len(sentences)
+#             conj_score = min(1.0, conj_ratio * 2)  # 適度な使用を評価
+#             scores.append(conj_score)
+            
+#             # スコアの重み付け平均
+#             weights = [0.5, 0.25, 0.25]  # バランス、長さ、接続詞の重み
+#             final_score = sum(s * w for s, w in zip(scores, weights))
+            
+#             return max(0.1, min(1.0, final_score))  # 0.1から1.0の範囲に制限
+        
+#         flow_scores = [calculate_dialogue_flow(pred) for pred in decoded_preds]
+        
+#         style_score = np.mean(style_scores)
+#         flow_score = np.mean(flow_scores)
+        
+#         # 総合評価スコアを追加
+#         combined_score = (style_score * 0.6 + flow_score * 0.4)  # flow_scoreの重みを増加
+        
+#         return {
+#             'style_consistency': style_score,
+#             'dialogue_flow': flow_score,
+#             'combined_score': combined_score
+#         }
+
+# claude修正案5(後)
 def compute_metrics(eval_preds):
     logits, labels = eval_preds  # eval_predsから logits と labels を取得
-    
-    # 評価用データセットのサイズ制限を緩和
-    max_samples = 100
     
     # デコード処理の改善
     with torch.no_grad():
@@ -478,165 +617,74 @@ def compute_metrics(eval_preds):
         
         del logits, predictions  # メモリ解放
         torch.cuda.empty_cache()
-        
-        # 文末パターンをより柔軟に定義
-        sentence_end_patterns = {
-            'question_patterns': [
-                'かね', 'だろうか', 'ではないか',
-                'のか', 'と思わないか', '考えてみよう',
-            ],
-            'statement_patterns': [
-                'だね', 'なるほど', '興味深い',
-                'といえよう', 'というべきだ'
-            ],
-            'reflection_patterns': [
-                'かもしれない', 'のではないか',
-                'と考えられる', 'といえそうだ'
-            ]
+
+        socratic_patterns = {
+            'question_endings': ['かね', 'だろうか', 'ではないかね'],
+            'address_patterns': ['君は', '君が', '君の'],
+            'inquiry_leads': ['では', 'について']
         }
-        
-        # 助動詞パターン
-        auxiliary_patterns = [
-            'である', 'だ', 'です', 'ます',
-            'のだ', 'のです', 'のである'
-        ]
-        
-        def calculate_style_consistency(text):
-            sentences = text.split('。')
-            if not sentences:
-                return 0.0
-                
-            # 文末スタイルの一貫性を評価
-            end_style_scores = []
-            for sent in sentences:
-                if not sent.strip():
-                    continue
-                    
-                # 文末パターンの評価（部分一致を許容）
-                pattern_found = False
-                for pattern_type, patterns in sentence_end_patterns.items():
-                    if any(p in sent[-10:] for p in patterns):  # 文末10文字以内で検索
-                        pattern_found = True
-                        break
-                end_style_scores.append(1.0 if pattern_found else 0.0)
-            
-            # 助動詞の一貫性を評価
-            aux_style_scores = []
-            for sent in sentences:
-                if not sent.strip():
-                    continue
-                    
-                # 文中での助動詞使用を評価
-                aux_found = any(p in sent for p in auxiliary_patterns)
-                aux_style_scores.append(1.0 if aux_found else 0.0)
-            
-            # 文の長さの一貫性を評価
-            lengths = [len(s.strip()) for s in sentences if s.strip()]
-            length_variance = np.var(lengths) if lengths else 0
-            length_score = 1.0 / (1.0 + length_variance/100)  # 分散が小さいほど高スコア
-            
-            # 総合評価
-            end_style_avg = np.mean(end_style_scores) if end_style_scores else 0
-            aux_style_avg = np.mean(aux_style_scores) if aux_style_scores else 0
-            
-            # 重み付け
-            weights = {
-                'end_style': 0.5,
-                'aux_style': 0.3,
-                'length_consistency': 0.2
-            }
-            
-            return (
-                weights['end_style'] * end_style_avg +
-                weights['aux_style'] * aux_style_avg +
-                weights['length_consistency'] * length_score
-            )
-        
-        # 各予測に対してスタイル一貫性を評価
-        style_scores = [calculate_style_consistency(pred) for pred in decoded_preds]
-        
-        # 対話の流れも評価
-        def calculate_dialogue_flow(text):
+
+        def calculate_socratic_style(text):
             sentences = text.split('。')
             if not sentences:
                 return 0.0
             
-            # より詳細な評価基準を追加
             scores = []
+            for sent in sentences:
+                if not sent.strip():
+                    continue
+                
+                # 問いで終わっているか
+                ends_with_question = any(sent.endswith(p) for p in socratic_patterns['question_endings'])
+                # 二人称の適切な使用
+                uses_proper_address = any(p in sent for p in socratic_patterns['address_patterns'])
+                # 問いの導入句の使用
+                uses_inquiry_lead = any(p in sent for p in socratic_patterns['inquiry_leads'])
+                
+                # 各要素のスコア（問いで終わることを重視）
+                sentence_score = (
+                    (ends_with_question * 0.6) +
+                    (uses_proper_address * 0.25) +
+                    (uses_inquiry_lead * 0.15)
+                )
+                scores.append(sentence_score)
             
-            # 1. 質問と説明のバランス（既存の評価）
-            questions = sum(1 for s in sentences if any(p in s for p in sentence_end_patterns['question_patterns']))
-            ratio = questions / len(sentences) if sentences else 0
-            balance_score = max(0.0, 1.0 - min(abs(0.3 - ratio), 0.2) * 2)
-            scores.append(balance_score)
-            
-            # 2. 文の長さの変化
-            lengths = [len(s.strip()) for s in sentences if s.strip()]
-            length_variance = np.var(lengths) if len(lengths) > 1 else 0
-            length_score = 1.0 / (1.0 + length_variance/500)  # 分散が小さいほど高スコア
-            scores.append(length_score)
-            
-            # 3. 接続詞の使用
-            conjunctions = ['しかし', 'だから', 'また', 'そして', 'したがって']
-            conj_count = sum(1 for s in sentences if any(c in s for c in conjunctions))
-            conj_ratio = conj_count / len(sentences)
-            conj_score = min(1.0, conj_ratio * 2)  # 適度な使用を評価
-            scores.append(conj_score)
-            
-            # スコアの重み付け平均
-            weights = [0.5, 0.25, 0.25]  # バランス、長さ、接続詞の重み
-            final_score = sum(s * w for s, w in zip(scores, weights))
-            
-            return max(0.1, min(1.0, final_score))  # 0.1から1.0の範囲に制限
-        
-        flow_scores = [calculate_dialogue_flow(pred) for pred in decoded_preds]
-        
-        style_score = np.mean(style_scores)
-        flow_score = np.mean(flow_scores)
-        
-        # 総合評価スコアを追加
-        combined_score = (style_score * 0.6 + flow_score * 0.4)  # flow_scoreの重みを増加
+            return np.mean(scores) if scores else 0.0
+
+        style_scores = [calculate_socratic_style(pred) for pred in decoded_preds]
+        final_score = np.mean(style_scores)
         
         return {
-            'style_consistency': style_score,
-            'dialogue_flow': flow_score,
-            'combined_score': combined_score
+            'socratic_style': final_score,
         }
 
 # カスタムコールバックの修正
 class StyleCallback(TrainerCallback):
     def __init__(self):
-        self.style_scores = []
-        self.flow_scores = []
+        self.socratic_scores = []
         
     def on_evaluate(self, args, state, control, metrics, **kwargs):
-        if 'eval_style_consistency' in metrics:
-            self.style_scores.append(metrics['eval_style_consistency'])
-            self.flow_scores.append(metrics['eval_dialogue_flow'])
+        if 'eval_socratic_style' in metrics:
+            self.socratic_scores.append(metrics['eval_socratic_style'])
             
             # ログに詳細を記録
             logging.info(f"Step {state.global_step}:")
-            logging.info(f"Style Consistency: {metrics['eval_style_consistency']:.3f}")
-            logging.info(f"Dialogue Flow: {metrics['eval_dialogue_flow']:.3f}")
+            logging.info(f"Socratic Style Score: {metrics['eval_socratic_style']:.3f}")
     
     def on_train_end(self, args, state, control, **kwargs):
         # 学習全体の評価をログに記録
-        avg_style = sum(self.style_scores) / len(self.style_scores) if self.style_scores else 0
-        avg_flow = sum(self.flow_scores) / len(self.flow_scores) if self.flow_scores else 0
+        avg_score = sum(self.socratic_scores) / len(self.socratic_scores) if self.socratic_scores else 0
         
         logging.info("Training Complete!")
-        logging.info(f"Average Style Consistency: {avg_style:.3f}")
-        logging.info(f"Average Dialogue Flow: {avg_flow:.3f}")
-# """"""""""""""""""""""""""
-# カスタムコールバックを拡張
+        logging.info(f"Average Socratic Style Score: {avg_score:.3f}")
+
+# TrainingMonitorCallbackも修正
 class TrainingMonitorCallback(TrainerCallback):
     def __init__(self):
         self.train_start_time = None
         self.metrics_history = {
             'step': [],
-            'style_consistency': [],
-            'dialogue_flow': [],
-            'combined_score': [],
+            'socratic_style': [],  # メトリクス名を変更
             'loss': [],
             'learning_rate': [],
             'epoch': []
@@ -657,9 +705,7 @@ class TrainingMonitorCallback(TrainerCallback):
         self.metrics_history['epoch'].append(state.epoch)
         self.metrics_history['loss'].append(logs.get('loss', None))
         self.metrics_history['learning_rate'].append(logs.get('learning_rate', None))
-        self.metrics_history['style_consistency'].append(logs.get('eval_style_consistency', None))
-        self.metrics_history['dialogue_flow'].append(logs.get('eval_dialogue_flow', None))
-        self.metrics_history['combined_score'].append(logs.get('eval_combined_score', None))
+        self.metrics_history['socratic_style'].append(logs.get('eval_socratic_style', None))
         
         # CSVファイルに保存
         df = pd.DataFrame(self.metrics_history)
@@ -671,7 +717,7 @@ class TrainingMonitorCallback(TrainerCallback):
             
     def _plot_metrics(self):
         """学習メトリクスをプロットして保存"""
-        plt.figure(figsize=(15, 10))
+        plt.figure(figsize=(15, 8))
         
         # Loss
         plt.subplot(2, 2, 1)
@@ -689,26 +735,14 @@ class TrainingMonitorCallback(TrainerCallback):
         plt.ylabel('Learning Rate')
         plt.legend()
         
-        # Style and Flow Scores
+        # Socratic Style Score
         plt.subplot(2, 2, 3)
-        valid_steps = [s for s, v in zip(self.metrics_history['step'], self.metrics_history['style_consistency']) if v is not None]
-        valid_style = [v for v in self.metrics_history['style_consistency'] if v is not None]
-        valid_flow = [v for v in self.metrics_history['dialogue_flow'] if v is not None]
+        valid_steps = [s for s, v in zip(self.metrics_history['step'], self.metrics_history['socratic_style']) if v is not None]
+        valid_scores = [v for v in self.metrics_history['socratic_style'] if v is not None]
         
         if valid_steps:
-            plt.plot(valid_steps, valid_style, label='Style Consistency')
-            plt.plot(valid_steps, valid_flow, label='Dialogue Flow')
-            plt.title('Evaluation Metrics')
-            plt.xlabel('Step')
-            plt.ylabel('Score')
-            plt.legend()
-        
-        # Combined Score
-        plt.subplot(2, 2, 4)
-        valid_combined = [v for v in self.metrics_history['combined_score'] if v is not None]
-        if valid_steps:
-            plt.plot(valid_steps, valid_combined, label='Combined Score')
-            plt.title('Combined Evaluation Score')
+            plt.plot(valid_steps, valid_scores, label='Socratic Style')
+            plt.title('Socratic Style Score')
             plt.xlabel('Step')
             plt.ylabel('Score')
             plt.legend()
@@ -722,7 +756,7 @@ class TrainingMonitorCallback(TrainerCallback):
         summary = {
             'training_duration': str(datetime.now() - self.train_start_time),
             'final_loss': self.metrics_history['loss'][-1] if self.metrics_history['loss'] else None,
-            'best_combined_score': max(filter(None, self.metrics_history['combined_score'])) if self.metrics_history['combined_score'] else None,
+            'best_socratic_score': max(filter(None, self.metrics_history['socratic_style'])) if self.metrics_history['socratic_style'] else None,
             'total_steps': len(self.metrics_history['step']),
             'final_epoch': self.metrics_history['epoch'][-1] if self.metrics_history['epoch'] else None
         }
@@ -737,7 +771,7 @@ class TrainingMonitorCallback(TrainerCallback):
         logging.info("Training Complete!")
         logging.info(f"Training duration: {summary['training_duration']}")
         logging.info(f"Final loss: {summary['final_loss']:.4f}")
-        logging.info(f"Best combined score: {summary['best_combined_score']:.4f}")
+        logging.info(f"Best Socratic style score: {summary['best_socratic_score']:.4f}")
 
 # データセットを訓練用と評価用に分割
 dataset_size = len(tokenized_dataset)
@@ -790,15 +824,15 @@ try:
     checkpoint_dir = "./model"
     resume_from_checkpoint = None
     
-    # チェックポイントの確認と処理
+    # チェックポイントの確認と処理を修正
     if os.path.exists(checkpoint_dir):
-        print("\nChecking checkpoint status...")  # 追加
+        logging.info("\nChecking checkpoint status...")
         checkpoints = [f for f in os.listdir(checkpoint_dir) if f.startswith("checkpoint-")]
         if checkpoints:
             # 最新のチェックポイントを取得
             latest_checkpoint = max(checkpoints, key=lambda x: int(x.split("-")[1]))
             checkpoint_path = os.path.join(checkpoint_dir, latest_checkpoint)
-            print(f"Found latest checkpoint: {latest_checkpoint}")  # 追加
+            logging.info(f"Found latest checkpoint: {latest_checkpoint}")
             
             # チェックポイントの状態を確認
             state_path = os.path.join(checkpoint_path, "trainer_state.json")
@@ -806,34 +840,24 @@ try:
                 with open(state_path, 'r') as f:
                     state = json.load(f)
                 current_epoch = state.get('epoch', 0)
-                print(f"\nCurrent training status:")  # 追加
-                print(f"Current epoch: {current_epoch}")  # 追加
-                print(f"Target epochs: {training_args.num_train_epochs}")  # 追加
+                logging.info(f"\nCurrent training status:")
+                logging.info(f"Current epoch: {current_epoch}")
+                logging.info(f"Target epochs: {training_args.num_train_epochs}")
                 
                 # 完了している場合は安全に終了
                 if current_epoch >= training_args.num_train_epochs - 0.1:
-                    print("\n" + "="*50)
-                    print("IMPORTANT NOTICE:")
-                    print(f"Training has already been completed at epoch {current_epoch}!")  # 修正
-                    print(f"Target epochs was {training_args.num_train_epochs}")  # 追加
-                    print(f"Trained model is available at: {checkpoint_dir}")
-                    print("="*50 + "\n")
-                    logging.info("Training has already been completed. Exiting to protect existing model.")
+                    logging.info("\n" + "="*50)
+                    logging.info("IMPORTANT NOTICE:")
+                    logging.info(f"Training has already been completed at epoch {current_epoch}!")
+                    logging.info(f"Target epochs was {training_args.num_train_epochs}")
                     logging.info(f"Trained model is available at: {checkpoint_dir}")
+                    logging.info("="*50 + "\n")
                     exit(0)
             else:
-                logging.warning("Invalid checkpoint state found. Please check manually.")
+                logging.warning("Invalid checkpoint state found. Proceeding with training...")
                 logging.warning(f"Checkpoint directory: {checkpoint_dir}")
-                user_input = input("Do you want to continue and overwrite? (yes/no): ")
-                if user_input.lower() != 'yes':
-                    logging.info("Aborting to protect existing data.")
-                    exit(0)
         else:
-            logging.warning("Checkpoint directory exists but no checkpoints found.")
-            user_input = input("Do you want to continue and overwrite the directory? (yes/no): ")
-            if user_input.lower() != 'yes':
-                logging.info("Aborting to protect existing data.")
-                exit(0)
+            logging.warning("Checkpoint directory exists but no checkpoints found. Proceeding with training...")
 
     # 学習を開始（または再開）
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
