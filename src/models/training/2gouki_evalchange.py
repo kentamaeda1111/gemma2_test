@@ -444,7 +444,7 @@ training_args = TrainingArguments(
     optim="adamw_torch_fused",
     eval_accumulation_steps=8,
     load_best_model_at_end=True,
-    metric_for_best_model="combined_score",  # 新しい評価指標を使用
+    metric_for_best_model="socratic_style",  # 新しい評価指標を使用
 )
 
 # 環境変数でwandbを無効化（training_argsの前に追加）
@@ -458,12 +458,154 @@ data_collator = DataCollatorForLanguageModeling(
     pad_to_multiple_of=8
 )
 
-# 評価メトリクスの修正
+# claude修正案5(前)
+# # 評価メトリクスの修正
+# def compute_metrics(eval_preds):
+#     logits, labels = eval_preds  # eval_predsから logits と labels を取得
+    
+#     # 評価用データセットのサイズ制限を緩和
+#     max_samples = 100
+    
+#     # デコード処理の改善
+#     with torch.no_grad():
+#         logits = torch.tensor(logits).cpu()
+#         predictions = torch.argmax(logits, dim=-1)
+        
+#         # バッチ全体をデコード
+#         decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+        
+#         # より詳細なログ出力を追加
+#         logging.info(f"Sample prediction: {decoded_preds[0][:100]}...")
+        
+#         del logits, predictions  # メモリ解放
+#         torch.cuda.empty_cache()
+#         # 文末パターンをより柔軟に定義
+#         sentence_end_patterns = {
+#             'question_patterns': [
+#                 'かね', 'だろうか', 'ではないか',
+#                 'のか', 'と思わないか', '考えてみよう',
+#             ],
+#             'statement_patterns': [
+#                 'だね', 'なるほど', '興味深い',
+#                 'といえよう', 'というべきだ'
+#             ],
+#             'reflection_patterns': [
+#                 'かもしれない', 'のではないか',
+#                 'と考えられる', 'といえそうだ'
+#             ]
+#         }
+        
+#         # 助動詞パターン
+#         auxiliary_patterns = [
+#             'である', 'だ', 'です', 'ます',
+#             'のだ', 'のです', 'のである'
+#         ]
+        
+#         def calculate_style_consistency(text):
+#             sentences = text.split('。')
+#             if not sentences:
+#                 return 0.0
+                
+#             # 文末スタイルの一貫性を評価
+#             end_style_scores = []
+#             for sent in sentences:
+#                 if not sent.strip():
+#                     continue
+                    
+#                 # 文末パターンの評価（部分一致を許容）
+#                 pattern_found = False
+#                 for pattern_type, patterns in sentence_end_patterns.items():
+#                     if any(p in sent[-10:] for p in patterns):  # 文末10文字以内で検索
+#                         pattern_found = True
+#                         break
+#                 end_style_scores.append(1.0 if pattern_found else 0.0)
+            
+#             # 助動詞の一貫性を評価
+#             aux_style_scores = []
+#             for sent in sentences:
+#                 if not sent.strip():
+#                     continue
+                    
+#                 # 文中での助動詞使用を評価
+#                 aux_found = any(p in sent for p in auxiliary_patterns)
+#                 aux_style_scores.append(1.0 if aux_found else 0.0)
+            
+#             # 文の長さの一貫性を評価
+#             lengths = [len(s.strip()) for s in sentences if s.strip()]
+#             length_variance = np.var(lengths) if lengths else 0
+#             length_score = 1.0 / (1.0 + length_variance/100)  # 分散が小さいほど高スコア
+            
+#             # 総合評価
+#             end_style_avg = np.mean(end_style_scores) if end_style_scores else 0
+#             aux_style_avg = np.mean(aux_style_scores) if aux_style_scores else 0
+            
+#             # 重み付け
+#             weights = {
+#                 'end_style': 0.5,
+#                 'aux_style': 0.3,
+#                 'length_consistency': 0.2
+#             }
+            
+#             return (
+#                 weights['end_style'] * end_style_avg +
+#                 weights['aux_style'] * aux_style_avg +
+#                 weights['length_consistency'] * length_score
+#             )
+        
+#         # 各予測に対してスタイル一貫性を評価
+#         style_scores = [calculate_style_consistency(pred) for pred in decoded_preds]
+        
+#         # 対話の流れも評価
+#         def calculate_dialogue_flow(text):
+#             sentences = text.split('。')
+#             if not sentences:
+#                 return 0.0
+            
+#             # より詳細な評価基準を追加
+#             scores = []
+            
+#             # 1. 質問と説明のバランス（既存の評価）
+#             questions = sum(1 for s in sentences if any(p in s for p in sentence_end_patterns['question_patterns']))
+#             ratio = questions / len(sentences) if sentences else 0
+#             balance_score = max(0.0, 1.0 - min(abs(0.3 - ratio), 0.2) * 2)
+#             scores.append(balance_score)
+            
+#             # 2. 文の長さの変化
+#             lengths = [len(s.strip()) for s in sentences if s.strip()]
+#             length_variance = np.var(lengths) if len(lengths) > 1 else 0
+#             length_score = 1.0 / (1.0 + length_variance/500)  # 分散が小さいほど高スコア
+#             scores.append(length_score)
+            
+#             # 3. 接続詞の使用
+#             conjunctions = ['しかし', 'だから', 'また', 'そして', 'したがって']
+#             conj_count = sum(1 for s in sentences if any(c in s for c in conjunctions))
+#             conj_ratio = conj_count / len(sentences)
+#             conj_score = min(1.0, conj_ratio * 2)  # 適度な使用を評価
+#             scores.append(conj_score)
+            
+#             # スコアの重み付け平均
+#             weights = [0.5, 0.25, 0.25]  # バランス、長さ、接続詞の重み
+#             final_score = sum(s * w for s, w in zip(scores, weights))
+            
+#             return max(0.1, min(1.0, final_score))  # 0.1から1.0の範囲に制限
+        
+#         flow_scores = [calculate_dialogue_flow(pred) for pred in decoded_preds]
+        
+#         style_score = np.mean(style_scores)
+#         flow_score = np.mean(flow_scores)
+        
+#         # 総合評価スコアを追加
+#         combined_score = (style_score * 0.6 + flow_score * 0.4)  # flow_scoreの重みを増加
+        
+#         return {
+#             'style_consistency': style_score,
+#             'dialogue_flow': flow_score,
+#             'combined_score': combined_score
+#         }
+
+# claude修正案5(後)
 def compute_metrics(eval_preds):
     logits, labels = eval_preds  # eval_predsから logits と labels を取得
-    
-    # 評価用データセットのサイズ制限を緩和
-    max_samples = 100
     
     # デコード処理の改善
     with torch.no_grad():
@@ -478,129 +620,45 @@ def compute_metrics(eval_preds):
         
         del logits, predictions  # メモリ解放
         torch.cuda.empty_cache()
-        
-        # 文末パターンをより柔軟に定義
-        sentence_end_patterns = {
-            'question_patterns': [
-                'かね', 'だろうか', 'ではないか',
-                'のか', 'と思わないか', '考えてみよう',
-            ],
-            'statement_patterns': [
-                'だね', 'なるほど', '興味深い',
-                'といえよう', 'というべきだ'
-            ],
-            'reflection_patterns': [
-                'かもしれない', 'のではないか',
-                'と考えられる', 'といえそうだ'
-            ]
+
+        socratic_patterns = {
+            'question_endings': ['かね', 'だろうか', 'ではないかね'],
+            'address_patterns': ['君は', '君が', '君の'],
+            'inquiry_leads': ['では', 'について']
         }
-        
-        # 助動詞パターン
-        auxiliary_patterns = [
-            'である', 'だ', 'です', 'ます',
-            'のだ', 'のです', 'のである'
-        ]
-        
-        def calculate_style_consistency(text):
-            sentences = text.split('。')
-            if not sentences:
-                return 0.0
-                
-            # 文末スタイルの一貫性を評価
-            end_style_scores = []
-            for sent in sentences:
-                if not sent.strip():
-                    continue
-                    
-                # 文末パターンの評価（部分一致を許容）
-                pattern_found = False
-                for pattern_type, patterns in sentence_end_patterns.items():
-                    if any(p in sent[-10:] for p in patterns):  # 文末10文字以内で検索
-                        pattern_found = True
-                        break
-                end_style_scores.append(1.0 if pattern_found else 0.0)
-            
-            # 助動詞の一貫性を評価
-            aux_style_scores = []
-            for sent in sentences:
-                if not sent.strip():
-                    continue
-                    
-                # 文中での助動詞使用を評価
-                aux_found = any(p in sent for p in auxiliary_patterns)
-                aux_style_scores.append(1.0 if aux_found else 0.0)
-            
-            # 文の長さの一貫性を評価
-            lengths = [len(s.strip()) for s in sentences if s.strip()]
-            length_variance = np.var(lengths) if lengths else 0
-            length_score = 1.0 / (1.0 + length_variance/100)  # 分散が小さいほど高スコア
-            
-            # 総合評価
-            end_style_avg = np.mean(end_style_scores) if end_style_scores else 0
-            aux_style_avg = np.mean(aux_style_scores) if aux_style_scores else 0
-            
-            # 重み付け
-            weights = {
-                'end_style': 0.5,
-                'aux_style': 0.3,
-                'length_consistency': 0.2
-            }
-            
-            return (
-                weights['end_style'] * end_style_avg +
-                weights['aux_style'] * aux_style_avg +
-                weights['length_consistency'] * length_score
-            )
-        
-        # 各予測に対してスタイル一貫性を評価
-        style_scores = [calculate_style_consistency(pred) for pred in decoded_preds]
-        
-        # 対話の流れも評価
-        def calculate_dialogue_flow(text):
+
+        def calculate_socratic_style(text):
             sentences = text.split('。')
             if not sentences:
                 return 0.0
             
-            # より詳細な評価基準を追加
             scores = []
+            for sent in sentences:
+                if not sent.strip():
+                    continue
+                
+                # 問いで終わっているか
+                ends_with_question = any(sent.endswith(p) for p in socratic_patterns['question_endings'])
+                # 二人称の適切な使用
+                uses_proper_address = any(p in sent for p in socratic_patterns['address_patterns'])
+                # 問いの導入句の使用
+                uses_inquiry_lead = any(p in sent for p in socratic_patterns['inquiry_leads'])
+                
+                # 各要素のスコア（問いで終わることを重視）
+                sentence_score = (
+                    (ends_with_question * 0.6) +
+                    (uses_proper_address * 0.25) +
+                    (uses_inquiry_lead * 0.15)
+                )
+                scores.append(sentence_score)
             
-            # 1. 質問と説明のバランス（既存の評価）
-            questions = sum(1 for s in sentences if any(p in s for p in sentence_end_patterns['question_patterns']))
-            ratio = questions / len(sentences) if sentences else 0
-            balance_score = max(0.0, 1.0 - min(abs(0.3 - ratio), 0.2) * 2)
-            scores.append(balance_score)
-            
-            # 2. 文の長さの変化
-            lengths = [len(s.strip()) for s in sentences if s.strip()]
-            length_variance = np.var(lengths) if len(lengths) > 1 else 0
-            length_score = 1.0 / (1.0 + length_variance/500)  # 分散が小さいほど高スコア
-            scores.append(length_score)
-            
-            # 3. 接続詞の使用
-            conjunctions = ['しかし', 'だから', 'また', 'そして', 'したがって']
-            conj_count = sum(1 for s in sentences if any(c in s for c in conjunctions))
-            conj_ratio = conj_count / len(sentences)
-            conj_score = min(1.0, conj_ratio * 2)  # 適度な使用を評価
-            scores.append(conj_score)
-            
-            # スコアの重み付け平均
-            weights = [0.5, 0.25, 0.25]  # バランス、長さ、接続詞の重み
-            final_score = sum(s * w for s, w in zip(scores, weights))
-            
-            return max(0.1, min(1.0, final_score))  # 0.1から1.0の範囲に制限
-        
-        flow_scores = [calculate_dialogue_flow(pred) for pred in decoded_preds]
-        
-        style_score = np.mean(style_scores)
-        flow_score = np.mean(flow_scores)
-        
-        # 総合評価スコアを追加
-        combined_score = (style_score * 0.6 + flow_score * 0.4)  # flow_scoreの重みを増加
+            return np.mean(scores) if scores else 0.0
+
+        style_scores = [calculate_socratic_style(pred) for pred in decoded_preds]
+        final_score = np.mean(style_scores)
         
         return {
-            'style_consistency': style_score,
-            'dialogue_flow': flow_score,
-            'combined_score': combined_score
+            'socratic_style': final_score,
         }
 
 # カスタムコールバックの修正
