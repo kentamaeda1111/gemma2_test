@@ -701,45 +701,67 @@ class TrainingMonitorCallback(TrainerCallback):
             return
         
         # メトリクスの記録
-        self.metrics_history['step'].append(state.global_step)
-        self.metrics_history['epoch'].append(state.epoch)
-        self.metrics_history['loss'].append(logs.get('loss', None))
-        self.metrics_history['learning_rate'].append(logs.get('learning_rate', None))
-        self.metrics_history['socratic_style'].append(logs.get('eval_socratic_style', None))
+        current_step = state.global_step
+        
+        # すべてのステップでlossとlearning_rateを記録
+        if 'loss' in logs:
+            self.metrics_history['step'].append(current_step)
+            self.metrics_history['epoch'].append(state.epoch)
+            self.metrics_history['loss'].append(logs['loss'])
+            self.metrics_history['learning_rate'].append(logs.get('learning_rate', None))
+            self.metrics_history['socratic_style'].append(None)  # 評価ステップ以外はNone
+        
+        # 評価ステップでsocratic_styleスコアを更新
+        if 'eval_socratic_style' in logs:
+            # 最後のエントリを更新（同じステップの場合）
+            if self.metrics_history['step'] and self.metrics_history['step'][-1] == current_step:
+                self.metrics_history['socratic_style'][-1] = logs['eval_socratic_style']
+            else:
+                # 新しいエントリを追加
+                self.metrics_history['step'].append(current_step)
+                self.metrics_history['epoch'].append(state.epoch)
+                self.metrics_history['loss'].append(None)
+                self.metrics_history['learning_rate'].append(None)
+                self.metrics_history['socratic_style'].append(logs['eval_socratic_style'])
         
         # CSVファイルに保存
         df = pd.DataFrame(self.metrics_history)
         df.to_csv(self.output_dir / 'training_metrics.csv', index=False)
         
         # 100ステップごとにグラフを更新
-        if state.global_step % 100 == 0:
+        if current_step % 100 == 0:
             self._plot_metrics()
             
     def _plot_metrics(self):
         """学習メトリクスをプロットして保存"""
         plt.figure(figsize=(15, 8))
         
-        # Loss
+        # Loss - Noneを除外して描画
         plt.subplot(2, 2, 1)
-        plt.plot(self.metrics_history['step'], self.metrics_history['loss'], label='Loss')
-        plt.title('Training Loss')
-        plt.xlabel('Step')
-        plt.ylabel('Loss')
-        plt.legend()
+        valid_steps_loss = [s for s, v in zip(self.metrics_history['step'], self.metrics_history['loss']) if v is not None]
+        valid_loss = [v for v in self.metrics_history['loss'] if v is not None]
+        if valid_steps_loss:
+            plt.plot(valid_steps_loss, valid_loss, label='Loss')
+            plt.title('Training Loss')
+            plt.xlabel('Step')
+            plt.ylabel('Loss')
+            plt.legend()
         
-        # Learning Rate
+        # Learning Rate - Noneを除外して描画
         plt.subplot(2, 2, 2)
-        plt.plot(self.metrics_history['step'], self.metrics_history['learning_rate'], label='LR')
-        plt.title('Learning Rate')
-        plt.xlabel('Step')
-        plt.ylabel('Learning Rate')
-        plt.legend()
+        valid_steps_lr = [s for s, v in zip(self.metrics_history['step'], self.metrics_history['learning_rate']) if v is not None]
+        valid_lr = [v for v in self.metrics_history['learning_rate'] if v is not None]
+        if valid_steps_lr:
+            plt.plot(valid_steps_lr, valid_lr, label='LR')
+            plt.title('Learning Rate')
+            plt.xlabel('Step')
+            plt.ylabel('Learning Rate')
+            plt.legend()
         
-        # Socratic Style Score
+        # Socratic Style Score - Noneを除外して描画
         plt.subplot(2, 2, 3)
         valid_steps = [s for s, v in zip(self.metrics_history['step'], self.metrics_history['socratic_style']) if v is not None]
         valid_scores = [v for v in self.metrics_history['socratic_style'] if v is not None]
-        
         if valid_steps:
             plt.plot(valid_steps, valid_scores, label='Socratic Style')
             plt.title('Socratic Style Score')
@@ -770,8 +792,17 @@ class TrainingMonitorCallback(TrainerCallback):
         
         logging.info("Training Complete!")
         logging.info(f"Training duration: {summary['training_duration']}")
-        logging.info(f"Final loss: {summary['final_loss']:.4f}")
-        logging.info(f"Best Socratic style score: {summary['best_socratic_score']:.4f}")
+        
+        # Noneチェックを追加
+        if summary['final_loss'] is not None:
+            logging.info(f"Final loss: {summary['final_loss']:.4f}")
+        else:
+            logging.info("Final loss: Not available")
+        
+        if summary['best_socratic_score'] is not None:
+            logging.info(f"Best Socratic style score: {summary['best_socratic_score']:.4f}")
+        else:
+            logging.info("Best Socratic style score: Not available")
 
 # データセットを訓練用と評価用に分割
 dataset_size = len(tokenized_dataset)
