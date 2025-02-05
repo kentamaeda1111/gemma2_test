@@ -37,6 +37,6 @@ if __name__ == "__main__":
         sys.exit(1)
     
     input_file = "data/dialogue/processed/kaggle_model.json"
-    output_file = f"data/dialogue/processed/kaggle_model_{int(percentage)}percent.json"
+    output_file = f"data/dialogue/processed/kaggle_model_{int(percentage)}.json"
     
     reduce_data(input_file, output_file, percentage) 

@@ -23,7 +23,7 @@ from pathlib import Path
 from src.utils.config import get_api_keys
 
 # グローバル設定
-DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model_40.json"  # 対話データのJSONファイルパス
+DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model_60.json"  # 対話データのJSONファイルパス
 MAX_SEQUENCE_LENGTH = 256  # 1つの対話の最大トークン数
 MAX_TOKENIZE_LENGTH = 256  # トークナイズ時の最大トークン数
 
@@ -254,13 +254,13 @@ training_args = TrainingArguments(
     evaluation_strategy="steps",
     eval_steps=20,          # 25から20に変更してより頻繁に評価
     save_strategy="steps",
-    save_steps=20,
+    save_steps=50,          # 20ステップごとにチェックポイントを保存
     gradient_accumulation_steps=8,   # 累積回数を減らす
     max_steps=-1,
     disable_tqdm=False,
     logging_dir="./model/logs",
     logging_strategy="steps",
-    logging_steps=50,
+    logging_steps=50,        # 50ステップごとにログを記録
     no_cuda=False,
     dataloader_num_workers=2,
     report_to=[],
@@ -270,7 +270,7 @@ training_args = TrainingArguments(
     gradient_checkpointing=True,
     max_grad_norm=0.5,       # 「Gradient clipping: Values between 0.5-1.0 help prevent divergence」から0.5を選択
     dataloader_pin_memory=True,
-    save_total_limit=3,
+    save_total_limit=4,     # 最大3つのチェックポイントを保持
     fp16=True,
     optim="adamw_torch_fused",
     eval_accumulation_steps=8,
@@ -336,13 +336,12 @@ class CustomTrainer(Trainer):
 
 class TrainingMonitorCallback(TrainerCallback):
     def __init__(self):
-        self.train_start_time = None
         self.metrics_history = {
-            'step': [],
-            'loss': [],
-            'learning_rate': [],
-            'epoch': [],
-            'perplexity': []
+            'step': [],           # トレーニングのステップ数
+            'loss': [],          # 損失値
+            'learning_rate': [], # 学習率
+            'epoch': [],         # エポック数
+            'perplexity': []    # パープレキシティ（評価時のみ計算される）
         }
         # ディレクトリパスを設定して作成
         self.output_dir = Path("model/training_progress")
@@ -371,7 +370,7 @@ class TrainingMonitorCallback(TrainerCallback):
         df.to_csv(self.output_dir / 'training_metrics.csv', index=False)
         
         # 100ステップごとにグラフを更新
-        if state.global_step % 100 == 0:
+        if state.global_step % 100 == 0:  # ← ここで100ステップごとの制御をしています
             self._plot_metrics()
             
     def _plot_metrics(self):
