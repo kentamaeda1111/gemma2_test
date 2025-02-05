@@ -7,8 +7,8 @@ __pycache__/
 
 # Project specific
 others/**
-models/*
-!models/.gitkeep
+/models/model/
+!/models/.gitkeep
 
 # IDE 
 .idea/
