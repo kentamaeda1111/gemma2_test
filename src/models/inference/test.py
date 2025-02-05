@@ -36,8 +36,8 @@ def check_and_install_requirements():
 check_and_install_requirements()
 
 # Global Settings
-MODEL_VERSION = "kaggle_model_ver2"  
-CHECKPOINT_NUMBER = "best_model"  # "checkpoint-best_model" から "best_model" に変更
+MODEL_VERSION = "model"  
+CHECKPOINT_NUMBER = "checkpoint-780"  # "checkpoint-best_model" から "best_model" に変更
 MAX_HISTORY = 5  
 BASE_MODEL = "google/gemma-2-2b-jpn-it"
 
