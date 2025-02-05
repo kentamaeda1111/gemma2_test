@@ -343,9 +343,6 @@ def preprocess_function(examples):
         # claude 修正3(後)
         # ベースのattention maskをより自然な形に
         new_mask = mask.copy()  # 元のマスクを維持
-        # パターンマッチした部分のみ強調
-        for i in range(max(0, pattern_start - 2), min(len(mask), pattern_start + pattern_len + 2)):
-            new_mask[i] = 1.0
         
         # 文を分割
         sentences = text.split('。')
