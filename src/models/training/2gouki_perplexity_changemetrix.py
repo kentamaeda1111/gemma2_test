@@ -381,6 +381,10 @@ data_collator = DataCollatorForLanguageModeling(
 def compute_metrics(eval_preds):
     logits, labels = eval_preds
     
+    # NumPy配列をPyTorchテンソルに変換
+    logits = torch.from_numpy(logits)
+    labels = torch.from_numpy(labels)
+    
     # perplexityとlossの計算を追加
     shift_logits = logits[..., :-1, :].contiguous()
     shift_labels = labels[..., 1:].contiguous()
@@ -390,7 +394,7 @@ def compute_metrics(eval_preds):
     
     # 既存のスタイル評価
     with torch.no_grad():
-        logits = torch.tensor(logits).cpu()
+        # logitsはすでにテンソルに変換済み
         predictions = torch.argmax(logits, dim=-1)
         decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
         
