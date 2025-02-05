@@ -338,14 +338,18 @@ class TrainingMonitorCallback(TrainerCallback):
     def __init__(self):
         self.metrics_history = {
             'step': [],           # トレーニングのステップ数
-            'loss': [],          # 損失値
-            'learning_rate': [], # 学習率
-            'epoch': [],         # エポック数
-            'perplexity': []    # パープレキシティ（評価時のみ計算される）
+            'loss': [],          # 各ステップでの損失値
+            'learning_rate': [], # 各ステップでの学習率
+            'epoch': [],         # 現在のエポック数
+            'perplexity': [],    # パープレキシティ（評価ステップ時のみ計算）
+            'variance': [],      # 各ステップでの損失値の分散
+            'bias': []           # 各ステップでの損失値のバイアス
         }
         # ディレクトリパスを設定して作成
         self.output_dir = Path("model/training_progress")
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.running_mean = 0
+        self.n_steps = 0
         
     def on_train_begin(self, args, state, control, **kwargs):
         self.train_start_time = datetime.now()
@@ -355,30 +359,49 @@ class TrainingMonitorCallback(TrainerCallback):
         if logs is None:
             return
         
+        current_loss = logs.get('loss', None)
+        
         # メトリクスの記録
         self.metrics_history['step'].append(state.global_step)
         self.metrics_history['epoch'].append(state.epoch)
-        self.metrics_history['loss'].append(logs.get('loss', None))
+        self.metrics_history['loss'].append(current_loss)
         self.metrics_history['learning_rate'].append(logs.get('learning_rate', None))
         self.metrics_history['perplexity'].append(
             torch.exp(torch.tensor(logs.get('eval_loss', 0))).item() 
             if 'eval_loss' in logs else None
         )
         
+        # Variance と Bias の計算
+        if current_loss is not None:
+            self.n_steps += 1
+            delta = current_loss - self.running_mean
+            self.running_mean += delta / self.n_steps
+            
+            # Variance の計算 (実際の損失値と移動平均との差の二乗)
+            variance = (current_loss - self.running_mean) ** 2
+            # Bias の計算 (移動平均と理想的な損失値0との差)
+            bias = abs(self.running_mean - 0)
+            
+            self.metrics_history['variance'].append(variance)
+            self.metrics_history['bias'].append(bias)
+        else:
+            self.metrics_history['variance'].append(None)
+            self.metrics_history['bias'].append(None)
+        
         # CSVファイルに保存
         df = pd.DataFrame(self.metrics_history)
         df.to_csv(self.output_dir / 'training_metrics.csv', index=False)
         
         # 100ステップごとにグラフを更新
-        if state.global_step % 100 == 0:  # ← ここで100ステップごとの制御をしています
+        if state.global_step % 100 == 0:
             self._plot_metrics()
             
     def _plot_metrics(self):
         """学習メトリクスをプロットして保存"""
-        plt.figure(figsize=(15, 10))
+        plt.figure(figsize=(15, 12))
         
         # Loss
-        plt.subplot(2, 2, 1)
+        plt.subplot(3, 2, 1)
         plt.plot(self.metrics_history['step'], self.metrics_history['loss'], label='Loss')
         plt.title('Training Loss')
         plt.xlabel('Step')
@@ -386,7 +409,7 @@ class TrainingMonitorCallback(TrainerCallback):
         plt.legend()
         
         # Learning Rate
-        plt.subplot(2, 2, 2)
+        plt.subplot(3, 2, 2)
         plt.plot(self.metrics_history['step'], self.metrics_history['learning_rate'], label='LR')
         plt.title('Learning Rate')
         plt.xlabel('Step')
@@ -394,7 +417,7 @@ class TrainingMonitorCallback(TrainerCallback):
         plt.legend()
         
         # Perplexity
-        plt.subplot(2, 2, 3)
+        plt.subplot(3, 2, 3)
         valid_perplexity = [p for p in self.metrics_history['perplexity'] if p is not None]
         if valid_perplexity:
             plt.plot(
@@ -405,6 +428,34 @@ class TrainingMonitorCallback(TrainerCallback):
             plt.title('Perplexity')
             plt.xlabel('Step')
             plt.ylabel('Perplexity')
+            plt.legend()
+            
+        # Variance
+        plt.subplot(3, 2, 4)
+        valid_variance = [v for v in self.metrics_history['variance'] if v is not None]
+        if valid_variance:
+            plt.plot(
+                [s for s, v in zip(self.metrics_history['step'], self.metrics_history['variance']) if v is not None],
+                valid_variance,
+                label='Variance'
+            )
+            plt.title('Variance')
+            plt.xlabel('Step')
+            plt.ylabel('Variance')
+            plt.legend()
+            
+        # Bias
+        plt.subplot(3, 2, 5)
+        valid_bias = [b for b in self.metrics_history['bias'] if b is not None]
+        if valid_bias:
+            plt.plot(
+                [s for s, b in zip(self.metrics_history['step'], self.metrics_history['bias']) if b is not None],
+                valid_bias,
+                label='Bias'
+            )
+            plt.title('Bias')
+            plt.xlabel('Step')
+            plt.ylabel('Bias')
             plt.legend()
         
         plt.tight_layout()
