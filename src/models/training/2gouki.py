@@ -336,32 +336,66 @@ class CustomTrainer(Trainer):
 
 class TrainingMonitorCallback(TrainerCallback):
     def __init__(self):
+        self.train_start_time = None
         self.metrics_history = {
             'step': [],
             'loss': [],
             'learning_rate': [],
             'epoch': [],
-            'perplexity': []  # perplexityを追加
+            'perplexity': []
         }
-        # ... 残りの初期化コード ...
-
+        # ディレクトリパスを設定して作成
+        self.output_dir = Path("model/training_progress")
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        
+    def on_train_begin(self, args, state, control, **kwargs):
+        self.train_start_time = datetime.now()
+        log_memory_usage()
+        
     def on_log(self, args, state, control, logs=None, **kwargs):
         if logs is None:
             return
         
-        # 既存のメトリクス記録に加えて
+        # メトリクスの記録
+        self.metrics_history['step'].append(state.global_step)
+        self.metrics_history['epoch'].append(state.epoch)
+        self.metrics_history['loss'].append(logs.get('loss', None))
+        self.metrics_history['learning_rate'].append(logs.get('learning_rate', None))
         self.metrics_history['perplexity'].append(
             torch.exp(torch.tensor(logs.get('eval_loss', 0))).item() 
             if 'eval_loss' in logs else None
         )
-        # ... 残りのログ記録コード ...
         
+        # CSVファイルに保存
+        df = pd.DataFrame(self.metrics_history)
+        df.to_csv(self.output_dir / 'training_metrics.csv', index=False)
+        
+        # 100ステップごとにグラフを更新
+        if state.global_step % 100 == 0:
+            self._plot_metrics()
+            
     def _plot_metrics(self):
+        """学習メトリクスをプロットして保存"""
         plt.figure(figsize=(15, 10))
-        # ... 既存のプロット ...
         
-        # Perplexityのプロット追加
-        plt.subplot(2, 2, 4)
+        # Loss
+        plt.subplot(2, 2, 1)
+        plt.plot(self.metrics_history['step'], self.metrics_history['loss'], label='Loss')
+        plt.title('Training Loss')
+        plt.xlabel('Step')
+        plt.ylabel('Loss')
+        plt.legend()
+        
+        # Learning Rate
+        plt.subplot(2, 2, 2)
+        plt.plot(self.metrics_history['step'], self.metrics_history['learning_rate'], label='LR')
+        plt.title('Learning Rate')
+        plt.xlabel('Step')
+        plt.ylabel('Learning Rate')
+        plt.legend()
+        
+        # Perplexity
+        plt.subplot(2, 2, 3)
         valid_perplexity = [p for p in self.metrics_history['perplexity'] if p is not None]
         if valid_perplexity:
             plt.plot(
@@ -373,6 +407,10 @@ class TrainingMonitorCallback(TrainerCallback):
             plt.xlabel('Step')
             plt.ylabel('Perplexity')
             plt.legend()
+        
+        plt.tight_layout()
+        plt.savefig(self.output_dir / 'training_progress.png')
+        plt.close()
 
 # トレーナーの設定を更新
 trainer = CustomTrainer(
@@ -392,13 +430,13 @@ try:
     
     # チェックポイントの確認と処理
     if os.path.exists(checkpoint_dir):
-        print("\nChecking checkpoint status...")  # 追加
+        logging.info("\nChecking checkpoint status...")
         checkpoints = [f for f in os.listdir(checkpoint_dir) if f.startswith("checkpoint-")]
         if checkpoints:
             # 最新のチェックポイントを取得
             latest_checkpoint = max(checkpoints, key=lambda x: int(x.split("-")[1]))
             checkpoint_path = os.path.join(checkpoint_dir, latest_checkpoint)
-            print(f"Found latest checkpoint: {latest_checkpoint}")  # 追加
+            logging.info(f"Found latest checkpoint: {latest_checkpoint}")
             
             # チェックポイントの状態を確認
             state_path = os.path.join(checkpoint_path, "trainer_state.json")
@@ -406,34 +444,24 @@ try:
                 with open(state_path, 'r') as f:
                     state = json.load(f)
                 current_epoch = state.get('epoch', 0)
-                print(f"\nCurrent training status:")  # 追加
-                print(f"Current epoch: {current_epoch}")  # 追加
-                print(f"Target epochs: {training_args.num_train_epochs}")  # 追加
+                logging.info(f"Current epoch: {current_epoch}")
+                logging.info(f"Target epochs: {training_args.num_train_epochs}")
                 
                 # 完了している場合は安全に終了
                 if current_epoch >= training_args.num_train_epochs - 0.1:
-                    print("\n" + "="*50)
-                    print("IMPORTANT NOTICE:")
-                    print(f"Training has already been completed at epoch {current_epoch}!")  # 修正
-                    print(f"Target epochs was {training_args.num_train_epochs}")  # 追加
-                    print(f"Trained model is available at: {checkpoint_dir}")
-                    print("="*50 + "\n")
                     logging.info("Training has already been completed. Exiting to protect existing model.")
                     logging.info(f"Trained model is available at: {checkpoint_dir}")
                     exit(0)
+                else:
+                    resume_from_checkpoint = checkpoint_path
+                    logging.info(f"Resuming from checkpoint: {checkpoint_path}")
             else:
-                logging.warning("Invalid checkpoint state found. Please check manually.")
-                logging.warning(f"Checkpoint directory: {checkpoint_dir}")
-                user_input = input("Do you want to continue and overwrite? (yes/no): ")
-                if user_input.lower() != 'yes':
-                    logging.info("Aborting to protect existing data.")
-                    exit(0)
+                logging.warning("Invalid checkpoint state found. Proceeding with training from scratch.")
         else:
-            logging.warning("Checkpoint directory exists but no checkpoints found.")
-            user_input = input("Do you want to continue and overwrite the directory? (yes/no): ")
-            if user_input.lower() != 'yes':
-                logging.info("Aborting to protect existing data.")
-                exit(0)
+            logging.warning("Checkpoint directory exists but no checkpoints found. Starting fresh training.")
+    else:
+        logging.info("No checkpoint directory found. Starting fresh training.")
+        os.makedirs(checkpoint_dir, exist_ok=True)
 
     # 学習を開始（または再開）
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
