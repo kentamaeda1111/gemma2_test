@@ -180,7 +180,7 @@ def tokenize_function(examples):
     result = tokenizer(
         examples['text'],
         truncation=True,
-        max_length=MAX_TOKENIZE_LENGTH,      # グローバル設定を使用
+        max_length=MAX_TOKENIZE_LENGTH,
         padding='max_length',
         add_special_tokens=True,
         return_tensors=None,
@@ -308,7 +308,6 @@ tokenizer.add_special_tokens({
     ]
 })
 
-
 tokenized_dataset = tokenized_dataset.map(
     preprocess_function,
     batched=True,
@@ -381,7 +380,11 @@ data_collator = DataCollatorForLanguageModeling(
 def compute_metrics(eval_preds):
     logits, labels = eval_preds
     
-    # perplexityとlossの計算を追加
+    # NumPy配列をPyTorchテンソルに変換
+    logits = torch.from_numpy(logits)
+    labels = torch.from_numpy(labels)
+    
+    # perplexityとlossの計算
     shift_logits = logits[..., :-1, :].contiguous()
     shift_labels = labels[..., 1:].contiguous()
     loss_fct = torch.nn.CrossEntropyLoss()
@@ -390,7 +393,6 @@ def compute_metrics(eval_preds):
     
     # 既存のスタイル評価
     with torch.no_grad():
-        logits = torch.tensor(logits).cpu()
         predictions = torch.argmax(logits, dim=-1)
         decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
         

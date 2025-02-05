@@ -1,4 +1,3 @@
-# もともとは2goukiのやつ
 import torch
 from transformers import (
     AutoModelForCausalLM,
@@ -20,31 +19,14 @@ import warnings
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
-from src.utils.config import get_api_keys
 
 # グローバル設定
-DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model_40.json"  # 対話データのJSONファイルパス
-MAX_SEQUENCE_LENGTH = 256  # 1つの対話の最大トークン数
-MAX_TOKENIZE_LENGTH = 256  # トークナイズ時の最大トークン数
-
-# グローバル設定の前に追加
-try:
-    # APIキーを取得
-    api_keys = get_api_keys()
-    huggingface_token = api_keys['huggingface_api_key']
-    
-    # Hugging Face APIキーを設定
-    os.environ["HUGGINGFACE_TOKEN"] = huggingface_token
-    
-    logging.info("Successfully loaded Hugging Face API key")
-except Exception as e:
-    logging.error(f"Error loading API keys: {str(e)}")
-    raise
+DIALOGUE_JSON_PATH = "logs/dialogue/2gouki.json"  # 対話データのJSONファイルパス
+MAX_SEQUENCE_LENGTH = 512  # 1つの対話の最大トークン数
 
 # 設定のログ出力
 logging.info(f"Using dialogue file: {DIALOGUE_JSON_PATH}")
 logging.info(f"Max sequence length: {MAX_SEQUENCE_LENGTH}")
-logging.info(f"Max tokenize length: {MAX_TOKENIZE_LENGTH}")
 
 # 環境変数とwarningの設定
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -120,8 +102,7 @@ def prepare_dataset():
 model_name = "google/gemma-2-2b-jpn-it"
 tokenizer = AutoTokenizer.from_pretrained(
     model_name,
-    trust_remote_code=True,
-    token=huggingface_token  # APIトークンを追加
+    trust_remote_code=True
 )
 
 # BitsAndBytesConfigの設定をさらに最適化
@@ -139,8 +120,7 @@ model = AutoModelForCausalLM.from_pretrained(
     quantization_config=bnb_config,
     device_map="auto",
     torch_dtype=torch.bfloat16,
-    attn_implementation='eager',
-    token=huggingface_token  # APIトークンを追加
+    attn_implementation='eager'
 )
 
 # モデルをLoRA用に準備した後にキャッシュを無効化
@@ -180,7 +160,7 @@ def tokenize_function(examples):
     result = tokenizer(
         examples['text'],
         truncation=True,
-        max_length=MAX_TOKENIZE_LENGTH,      # グローバル設定を使用
+        max_length=256,      
         padding='max_length',
         add_special_tokens=True,
         return_tensors=None,
@@ -308,7 +288,6 @@ tokenizer.add_special_tokens({
     ]
 })
 
-
 tokenized_dataset = tokenized_dataset.map(
     preprocess_function,
     batched=True,
@@ -379,23 +358,17 @@ data_collator = DataCollatorForLanguageModeling(
 
 # 評価メトリクスの修正
 def compute_metrics(eval_preds):
-    logits, labels = eval_preds
+    logits, labels = eval_preds  # eval_predsから logits と labels を取得
     
-    # NumPy配列をPyTorchテンソルに変換
-    logits = torch.from_numpy(logits)
-    labels = torch.from_numpy(labels)
+    # 評価用データセットのサイズ制限を緩和
+    max_samples = 100
     
-    # perplexityとlossの計算を追加
-    shift_logits = logits[..., :-1, :].contiguous()
-    shift_labels = labels[..., 1:].contiguous()
-    loss_fct = torch.nn.CrossEntropyLoss()
-    loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
-    perplexity = torch.exp(loss)
-    
-    # 既存のスタイル評価
+    # デコード処理の改善
     with torch.no_grad():
-        # logitsはすでにテンソルに変換済み
+        logits = torch.tensor(logits).cpu()
         predictions = torch.argmax(logits, dim=-1)
+        
+        # バッチ全体をデコード
         decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
         
         # より詳細なログ出力を追加
@@ -523,8 +496,6 @@ def compute_metrics(eval_preds):
         combined_score = (style_score * 0.6 + flow_score * 0.4)  # flow_scoreの重みを増加
         
         return {
-            'eval_loss': loss.item(),
-            'eval_perplexity': perplexity.item(),
             'style_consistency': style_score,
             'dialogue_flow': flow_score,
             'combined_score': combined_score
@@ -565,8 +536,6 @@ class TrainingMonitorCallback(TrainerCallback):
             'dialogue_flow': [],
             'combined_score': [],
             'loss': [],
-            'eval_loss': [],
-            'eval_perplexity': [],
             'learning_rate': [],
             'epoch': []
         }
@@ -585,8 +554,6 @@ class TrainingMonitorCallback(TrainerCallback):
         self.metrics_history['step'].append(state.global_step)
         self.metrics_history['epoch'].append(state.epoch)
         self.metrics_history['loss'].append(logs.get('loss', None))
-        self.metrics_history['eval_loss'].append(logs.get('eval_loss', None))
-        self.metrics_history['eval_perplexity'].append(logs.get('eval_perplexity', None))
         self.metrics_history['learning_rate'].append(logs.get('learning_rate', None))
         self.metrics_history['style_consistency'].append(logs.get('eval_style_consistency', None))
         self.metrics_history['dialogue_flow'].append(logs.get('eval_dialogue_flow', None))
@@ -602,30 +569,26 @@ class TrainingMonitorCallback(TrainerCallback):
             
     def _plot_metrics(self):
         """学習メトリクスをプロットして保存"""
-        plt.figure(figsize=(15, 15))  # サイズを大きくして新しいプロットを追加
+        plt.figure(figsize=(15, 10))
         
         # Loss
-        plt.subplot(3, 2, 1)  # グリッドを3x2に変更
-        plt.plot(self.metrics_history['step'], self.metrics_history['loss'], label='Train Loss')
-        plt.plot(self.metrics_history['step'], self.metrics_history['eval_loss'], label='Eval Loss')  # 追加
-        plt.title('Loss')
+        plt.subplot(2, 2, 1)
+        plt.plot(self.metrics_history['step'], self.metrics_history['loss'], label='Loss')
+        plt.title('Training Loss')
         plt.xlabel('Step')
         plt.ylabel('Loss')
         plt.legend()
         
-        # Perplexity
-        plt.subplot(3, 2, 2)  # 追加
-        valid_steps = [s for s, v in zip(self.metrics_history['step'], self.metrics_history['eval_perplexity']) if v is not None]
-        valid_perplexity = [v for v in self.metrics_history['eval_perplexity'] if v is not None]
-        if valid_steps:
-            plt.plot(valid_steps, valid_perplexity, label='Perplexity')
-            plt.title('Evaluation Perplexity')
-            plt.xlabel('Step')
-            plt.ylabel('Perplexity')
-            plt.legend()
+        # Learning Rate
+        plt.subplot(2, 2, 2)
+        plt.plot(self.metrics_history['step'], self.metrics_history['learning_rate'], label='LR')
+        plt.title('Learning Rate')
+        plt.xlabel('Step')
+        plt.ylabel('Learning Rate')
+        plt.legend()
         
         # Style and Flow Scores
-        plt.subplot(3, 2, 3)
+        plt.subplot(2, 2, 3)
         valid_steps = [s for s, v in zip(self.metrics_history['step'], self.metrics_history['style_consistency']) if v is not None]
         valid_style = [v for v in self.metrics_history['style_consistency'] if v is not None]
         valid_flow = [v for v in self.metrics_history['dialogue_flow'] if v is not None]
@@ -639,7 +602,7 @@ class TrainingMonitorCallback(TrainerCallback):
             plt.legend()
         
         # Combined Score
-        plt.subplot(3, 2, 4)
+        plt.subplot(2, 2, 4)
         valid_combined = [v for v in self.metrics_history['combined_score'] if v is not None]
         if valid_steps:
             plt.plot(valid_steps, valid_combined, label='Combined Score')
