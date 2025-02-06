@@ -36,8 +36,8 @@ def check_and_install_requirements():
 check_and_install_requirements()
 
 # Global Settings
-MODEL_VERSION = "2gouki"  
-CHECKPOINT = "checkpoint-990"  
+MODEL_VERSION = "model3"  
+CHECKPOINT = "checkpoint-1980"  
 MAX_HISTORY = 5  
 BASE_MODEL = "google/gemma-2-2b-jpn-it"
 
