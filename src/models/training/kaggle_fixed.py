@@ -83,7 +83,7 @@ logging.info(f"Output directory: {BASE_OUTPUT_DIR}")
 model_name = "google/gemma-2-2b-jpn-it"
 tokenizer = AutoTokenizer.from_pretrained(
     model_name,
-    trust_remote_code=True
+    trust_remote_code=True,
     token=os.environ["HUGGINGFACE_TOKEN"],  
 )
 

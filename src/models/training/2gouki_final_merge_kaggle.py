@@ -269,19 +269,6 @@ print(dataset.features)
 dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
 
 
-# 変更前
-# Optimize dataset processing
-# tokenized_dataset = dataset.map(
-#     tokenize_function,
-#     batched=True,
-#     batch_size=32,  
-#     num_proc=4,     
-#     load_from_cache_file=True,
-#     desc="Tokenizing datasets",
-#     remove_columns=dataset.column_names,
-# )
-
-# KAGGLE用に変更後
 # Optimize dataset processing
 tokenized_dataset = dataset.map(
     tokenize_function,
@@ -314,16 +301,6 @@ bnb_config = BitsAndBytesConfig(
 )
 
 # 3.2 Basic Model Initialization
-# 変更前
-# model = AutoModelForCausalLM.from_pretrained(
-#     model_name,
-#     quantization_config=bnb_config,
-#     device_map="auto",
-#     torch_dtype=torch.bfloat16,
-#     attn_implementation='eager',
-#     token=huggingface_token  # API token added
-# )
-# KAGGLE用に変更後
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
     quantization_config=bnb_config,
