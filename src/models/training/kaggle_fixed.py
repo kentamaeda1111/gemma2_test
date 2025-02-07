@@ -1,6 +1,7 @@
 # 1. Environment Setup and Imports
 # 1.1 Import Dependencies
 import torch
+import gc  # gc モジュールを追加
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
