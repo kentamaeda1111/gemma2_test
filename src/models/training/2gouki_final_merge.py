@@ -170,50 +170,75 @@ def tokenize_function(examples):
     return result
 
 def preprocess_function(examples):
-    # Focus on Socratic tone and inquiry patterns
-    socratic_patterns = [
-        # Question patterns
-        "かね", "だろうか", "のかね", "ではないかね",
-        # Question introduction
-        "では", "について",
-        # Second person (characteristic of mature tone)
-        "君は", "君が", "君の"
+    # パターン定義
+    end_patterns = [
+        "だろうか", "ではないか", "のではないか", "かね",
+        "なるほど", "興味深い", "考えてみよう"
     ]
     
-    # Get tokenized text
+    # 接続詞パターン
+    conjunctions = [
+        "しかし", "だから", "それでは", "すなわち",
+        "たとえば", "つまり", "ならば", "もし"
+    ]
+    
+    # トークン化されたテキストを取得
     texts = tokenizer.batch_decode(examples['input_ids'])
     new_attention_masks = []
     
     for text, mask in zip(texts, examples['attention_mask']):
         if not isinstance(mask, list):
             mask = mask.tolist()
-
-        new_mask = mask.copy() 
         
-        # Split text
+        # 新しいattention maskを作成（ベースは0.8）
+        new_mask = [0.8] * len(mask)
+        
+        # 文を分割
         sentences = text.split('。')
         current_pos = 0
         
         for sentence in sentences:
             if not sentence.strip():
                 continue
-            
-            # Detect and highlight Socratic patterns
-            for pattern in socratic_patterns:
+                
+            # 文末パターンの検出と強調
+            for pattern in end_patterns:
                 if pattern in sentence:
-                    # Identify pattern position
+                    # パターンの位置を特定
                     pattern_tokens = tokenizer.encode(pattern, add_special_tokens=False)
                     pattern_len = len(pattern_tokens)
                     
-                    # Highlight tokens containing the pattern and its surroundings
+                    # パターンを含むトークンとその前後を強調
                     pattern_start = current_pos + len(tokenizer.encode(sentence, add_special_tokens=False)) - pattern_len
                     for i in range(max(0, pattern_start - 2), min(len(mask), pattern_start + pattern_len + 2)):
-                        new_mask[i] = 1.0  # Max attention to pattern part
+                        new_mask[i] = 1.0  # パターン部分は最大の注意を向ける
             
-            # Update position for each sentence segment
+            # 接続詞の検出と強調
+            for conj in conjunctions:
+                if conj in sentence:
+                    # 接続詞の位置を特定
+                    conj_tokens = tokenizer.encode(conj, add_special_tokens=False)
+                    conj_pos = len(tokenizer.encode(sentence.split(conj)[0], add_special_tokens=False))
+                    
+                    # 接続詞の前後を強調（やや弱め）
+                    for i in range(max(0, current_pos + conj_pos - 1), 
+                                 min(len(mask), current_pos + conj_pos + len(conj_tokens) + 1)):
+                        new_mask[i] = 0.9
+            
+            # 句読点の強調
+            for i, char in enumerate(sentence):
+                if char in '、。！？':
+                    # 句読点の位置を特定
+                    punct_pos = len(tokenizer.encode(sentence[:i], add_special_tokens=False))
+                    # 句読点前後のトークンを強調
+                    for j in range(max(0, current_pos + punct_pos - 1),
+                                 min(len(mask), current_pos + punct_pos + 2)):
+                        new_mask[j] = 0.95
+            
+            # 文の区切りごとの位置を更新
             current_pos += len(tokenizer.encode(sentence + '。', add_special_tokens=False))
         
-        # Special token masks are set to 1.0
+        # 特殊トークンのマスクは1.0に設定
         if tokenizer.bos_token_id is not None:
             new_mask[0] = 1.0  # BOS token
         if tokenizer.eos_token_id is not None:
@@ -223,6 +248,12 @@ def preprocess_function(examples):
 
     examples['attention_mask'] = new_attention_masks
     return examples
+
+tokenizer.add_special_tokens({
+    'additional_special_tokens': [
+        '。', '、', '！', '？',  
+    ]
+})
 
 
 # 2.5 Data Set Preparation
