@@ -25,7 +25,7 @@ from src.utils.config import get_api_keys
 
 # 1.2 Global Constants and Environment Variables
 # Define global constants
-DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  # Path to dialogue JSON file
+DIALOGUE_JSON_PATH = "data/dialogue/processed/final.json"  # Path to dialogue JSON file
 MAX_SEQUENCE_LENGTH = 256  # Maximum number of tokens per dialogue
 MAX_TOKENIZE_LENGTH = 256  # Maximum token length during tokenization
 
@@ -170,19 +170,19 @@ def tokenize_function(examples):
     return result
 
 def preprocess_function(examples):
-    # パターン定義
+    # Pattern definitions
     end_patterns = [
         "だろうか", "ではないか", "のではないか", "かね",
         "なるほど", "興味深い", "考えてみよう"
     ]
     
-    # 接続詞パターン
+    # Conjunction patterns
     conjunctions = [
         "しかし", "だから", "それでは", "すなわち",
         "たとえば", "つまり", "ならば", "もし"
     ]
     
-    # トークン化されたテキストを取得
+    # Get tokenized texts
     texts = tokenizer.batch_decode(examples['input_ids'])
     new_attention_masks = []
     
@@ -190,10 +190,10 @@ def preprocess_function(examples):
         if not isinstance(mask, list):
             mask = mask.tolist()
         
-        # 新しいattention maskを作成（ベースは0.8）
+        # Create new attention mask (base value 0.8)
         new_mask = [0.8] * len(mask)
         
-        # 文を分割
+        # Split into sentences
         sentences = text.split('。')
         current_pos = 0
         
@@ -201,44 +201,44 @@ def preprocess_function(examples):
             if not sentence.strip():
                 continue
                 
-            # 文末パターンの検出と強調
+            # Detect and emphasize end patterns
             for pattern in end_patterns:
                 if pattern in sentence:
-                    # パターンの位置を特定
+                    # Locate pattern position
                     pattern_tokens = tokenizer.encode(pattern, add_special_tokens=False)
                     pattern_len = len(pattern_tokens)
                     
-                    # パターンを含むトークンとその前後を強調
+                    # Emphasize tokens containing pattern and surrounding tokens
                     pattern_start = current_pos + len(tokenizer.encode(sentence, add_special_tokens=False)) - pattern_len
                     for i in range(max(0, pattern_start - 2), min(len(mask), pattern_start + pattern_len + 2)):
-                        new_mask[i] = 1.0  # パターン部分は最大の注意を向ける
+                        new_mask[i] = 1.0  # Maximum attention for pattern parts
             
-            # 接続詞の検出と強調
+            # Detect and emphasize conjunctions
             for conj in conjunctions:
                 if conj in sentence:
-                    # 接続詞の位置を特定
+                    # Locate conjunction position
                     conj_tokens = tokenizer.encode(conj, add_special_tokens=False)
                     conj_pos = len(tokenizer.encode(sentence.split(conj)[0], add_special_tokens=False))
                     
-                    # 接続詞の前後を強調（やや弱め）
+                    # Emphasize tokens before and after conjunction (slightly lower)
                     for i in range(max(0, current_pos + conj_pos - 1), 
                                  min(len(mask), current_pos + conj_pos + len(conj_tokens) + 1)):
                         new_mask[i] = 0.9
             
-            # 句読点の強調
+            # Emphasize punctuation marks
             for i, char in enumerate(sentence):
                 if char in '、。！？':
-                    # 句読点の位置を特定
+                    # Locate punctuation position
                     punct_pos = len(tokenizer.encode(sentence[:i], add_special_tokens=False))
-                    # 句読点前後のトークンを強調
+                    # Emphasize tokens around punctuation
                     for j in range(max(0, current_pos + punct_pos - 1),
                                  min(len(mask), current_pos + punct_pos + 2)):
                         new_mask[j] = 0.95
             
-            # 文の区切りごとの位置を更新
+            # Update position for next sentence
             current_pos += len(tokenizer.encode(sentence + '。', add_special_tokens=False))
         
-        # 特殊トークンのマスクは1.0に設定
+        # Set special token masks to 1.0
         if tokenizer.bos_token_id is not None:
             new_mask[0] = 1.0  # BOS token
         if tokenizer.eos_token_id is not None:
