@@ -25,7 +25,7 @@ from src.utils.config import get_api_keys
 
 # 1.2 Global Constants and Environment Variables
 # Define global constants
-DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  # Path to dialogue JSON file
+DIALOGUE_JSON_PATH = "data/dialogue/processed/final.json"  # Path to dialogue JSON file
 MAX_SEQUENCE_LENGTH = 256  # Maximum number of tokens per dialogue
 MAX_TOKENIZE_LENGTH = 256  # Maximum token length during tokenization
 
