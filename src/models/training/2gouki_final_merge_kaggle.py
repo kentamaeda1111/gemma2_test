@@ -67,7 +67,6 @@ logging.info(f"Using dialogue file: {DIALOGUE_JSON_PATH}")
 logging.info(f"Max sequence length: {MAX_SEQUENCE_LENGTH}")
 logging.info(f"Max tokenize length: {MAX_TOKENIZE_LENGTH}")
 
-
 # 2. Data Preprocessing Pipeline
 # 2.1 Tokenizer Setup and Initialization
 model_name = "google/gemma-2-2b-jpn-it"
@@ -90,8 +89,6 @@ def validate_message_format(message):
         return False
     return True
 
-
-
 def validate_dataset(dataset):
     """Validate dataset structure"""
     first_item = dataset[0]
@@ -100,7 +97,6 @@ def validate_dataset(dataset):
     print(f"input_ids type: {type(first_item['input_ids'])}")
     print(f"input_ids length: {len(first_item['input_ids'])}")
     return dataset
-
 
 # 2.3 Data Set Preparation Function
 def prepare_dataset():
@@ -257,6 +253,7 @@ tokenizer.add_special_tokens({
 })
 
 
+
 # 2.5 Data Set Preparation
 # Prepare base dataset
 dataset = prepare_dataset()
@@ -305,7 +302,6 @@ tokenized_dataset = tokenized_dataset.map(
 
 # Final dataset validation
 tokenized_dataset = validate_dataset(tokenized_dataset)
-
 
 # 3. Model Architecture
 # 3.1 Quantization Setup (BitsAndBytes)
@@ -363,8 +359,6 @@ data_collator = DataCollatorForLanguageModeling(
     mlm=False,
     pad_to_multiple_of=8
 )
-
-
 
 # 4. Training Framework
 # 4.1 System Resource Monitoring
@@ -752,4 +746,3 @@ except Exception as e:
     logging.error(f"An error occurred: {str(e)}")
     # Checkpoint is also kept even on error
     raise 
-

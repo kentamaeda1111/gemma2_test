@@ -22,6 +22,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 from src.utils.config import get_api_keys
+import psutil
+import gc
 
 # 1.2 Global Constants and Environment Variables
 # Define global constants
@@ -34,6 +36,9 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 warnings.filterwarnings("ignore", category=FutureWarning)
 os.environ["WANDB_DISABLED"] = "true"
 
+# API keys
+api_keys = get_api_keys()
+os.environ["HUGGINGFACE_TOKEN"] = api_keys['huggingface_api_key']
 
 # Setup output directory paths
 BASE_OUTPUT_DIR = "models/kaggle_model_ver2"  
@@ -44,26 +49,7 @@ LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
 for dir_path in [BASE_OUTPUT_DIR, MODEL_OUTPUT_DIR, LOG_OUTPUT_DIR]:
     os.makedirs(dir_path, exist_ok=True)
 
-# API key
-api_keys = get_api_keys()
-os.environ["HUGGINGFACE_TOKEN"] = api_keys['huggingface_api_key']
-
-
-# 1.3 Logging Setup
-# Create log directory
-log_dir = f"{BASE_OUTPUT_DIR}/logs"
-os.makedirs(log_dir, exist_ok=True)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(os.path.join(log_dir, f'training_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')),
-        logging.StreamHandler()
-    ]
-)
-
-
+# Setup logging configuration immediately after directory creation
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -73,21 +59,23 @@ logging.basicConfig(
     ]
 )
 
-# Output settings
+# Initial logging messages to verify logging is working
+logging.info("Training script started")
 logging.info(f"Using dialogue file: {DIALOGUE_JSON_PATH}")
 logging.info(f"Max sequence length: {MAX_SEQUENCE_LENGTH}")
 logging.info(f"Output directory: {BASE_OUTPUT_DIR}")
 
-# 2. Data Preprocessing Pipeline
-# 2.1 Tokenizer Setup and Initialization
+# Model and tokenizer preparation
 model_name = "google/gemma-2-2b-jpn-it"
 tokenizer = AutoTokenizer.from_pretrained(
     model_name,
-    trust_remote_code=True
     token=os.environ["HUGGINGFACE_TOKEN"],  
+    trust_remote_code=True
 )
 
-# 2.2 Data Validation Functions
+
+
+
 def validate_message_format(message):
     """Validate message format"""
     if not isinstance(message, dict):
@@ -100,16 +88,6 @@ def validate_message_format(message):
         return False
     return True
 
-def validate_dataset(dataset):
-    """Validate dataset structure"""
-    first_item = dataset[0]
-    print("Validated first item structure:")
-    print(f"Keys: {first_item.keys()}")
-    print(f"input_ids type: {type(first_item['input_ids'])}")
-    print(f"input_ids length: {len(first_item['input_ids'])}")
-    return dataset
-
-# 2.3 Data Set Preparation Function
 def prepare_dataset():
     conversations = []
     
@@ -125,7 +103,7 @@ def prepare_dataset():
                 logging.warning(f"Skipped dialogue due to invalid message format")
                 continue
                 
-            # Construct conversation in user->model order
+            # Build conversation checking user->model sequence
             current_conversation = []
             valid_sequence = True
             
@@ -164,18 +142,126 @@ def prepare_dataset():
     logging.info(f"Processed {len(conversations)} valid conversations")
     return Dataset.from_list(conversations)
 
-# 2.4 Data Processing Pipeline Function
+
+# Optimize BitsAndBytesConfig settings
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_use_double_quant=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.float16,
+    bnb_4bit_quant_storage=torch.uint8,
+)
+
+# Load model with modifications
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    token=os.environ["HUGGINGFACE_TOKEN"],  
+    quantization_config=bnb_config,
+    device_map="balanced",
+    torch_dtype=torch.float16,
+    attn_implementation='sdpa',
+    max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}
+)
+
+# Prepare model for LoRA and disable cache
+model = prepare_model_for_kbit_training(model)
+model.config.use_cache = False
+
+# Adjust LoRA configuration
+lora_config = LoraConfig(
+    r=16,
+    lora_alpha=32,
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+    lora_dropout=0.1,
+    bias="none",
+    task_type="CAUSAL_LM",
+)
+
+# Create LoRA model
+model = get_peft_model(model, lora_config)
+
+# Memory efficiency settings
+model.config.use_cache = False
+
+# Dataset preparation
+dataset = prepare_dataset()
+
+# Check dataset structure
+print("Dataset structure:")
+print(dataset[0])  # Display first element
+print("\nDataset features:")
+print(dataset.features)
+
+# Optimize dataset batch processing
+dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
+
+# Optimize tokenize function
 def tokenize_function(examples):
     result = tokenizer(
         examples['text'],
         truncation=True,
-        max_length=TOKENIZE_MAX_LENGTH,       # Use global setting
+        max_length=TOKENIZE_MAX_LENGTH,      # 256 から TOKENIZE_MAX_LENGTH に変更
         padding='max_length',
         add_special_tokens=True,
         return_tensors=None,
     )
     return result
 
+# Optimize dataset processing
+tokenized_dataset = dataset.map(
+    tokenize_function,
+    batched=True,
+    batch_size=16,
+    num_proc=2,
+    load_from_cache_file=True,
+    desc="Tokenizing datasets",
+    remove_columns=dataset.column_names,
+)
+
+# Add memory usage monitoring log
+def log_memory_usage():
+    import psutil
+    import torch
+    
+    # CPU memory
+    process = psutil.Process()
+    cpu_memory = process.memory_info().rss / 1024 / 1024  # MB
+    
+    # GPU memory
+    gpu_memory = []
+    if torch.cuda.is_available():
+        for i in range(torch.cuda.device_count()):
+            gpu_memory.append({
+                'device': i,
+                'allocated': torch.cuda.memory_allocated(i) / 1024 / 1024,  # MB
+                'reserved': torch.cuda.memory_reserved(i) / 1024 / 1024,    # MB
+                'max_allocated': torch.cuda.max_memory_allocated(i) / 1024 / 1024  # MB
+            })
+    
+    logging.info(f"CPU Memory usage: {cpu_memory:.2f} MB")
+    for gpu in gpu_memory:
+        logging.info(f"GPU {gpu['device']} Memory:")
+        logging.info(f"  - Allocated: {gpu['allocated']:.2f} MB")
+        logging.info(f"  - Reserved: {gpu['reserved']:.2f} MB")
+        logging.info(f"  - Max Allocated: {gpu['max_allocated']:.2f} MB")
+
+# Log dataset size
+logging.info(f"Total dataset size: {len(dataset)}")
+log_memory_usage()
+
+# Add dataset validation
+def validate_dataset(dataset):
+    # Check first element
+    first_item = dataset[0]
+    print("Validated first item structure:")
+    print(f"Keys: {first_item.keys()}")
+    print(f"input_ids type: {type(first_item['input_ids'])}")
+    print(f"input_ids length: {len(first_item['input_ids'])}")
+    return dataset
+
+tokenized_dataset = validate_dataset(tokenized_dataset)
+
+# Add dataset preprocessing
 def preprocess_function(examples):
     # Pattern definitions
     end_patterns = [
@@ -264,141 +350,75 @@ tokenizer.add_special_tokens({
 })
 
 
-
-# 2.5 Data Set Preparation
-# Prepare base dataset
-dataset = prepare_dataset()
-logging.info(f"Total dataset size: {len(dataset)}")
-
-# Validate dataset structure
-print("Dataset structure:")
-print(dataset[0])  # Display first element
-print("\nDataset features:")
-print(dataset.features)
-
-# Optimize dataset batch processing
-dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
-
-
-# Optimize dataset processing
-tokenized_dataset = dataset.map(
-    tokenize_function,
-    batched=True,
-    batch_size=16,
-    num_proc=2,
-    load_from_cache_file=True,
-    desc="Tokenizing datasets",
-    remove_columns=dataset.column_names,
-)
-
-# Apply preprocessing
 tokenized_dataset = tokenized_dataset.map(
     preprocess_function,
     batched=True,
     desc="Applying attention masking"
 )
 
-# Final dataset validation
-tokenized_dataset = validate_dataset(tokenized_dataset)
+# Create log directory
+log_dir = f"{BASE_OUTPUT_DIR}/logs"
+os.makedirs(log_dir, exist_ok=True)
 
-# 3. Model Architecture
-# 3.1 Quantization Setup (BitsAndBytes)
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_use_double_quant=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.float16,
-    bnb_4bit_quant_storage=torch.uint8,
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(os.path.join(log_dir, f'training_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')),
+        logging.StreamHandler()
+    ]
 )
 
-# 3.2 Basic Model Initialization
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    quantization_config=bnb_config,
-    device_map="balanced",
-    torch_dtype=torch.float16,
-    attn_implementation='sdpa',
-    token=os.environ["HUGGINGFACE_TOKEN"],  
-    max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}
+# Update training arguments
+training_args = TrainingArguments(
+    output_dir=MODEL_OUTPUT_DIR,  
+    num_train_epochs=30,
+    learning_rate=8e-5,
+    weight_decay=0.06,
+    warmup_ratio=0.25,
+    lr_scheduler_type="cosine_with_restarts",
+    evaluation_strategy="steps",
+    eval_steps=20,
+    save_strategy="steps",
+    save_steps=20,
+    gradient_accumulation_steps=8,
+    max_steps=-1,
+    disable_tqdm=False,
+    logging_dir=LOG_OUTPUT_DIR,   
+    logging_strategy="steps",
+    logging_steps=50,
+    no_cuda=False,
+    dataloader_num_workers=1,
+    report_to=[],
+    run_name=None,
+    per_device_train_batch_size=2,
+    per_device_eval_batch_size=1,
+    gradient_checkpointing=True,
+    max_grad_norm=0.5,
+    dataloader_pin_memory=True,
+    save_total_limit=2,
+    fp16=True,
+    optim="adamw_torch_fused",
+    eval_accumulation_steps=4,
+    load_best_model_at_end=False,
 )
 
-# 3.3 LoRA Setup and Application
-# LoRA parameter setup
-lora_config = LoraConfig(
-    r=16,
-    lora_alpha=32,
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
-    lora_dropout=0.1,
-    bias="none",
-    task_type="CAUSAL_LM",
-)
 
-# Create and initialize LoRA model
-model = prepare_model_for_kbit_training(model)
-model = get_peft_model(model, lora_config)
-
-# 3.4 Model Optimization Setup
-# Optimize cache setup
-model.config.use_cache = False
-
-# Data collator setup
+# Modify data collator
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
     mlm=False,
     pad_to_multiple_of=8
 )
 
-# 4. Training Framework
-# 4.1 System Resource Monitoring
-def log_memory_usage():
-    """Log memory usage"""
-    import psutil
-    import torch
-    
-    # CPU memory
-    process = psutil.Process()
-    cpu_memory = process.memory_info().rss / 1024 / 1024  # MB
-    
-    # GPU memory
-    gpu_memory = []
-    if torch.cuda.is_available():
-        for i in range(torch.cuda.device_count()):
-            gpu_memory.append({
-                'device': i,
-                'allocated': torch.cuda.memory_allocated(i) / 1024 / 1024,  # MB
-                'reserved': torch.cuda.memory_reserved(i) / 1024 / 1024,    # MB
-                'max_allocated': torch.cuda.max_memory_allocated(i) / 1024 / 1024  # MB
-            })
-    
-    logging.info(f"CPU Memory usage: {cpu_memory:.2f} MB")
-    for gpu in gpu_memory:
-        logging.info(f"GPU {gpu['device']} Memory:")
-        logging.info(f"  - Allocated: {gpu['allocated']:.2f} MB")
-        logging.info(f"  - Reserved: {gpu['reserved']:.2f} MB")
-        logging.info(f"  - Max Allocated: {gpu['max_allocated']:.2f} MB")
-
-
-
-
-
-
-
-
-
-def clear_memory():
-    """Memory release function during training"""
-    import gc
-    gc.collect()
-    torch.cuda.empty_cache()
-
-# 4.2 Metrics Calculation System
+# Update evaluation metrics
 def compute_metrics(eval_preds):
     return None
 
-
-# 4.3 Training Callbacks
+# Extend custom callbacks
 class TrainingMonitorCallback(TrainerCallback):
     def __init__(self):
+        import psutil
         self.train_start_time = None
         self.metrics_history = {
             'step': [],
@@ -559,13 +579,14 @@ class TrainingMonitorCallback(TrainerCallback):
             }
         }
         
+        # サマリーをJSONファイルとして保存
         with open(self.output_dir / 'training_summary.json', 'w', encoding='utf-8') as f:
             json.dump(summary, f, indent=2, ensure_ascii=False)
-
+            
         logging.info("Training Complete!")
         logging.info(f"Training duration: {summary['training_duration']}")
         
-        # None check added
+        # Noneチェックを追加
         if summary['loss_summary']['final_moving_avg'] is not None:
             logging.info(f"Final moving average loss: {summary['loss_summary']['final_moving_avg']:.4f}")
         if summary['loss_summary']['best_loss'] is not None:
@@ -601,9 +622,23 @@ class TrainingMonitorCallback(TrainerCallback):
     def _get_total_ram(self):
         return psutil.virtual_memory().total / (1024 * 1024 * 1024)  # GB
 
+# Split dataset into training and evaluation sets
+dataset_size = len(tokenized_dataset)
+indices = np.random.permutation(dataset_size)
+split_idx = int(dataset_size * 0.8)
 
+train_dataset = tokenized_dataset.select(indices[:split_idx])
+# Limit evaluation dataset size
+eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])  # Maximum 50 samples
 
-# 4.4 Custom Trainer Implementation
+logging.info(f"Training dataset size: {len(train_dataset)}")
+logging.info(f"Evaluation dataset size: {len(eval_dataset)}")
+
+# Add memory cleanup
+def clear_memory():
+    gc.collect()
+    torch.cuda.empty_cache()
+    
 class CustomTrainer(Trainer):
     def training_step(self, *args, **kwargs):
         loss = super().training_step(*args, **kwargs)
@@ -613,6 +648,8 @@ class CustomTrainer(Trainer):
             torch.cuda.empty_cache()
         return loss
 
+# Create custom Trainer class for evaluation
+class CustomTrainer(Trainer):
     def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
         eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
         if eval_dataset is not None:
@@ -620,57 +657,7 @@ class CustomTrainer(Trainer):
             eval_dataset = eval_dataset.select(range(min(100, len(eval_dataset))))
         return super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
 
-# 4.5 Training Setup
-training_args = TrainingArguments(
-    output_dir=MODEL_OUTPUT_DIR,  
-    num_train_epochs=30,
-    learning_rate=8e-5,
-    weight_decay=0.06,
-    warmup_ratio=0.25,
-    lr_scheduler_type="cosine_with_restarts",
-    evaluation_strategy="steps",
-    eval_steps=20,
-    save_strategy="steps",
-    save_steps=20,
-    gradient_accumulation_steps=8,
-    max_steps=-1,
-    disable_tqdm=False,
-    logging_dir=LOG_OUTPUT_DIR,   
-    logging_strategy="steps",
-    logging_steps=50,
-    no_cuda=False,
-    dataloader_num_workers=1,
-    report_to=[],
-    run_name=None,
-    per_device_train_batch_size=2,
-    per_device_eval_batch_size=1,
-    gradient_checkpointing=True,
-    max_grad_norm=0.5,
-    dataloader_pin_memory=True,
-    save_total_limit=2,
-    fp16=True,
-    optim="adamw_torch_fused",
-    eval_accumulation_steps=4,
-    load_best_model_at_end=False,
-)
-
-# 5. Execution and Model Management
-# 5.1 Data Set Split and Validation
-# Data set split
-dataset_size = len(tokenized_dataset)
-indices = np.random.permutation(dataset_size)
-split_idx = int(dataset_size * 0.8)
-
-# Create training and test datasets
-train_dataset = tokenized_dataset.select(indices[:split_idx])
-eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])  # Maximum 50 samples
-
-# Record dataset size
-logging.info(f"Training dataset size: {len(train_dataset)}")
-logging.info(f"Evaluation dataset size: {len(eval_dataset)}")
-
-# 5.2 Training Execution Control
-# Trainer initialization
+# Update trainer settings
 trainer = CustomTrainer(
     model=model,
     args=training_args,
@@ -680,10 +667,7 @@ trainer = CustomTrainer(
     callbacks=[TrainingMonitorCallback()],
 )
 
-# Check memory state
-log_memory_usage()
-
-# Training execution
+# Start training
 logging.info("Starting training...")
 try:
     checkpoint_dir = MODEL_OUTPUT_DIR  
@@ -692,7 +676,7 @@ try:
     # Check if running in Kaggle environment
     is_kaggle = os.path.exists('/kaggle/working')
     
-    # Checkpoint status and processing modification
+    # Checkpoint status and processing
     if os.path.exists(checkpoint_dir):
         print("\nChecking checkpoint status...")  
         checkpoints = [f for f in os.listdir(checkpoint_dir) if f.startswith("checkpoint-")]
@@ -739,8 +723,7 @@ try:
                     logging.info("Aborting to protect existing data.")
                     exit(0)
 
-
-
+    # Start training (or resume)
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
     logging.info("Training completed successfully!")
     
@@ -756,7 +739,7 @@ try:
             return [convert_to_serializable(x) for x in obj]
         return obj
 
-    # Convert all settings
+    # Convert each setting
     training_args_dict = convert_to_serializable(training_args.to_dict())
     lora_config_dict = convert_to_serializable(lora_config.to_dict())
 
@@ -784,5 +767,5 @@ try:
 
 except Exception as e:
     logging.error(f"An error occurred: {str(e)}")
-    # Checkpoint is also kept even on error
+    # Checkpoints are preserved even if an error occurs
     raise 
