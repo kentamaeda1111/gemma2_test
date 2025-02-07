@@ -169,7 +169,7 @@ def tokenize_function(examples):
     result = tokenizer(
         examples['text'],
         truncation=True,
-        max_length=TOKENIZE_MAX_LENGTH,       # Use global setting
+        max_length=MAX_TOKENIZE_LENGTH,    # TOKENIZE_MAX_LENGTH から MAX_TOKENIZE_LENGTH に変更
         padding='max_length',
         add_special_tokens=True,
         return_tensors=None,
