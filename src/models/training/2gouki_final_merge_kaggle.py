@@ -1,3 +1,4 @@
+#動くことは確認
 # 1. Environment Setup and Imports
 # 1.1 Import Dependencies
 import torch
@@ -263,7 +264,6 @@ tokenizer.add_special_tokens({
 })
 
 
-
 # 2.5 Data Set Preparation
 # Prepare base dataset
 dataset = prepare_dataset()
@@ -277,7 +277,6 @@ print(dataset.features)
 
 # Optimize dataset batch processing
 dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
-
 
 # Optimize dataset processing
 tokenized_dataset = dataset.map(

@@ -166,21 +166,21 @@ While we could have used tuners like XTuner, Axolotl, or LLaMA Factory to implem
 
 
 # Final Training Data
-結果的には３つのデータを以下のように用意しました。
+結果的には2つのデータを以下のように用意しました。
 違いはpromptの３つのパターンです。
 
-| Item | model1 | model2 | model3 |
-|------|--------|--------|--------|
-| Number of dialogues extracted from 12 turns | 11 | 11 | 11 |
-| Number of utterances per dialogue | 2 | 2 | 2 |
-| Total number of dialogues | 2,662 | 2,662 | 2,662 |
-| Total tokens | 685,875 | 707,115 | 752,369 |
-| Average tokens per dialogue | 257.65 | 265.63 | 282.63 |
-| MAX tokens per dialogue | 527 | 535 | 552 |
-| MIN tokens per dialogue | 19 | 27 | 44 |
-| Average user tokens* | 144.42 | 152.39 | 169.39 | 
-| Average model tokens* | 113.24 | 113.24 | 113.24 | 
-| System prompt | None | "Socrates." | "You are Socrates, the ancient Greek philosopher." | 
+| Item | model1 | model2 |
+|------|--------|--------|
+| Number of dialogues extracted from 12 turns | 11 | 11 |
+| Number of utterances per dialogue | 2 | 2 |
+| Total number of dialogues | 2,662 | 2,662 |
+| Total tokens | 685,875 | 752,369 |
+| Average tokens per dialogue | 257.65 | 282.63 |
+| MAX tokens per dialogue | 527 | 552 |
+| MIN tokens per dialogue | 19 | 44 |
+| Average user tokens* | 144.42 | 169.39 | 
+| Average model tokens* | 113.24 | 113.24 | 
+| System prompt | None | "You are Socrates, the ancient Greek philosopher." | 
 
 
 ■train.pyの作成方針
