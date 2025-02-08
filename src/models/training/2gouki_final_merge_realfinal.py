@@ -265,7 +265,6 @@ tokenizer.add_special_tokens({
     ]
 })
 
-
 # 2.5 Data Set Preparation
 # Prepare base dataset
 dataset = prepare_dataset()
@@ -685,7 +684,7 @@ log_memory_usage()
 # Training execution
 logging.info("Starting training...")
 try:
-    checkpoint_dir = MODEL_OUTPUT_DIR  # "./model" から変更
+    checkpoint_dir = "./model"
     resume_from_checkpoint = None
     
     # Checkpoint status and processing modification
