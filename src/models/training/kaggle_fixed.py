@@ -466,7 +466,7 @@ class TrainingMonitorCallback(TrainerCallback):
             self.metrics_history['cpu_ram_usage'].append(cpu_ram)
             self.metrics_history['gpu_vram_usage'].append(vram_used)
             self.metrics_history['gpu_utilization'].append(gpu_util)
-    
+
     def on_train_begin(self, args, state, control, **kwargs):
         self.train_start_time = datetime.now()
         logging.info("Training started at: %s", self.train_start_time)
