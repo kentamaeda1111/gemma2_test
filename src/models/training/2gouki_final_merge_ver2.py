@@ -356,91 +356,12 @@ def clear_memory():
     torch.cuda.empty_cache()
 
 # 4.2 Metrics Calculation System
-def compute_metrics(eval_preds):
-    logits, labels = eval_preds  # Get logits and labels from eval_preds
-    
-    # Improve decoding process
-    with torch.no_grad():
-        logits = torch.tensor(logits).cpu()
-        predictions = torch.argmax(logits, dim=-1)
-        
-        # Decode entire batch
-        decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
-        
-        # Add more detailed log output
-        logging.info(f"Sample prediction: {decoded_preds[0][:100]}...")
-        
-        del logits, predictions  # Memory release
-        torch.cuda.empty_cache()
-
-        socratic_patterns = {
-            'question_endings': ['かね', 'だろうか', 'ではないかね'],
-            'address_patterns': ['君は', '君が', '君の'],
-            'inquiry_leads': ['では', 'について']
-        }
-
-        def calculate_socratic_style(text):
-            sentences = text.split('。')
-            if not sentences:
-                return 0.0
-            
-            scores = []
-            for sent in sentences:
-                if not sent.strip():
-                    continue
-                
-                # Check if sentence ends with a question
-                ends_with_question = any(sent.endswith(p) for p in socratic_patterns['question_endings'])
-                # Proper use of second person
-                uses_proper_address = any(p in sent for p in socratic_patterns['address_patterns'])
-                # Use of inquiry introduction
-                uses_inquiry_lead = any(p in sent for p in socratic_patterns['inquiry_leads'])
-                
-                # Sentence score (emphasize ending with a question)
-                sentence_score = (
-                    (ends_with_question * 0.6) +
-                    (uses_proper_address * 0.25) +
-                    (uses_inquiry_lead * 0.15)
-                )
-                scores.append(sentence_score)
-            
-            return np.mean(scores) if scores else 0.0
-
-        style_scores = [calculate_socratic_style(pred) for pred in decoded_preds]
-        final_score = np.mean(style_scores)
-        
-        return {
-            'socratic_style': final_score,
-        }
-
-# 4.3 Training Callbacks
-# Custom callback modification
-class StyleCallback(TrainerCallback):
-    def __init__(self):
-        self.socratic_scores = []
-        
-    def on_evaluate(self, args, state, control, metrics, **kwargs):
-        if 'eval_socratic_style' in metrics:
-            self.socratic_scores.append(metrics['eval_socratic_style'])
-            
-            # Log detailed information
-            logging.info(f"Step {state.global_step}:")
-            logging.info(f"Socratic Style Score: {metrics['eval_socratic_style']:.3f}")
-    
-    def on_train_end(self, args, state, control, **kwargs):
-        # Log overall evaluation
-        avg_score = sum(self.socratic_scores) / len(self.socratic_scores) if self.socratic_scores else 0
-        
-        logging.info("Training Complete!")
-        logging.info(f"Average Socratic Style Score: {avg_score:.3f}")
-
 # TrainingMonitorCallback also modified
 class TrainingMonitorCallback(TrainerCallback):
     def __init__(self):
         self.train_start_time = None
         self.metrics_history = {
             'step': [],
-            'socratic_style': [],  # Metric name changed
             'loss': [],
             'learning_rate': [],
             'epoch': []
@@ -459,26 +380,12 @@ class TrainingMonitorCallback(TrainerCallback):
         # Record metrics
         current_step = state.global_step
         
-        # Record loss and learning_rate for all steps
+        # Record loss and learning_rate
         if 'loss' in logs:
             self.metrics_history['step'].append(current_step)
             self.metrics_history['epoch'].append(state.epoch)
             self.metrics_history['loss'].append(logs['loss'])
             self.metrics_history['learning_rate'].append(logs.get('learning_rate', None))
-            self.metrics_history['socratic_style'].append(None)  # None for non-evaluation steps
-        
-        # Update socratic_style score in evaluation step
-        if 'eval_socratic_style' in logs:
-            # Update last entry (same step)
-            if self.metrics_history['step'] and self.metrics_history['step'][-1] == current_step:
-                self.metrics_history['socratic_style'][-1] = logs['eval_socratic_style']
-            else:
-                # Add new entry
-                self.metrics_history['step'].append(current_step)
-                self.metrics_history['epoch'].append(state.epoch)
-                self.metrics_history['loss'].append(None)
-                self.metrics_history['learning_rate'].append(None)
-                self.metrics_history['socratic_style'].append(logs['eval_socratic_style'])
         
         # Save to CSV file
         df = pd.DataFrame(self.metrics_history)
@@ -490,10 +397,10 @@ class TrainingMonitorCallback(TrainerCallback):
             
     def _plot_metrics(self):
         """Plot learning metrics and save"""
-        plt.figure(figsize=(15, 8))
+        plt.figure(figsize=(12, 5))
         
-        # Plot Loss - Exclude None
-        plt.subplot(2, 2, 1)
+        # Plot Loss
+        plt.subplot(1, 2, 1)
         valid_steps_loss = [s for s, v in zip(self.metrics_history['step'], self.metrics_history['loss']) if v is not None]
         valid_loss = [v for v in self.metrics_history['loss'] if v is not None]
         if valid_steps_loss:
@@ -503,8 +410,8 @@ class TrainingMonitorCallback(TrainerCallback):
             plt.ylabel('Loss')
             plt.legend()
         
-        # Plot Learning Rate - Exclude None
-        plt.subplot(2, 2, 2)
+        # Plot Learning Rate
+        plt.subplot(1, 2, 2)
         valid_steps_lr = [s for s, v in zip(self.metrics_history['step'], self.metrics_history['learning_rate']) if v is not None]
         valid_lr = [v for v in self.metrics_history['learning_rate'] if v is not None]
         if valid_steps_lr:
@@ -514,27 +421,15 @@ class TrainingMonitorCallback(TrainerCallback):
             plt.ylabel('Learning Rate')
             plt.legend()
         
-        # Plot Socratic Style Score - Exclude None
-        plt.subplot(2, 2, 3)
-        valid_steps = [s for s, v in zip(self.metrics_history['step'], self.metrics_history['socratic_style']) if v is not None]
-        valid_scores = [v for v in self.metrics_history['socratic_style'] if v is not None]
-        if valid_steps:
-            plt.plot(valid_steps, valid_scores, label='Socratic Style')
-            plt.title('Socratic Style Score')
-            plt.xlabel('Step')
-            plt.ylabel('Score')
-            plt.legend()
-        
         plt.tight_layout()
         plt.savefig(self.output_dir / 'training_progress.png')
         plt.close()
     
     def on_train_end(self, args, state, control, **kwargs):
-        # Final learning result summary to save
+        # Final learning result summary
         summary = {
             'training_duration': str(datetime.now() - self.train_start_time),
             'final_loss': self.metrics_history['loss'][-1] if self.metrics_history['loss'] else None,
-            'best_socratic_score': max(filter(None, self.metrics_history['socratic_style'])) if self.metrics_history['socratic_style'] else None,
             'total_steps': len(self.metrics_history['step']),
             'final_epoch': self.metrics_history['epoch'][-1] if self.metrics_history['epoch'] else None
         }
@@ -543,22 +438,16 @@ class TrainingMonitorCallback(TrainerCallback):
         with open(self.output_dir / 'training_summary.json', 'w', encoding='utf-8') as f:
             json.dump(summary, f, indent=2, ensure_ascii=False)
         
-        # Final graph to save
+        # Final graph
         self._plot_metrics()
         
         logging.info("Training Complete!")
         logging.info(f"Training duration: {summary['training_duration']}")
         
-        # None check added
         if summary['final_loss'] is not None:
             logging.info(f"Final loss: {summary['final_loss']:.4f}")
         else:
             logging.info("Final loss: Not available")
-        
-        if summary['best_socratic_score'] is not None:
-            logging.info(f"Best Socratic style score: {summary['best_socratic_score']:.4f}")
-        else:
-            logging.info("Best Socratic style score: Not available")
 
 # 4.4 Custom Trainer Implementation
 class CustomTrainer(Trainer):
@@ -607,7 +496,6 @@ training_args = TrainingArguments(
     optim="adamw_torch_fused",
     eval_accumulation_steps=8,
     load_best_model_at_end=True,
-    metric_for_best_model="socratic_style",  
 )
 
 # 5. Execution and Model Management
@@ -633,8 +521,7 @@ trainer = CustomTrainer(
     train_dataset=train_dataset,
     eval_dataset=eval_dataset,
     data_collator=data_collator,
-    compute_metrics=compute_metrics,
-    callbacks=[StyleCallback(), TrainingMonitorCallback()],
+    callbacks=[TrainingMonitorCallback()],
 )
 
 # Check memory state
