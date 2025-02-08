@@ -727,4 +727,3 @@ except Exception as e:
     logging.error(f"An error occurred: {str(e)}")
     # Checkpoint is also kept even on error
     raise 
-

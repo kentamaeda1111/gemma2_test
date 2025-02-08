@@ -667,8 +667,7 @@ trainer = CustomTrainer(
     train_dataset=train_dataset,
     eval_dataset=eval_dataset,
     data_collator=data_collator,
-    compute_metrics=compute_metrics,
-    callbacks=[StyleCallback(), TrainingMonitorCallback()],
+    callbacks=[TrainingMonitorCallback()],
 )
 
 # Check memory state
