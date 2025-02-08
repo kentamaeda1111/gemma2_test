@@ -638,20 +638,19 @@ training_args = TrainingArguments(
     logging_strategy="steps",
     logging_steps=50,
     no_cuda=False,
-    dataloader_num_workers=1, #kaggle用は1, 修正前は2
+    dataloader_num_workers=1,
     report_to=[],
     run_name=None,
-    per_device_train_batch_size=2, #kaggle用は2, 修正前は4
-    per_device_eval_batch_size=1, #kaggle用は1, 修正前は2
+    per_device_train_batch_size=2,
+    per_device_eval_batch_size=1,
     gradient_checkpointing=True,
     max_grad_norm=0.5,
     dataloader_pin_memory=True,
-    save_total_limit=2, #kaggle用は2, 修正前は3
+    save_total_limit=2,
     fp16=True,
     optim="adamw_torch_fused",
-    eval_accumulation_steps=4, #kaggle用は4, 修正前は8
-    load_best_model_at_end=True,
-    metric_for_best_model="socratic_style",  
+    eval_accumulation_steps=4,
+    load_best_model_at_end=False,
 )
 
 # 5. Execution and Model Management

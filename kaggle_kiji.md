@@ -159,7 +159,7 @@ While many examples on the internet ignored this design philosophy by including 
 
 Instead, I decided to create two variations of training data:
 1. One completely without any system prompt-like elements
-2. Another incorporating brief phrases like "You are Socrates" before user utterances, as this was a commonly used practice
+2. Another incorporating phrase "You are Socrates, the ancient Greek philosopher." before user utterances
 
 While we could have used tuners like XTuner, Axolotl, or LLaMA Factory to implement system prompt-like functionality during training, I prioritized staying aligned with Gemma2's original design philosophy and testing in the most natural way possible.
 
