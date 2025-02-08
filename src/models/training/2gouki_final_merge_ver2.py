@@ -1,3 +1,4 @@
+#独自の評価メトリクスを削除したバージョン
 # 1. Environment Setup and Imports
 # 1.1 Import Dependencies
 import torch
