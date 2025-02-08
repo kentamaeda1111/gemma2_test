@@ -29,15 +29,6 @@ DIALOGUE_JSON_PATH = "data/dialogue/processed/final.json"  # Path to dialogue JS
 MAX_SEQUENCE_LENGTH = 256  # Maximum number of tokens per dialogue
 MAX_TOKENIZE_LENGTH = 256  # Maximum token length during tokenization
 
-# Setup output directory paths
-BASE_OUTPUT_DIR = "models/kaggle_model_ver2"  
-MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
-LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
-
-# Create directories
-for dir_path in [BASE_OUTPUT_DIR, MODEL_OUTPUT_DIR, LOG_OUTPUT_DIR]:
-    os.makedirs(dir_path, exist_ok=True)
-
 # Environment variables
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -76,6 +67,7 @@ logging.info(f"Using dialogue file: {DIALOGUE_JSON_PATH}")
 logging.info(f"Max sequence length: {MAX_SEQUENCE_LENGTH}")
 logging.info(f"Max tokenize length: {MAX_TOKENIZE_LENGTH}")
 
+
 # 2. Data Preprocessing Pipeline
 # 2.1 Tokenizer Setup and Initialization
 model_name = "google/gemma-2-2b-jpn-it"
@@ -98,6 +90,8 @@ def validate_message_format(message):
         return False
     return True
 
+
+
 def validate_dataset(dataset):
     """Validate dataset structure"""
     first_item = dataset[0]
@@ -106,6 +100,7 @@ def validate_dataset(dataset):
     print(f"input_ids type: {type(first_item['input_ids'])}")
     print(f"input_ids length: {len(first_item['input_ids'])}")
     return dataset
+
 
 # 2.3 Data Set Preparation Function
 def prepare_dataset():
@@ -262,7 +257,6 @@ tokenizer.add_special_tokens({
 })
 
 
-
 # 2.5 Data Set Preparation
 # Prepare base dataset
 dataset = prepare_dataset()
@@ -277,13 +271,12 @@ print(dataset.features)
 # Optimize dataset batch processing
 dataset = dataset.select(range(len(dataset))).shuffle(seed=42)
 
-
 # Optimize dataset processing
 tokenized_dataset = dataset.map(
     tokenize_function,
     batched=True,
-    batch_size=16,
-    num_proc=2,
+    batch_size=32,  
+    num_proc=4,     
     load_from_cache_file=True,
     desc="Tokenizing datasets",
     remove_columns=dataset.column_names,
@@ -299,6 +292,7 @@ tokenized_dataset = tokenized_dataset.map(
 # Final dataset validation
 tokenized_dataset = validate_dataset(tokenized_dataset)
 
+
 # 3. Model Architecture
 # 3.1 Quantization Setup (BitsAndBytes)
 bnb_config = BitsAndBytesConfig(
@@ -313,11 +307,10 @@ bnb_config = BitsAndBytesConfig(
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
     quantization_config=bnb_config,
-    device_map="balanced",
-    torch_dtype=torch.float16,
-    attn_implementation='sdpa',
-    token=os.environ["HUGGINGFACE_TOKEN"],  
-    max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}
+    device_map="auto",
+    torch_dtype=torch.bfloat16,
+    attn_implementation='eager',
+    token=huggingface_token  # API token added
 )
 
 # 3.3 LoRA Setup and Application
@@ -346,42 +339,15 @@ data_collator = DataCollatorForLanguageModeling(
     pad_to_multiple_of=8
 )
 
+
+
 # 4. Training Framework
 # 4.1 System Resource Monitoring
 def log_memory_usage():
     """Log memory usage"""
     import psutil
-    import torch
-    
-    # CPU memory
     process = psutil.Process()
-    cpu_memory = process.memory_info().rss / 1024 / 1024  # MB
-    
-    # GPU memory
-    gpu_memory = []
-    if torch.cuda.is_available():
-        for i in range(torch.cuda.device_count()):
-            gpu_memory.append({
-                'device': i,
-                'allocated': torch.cuda.memory_allocated(i) / 1024 / 1024,  # MB
-                'reserved': torch.cuda.memory_reserved(i) / 1024 / 1024,    # MB
-                'max_allocated': torch.cuda.max_memory_allocated(i) / 1024 / 1024  # MB
-            })
-    
-    logging.info(f"CPU Memory usage: {cpu_memory:.2f} MB")
-    for gpu in gpu_memory:
-        logging.info(f"GPU {gpu['device']} Memory:")
-        logging.info(f"  - Allocated: {gpu['allocated']:.2f} MB")
-        logging.info(f"  - Reserved: {gpu['reserved']:.2f} MB")
-        logging.info(f"  - Max Allocated: {gpu['max_allocated']:.2f} MB")
-
-
-
-
-
-
-
-
+    logging.info(f"Memory usage: {process.memory_info().rss / 1024 / 1024:.2f} MB")
 
 def clear_memory():
     """Memory release function during training"""
@@ -391,224 +357,215 @@ def clear_memory():
 
 # 4.2 Metrics Calculation System
 def compute_metrics(eval_preds):
-    return None
+    logits, labels = eval_preds  # Get logits and labels from eval_preds
+    
+    # Improve decoding process
+    with torch.no_grad():
+        logits = torch.tensor(logits).cpu()
+        predictions = torch.argmax(logits, dim=-1)
+        
+        # Decode entire batch
+        decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+        
+        # Add more detailed log output
+        logging.info(f"Sample prediction: {decoded_preds[0][:100]}...")
+        
+        del logits, predictions  # Memory release
+        torch.cuda.empty_cache()
 
+        socratic_patterns = {
+            'question_endings': ['かね', 'だろうか', 'ではないかね'],
+            'address_patterns': ['君は', '君が', '君の'],
+            'inquiry_leads': ['では', 'について']
+        }
+
+        def calculate_socratic_style(text):
+            sentences = text.split('。')
+            if not sentences:
+                return 0.0
+            
+            scores = []
+            for sent in sentences:
+                if not sent.strip():
+                    continue
+                
+                # Check if sentence ends with a question
+                ends_with_question = any(sent.endswith(p) for p in socratic_patterns['question_endings'])
+                # Proper use of second person
+                uses_proper_address = any(p in sent for p in socratic_patterns['address_patterns'])
+                # Use of inquiry introduction
+                uses_inquiry_lead = any(p in sent for p in socratic_patterns['inquiry_leads'])
+                
+                # Sentence score (emphasize ending with a question)
+                sentence_score = (
+                    (ends_with_question * 0.6) +
+                    (uses_proper_address * 0.25) +
+                    (uses_inquiry_lead * 0.15)
+                )
+                scores.append(sentence_score)
+            
+            return np.mean(scores) if scores else 0.0
+
+        style_scores = [calculate_socratic_style(pred) for pred in decoded_preds]
+        final_score = np.mean(style_scores)
+        
+        return {
+            'socratic_style': final_score,
+        }
 
 # 4.3 Training Callbacks
+# Custom callback modification
+class StyleCallback(TrainerCallback):
+    def __init__(self):
+        self.socratic_scores = []
+        
+    def on_evaluate(self, args, state, control, metrics, **kwargs):
+        if 'eval_socratic_style' in metrics:
+            self.socratic_scores.append(metrics['eval_socratic_style'])
+            
+            # Log detailed information
+            logging.info(f"Step {state.global_step}:")
+            logging.info(f"Socratic Style Score: {metrics['eval_socratic_style']:.3f}")
+    
+    def on_train_end(self, args, state, control, **kwargs):
+        # Log overall evaluation
+        avg_score = sum(self.socratic_scores) / len(self.socratic_scores) if self.socratic_scores else 0
+        
+        logging.info("Training Complete!")
+        logging.info(f"Average Socratic Style Score: {avg_score:.3f}")
+
+# TrainingMonitorCallback also modified
 class TrainingMonitorCallback(TrainerCallback):
     def __init__(self):
         self.train_start_time = None
         self.metrics_history = {
             'step': [],
+            'socratic_style': [],  # Metric name changed
             'loss': [],
             'learning_rate': [],
-            'epoch': [],
-            'cpu_ram_usage': [],
-            'gpu_vram_usage': [],
-            'gpu_utilization': [],
-            'batch_size': [],
-            'moving_avg_loss': [],
-            'lr_schedule': [],
-            'batch_metrics': [],
-            'gpu_metrics': [],
-            'grad_norm': []
+            'epoch': []
         }
-        self.peak_metrics = {
-            'cpu_ram': 0,
-            'gpu_vram': 0,
-            'gpu_util': 0
-        }
-        self.output_dir = Path(f"{BASE_OUTPUT_DIR}/training_progress")
+        self.output_dir = Path("model/training_progress")
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
-    def _record_resource_usage(self):
-        """Record current resource usage with timestamp"""
-        import psutil
-        import torch
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
-        # CPU RAM
-        cpu_ram = psutil.Process().memory_info().rss / (1024 * 1024 * 1024)  # GB
-        self.peak_metrics['cpu_ram'] = max(self.peak_metrics['cpu_ram'], cpu_ram)
-        
-        # GPU metrics with timestamp
-        if torch.cuda.is_available():
-            gpu_metrics = []
-            for i in range(torch.cuda.device_count()):
-                vram_used = torch.cuda.memory_allocated(i) / (1024 * 1024 * 1024)  # GB
-                self.peak_metrics['gpu_vram'] = max(self.peak_metrics['gpu_vram'], vram_used)
-                
-                # GPU utilization (requires nvidia-smi)
-                try:
-                    import subprocess
-                    result = subprocess.check_output(['nvidia-smi', '--query-gpu=utilization.gpu', '--format=csv,noheader,nounits'])
-                    gpu_util = float(result.decode('utf-8').strip())
-                    self.peak_metrics['gpu_util'] = max(self.peak_metrics['gpu_util'], gpu_util)
-                except:
-                    gpu_util = 0
-                
-                gpu_metrics.append({
-                    'device': i,
-                    'vram_used': vram_used,
-                    'utilization': gpu_util
-                })
-                
-            # 時系列データとして保存
-            self.metrics_history['gpu_metrics'].append({
-                'timestamp': current_time,
-                'metrics': gpu_metrics
-            })
-                
-            self.metrics_history['cpu_ram_usage'].append(cpu_ram)
-            self.metrics_history['gpu_vram_usage'].append(vram_used)
-            self.metrics_history['gpu_utilization'].append(gpu_util)
-
     def on_train_begin(self, args, state, control, **kwargs):
         self.train_start_time = datetime.now()
-        logging.info("Training started at: %s", self.train_start_time)
-        self._record_resource_usage()
+        log_memory_usage()
         
     def on_log(self, args, state, control, logs=None, **kwargs):
-        if logs:
-            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            
-            # 学習率とスケジューリングの記録
-            if 'learning_rate' in logs:
-                self.metrics_history['lr_schedule'].append({
-                    'timestamp': current_time,
-                    'step': state.global_step,
-                    'learning_rate': logs['learning_rate'],
-                    'schedule_type': args.lr_scheduler_type
-                })
-                self.metrics_history['learning_rate'].append(logs['learning_rate'])
-            
-            # バッチサイズと損失値の関連を記録
-            if 'loss' in logs:
-                self.metrics_history['batch_metrics'].append({
-                    'timestamp': current_time,
-                    'step': state.global_step,
-                    'batch_size': args.per_device_train_batch_size,
-                    'loss': logs['loss'],
-                    'grad_norm': logs.get('grad_norm', None)
-                })
-                self.metrics_history['loss'].append(logs['loss'])
-                self.metrics_history['batch_size'].append(args.per_device_train_batch_size)
-                if 'grad_norm' in logs:
-                    self.metrics_history['grad_norm'].append(logs['grad_norm'])
-            
-            # 移動平均の計算と記録
-            if len(self.metrics_history['loss']) > 10:
-                avg_loss = sum(self.metrics_history['loss'][-10:]) / 10
-                self.metrics_history['moving_avg_loss'].append(avg_loss)
-                logging.info(f"Moving average loss (last 10 steps): {avg_loss:.4f}")
-            
-            logging.info(f"Step {state.global_step}: {logs}")
-            if 'grad_norm' in logs:
-                logging.info(f"Gradient norm: {logs['grad_norm']:.4f}")
-            
-        self._record_resource_usage()
+        if logs is None:
+            return
         
+        # Record metrics
+        current_step = state.global_step
+        
+        # Record loss and learning_rate for all steps
+        if 'loss' in logs:
+            self.metrics_history['step'].append(current_step)
+            self.metrics_history['epoch'].append(state.epoch)
+            self.metrics_history['loss'].append(logs['loss'])
+            self.metrics_history['learning_rate'].append(logs.get('learning_rate', None))
+            self.metrics_history['socratic_style'].append(None)  # None for non-evaluation steps
+        
+        # Update socratic_style score in evaluation step
+        if 'eval_socratic_style' in logs:
+            # Update last entry (same step)
+            if self.metrics_history['step'] and self.metrics_history['step'][-1] == current_step:
+                self.metrics_history['socratic_style'][-1] = logs['eval_socratic_style']
+            else:
+                # Add new entry
+                self.metrics_history['step'].append(current_step)
+                self.metrics_history['epoch'].append(state.epoch)
+                self.metrics_history['loss'].append(None)
+                self.metrics_history['learning_rate'].append(None)
+                self.metrics_history['socratic_style'].append(logs['eval_socratic_style'])
+        
+        # Save to CSV file
+        df = pd.DataFrame(self.metrics_history)
+        df.to_csv(self.output_dir / 'training_metrics.csv', index=False)
+        
+        # Update graph every 100 steps
+        if current_step % 100 == 0:
+            self._plot_metrics()
+            
+    def _plot_metrics(self):
+        """Plot learning metrics and save"""
+        plt.figure(figsize=(15, 8))
+        
+        # Plot Loss - Exclude None
+        plt.subplot(2, 2, 1)
+        valid_steps_loss = [s for s, v in zip(self.metrics_history['step'], self.metrics_history['loss']) if v is not None]
+        valid_loss = [v for v in self.metrics_history['loss'] if v is not None]
+        if valid_steps_loss:
+            plt.plot(valid_steps_loss, valid_loss, label='Loss')
+            plt.title('Training Loss')
+            plt.xlabel('Step')
+            plt.ylabel('Loss')
+            plt.legend()
+        
+        # Plot Learning Rate - Exclude None
+        plt.subplot(2, 2, 2)
+        valid_steps_lr = [s for s, v in zip(self.metrics_history['step'], self.metrics_history['learning_rate']) if v is not None]
+        valid_lr = [v for v in self.metrics_history['learning_rate'] if v is not None]
+        if valid_steps_lr:
+            plt.plot(valid_steps_lr, valid_lr, label='LR')
+            plt.title('Learning Rate')
+            plt.xlabel('Step')
+            plt.ylabel('Learning Rate')
+            plt.legend()
+        
+        # Plot Socratic Style Score - Exclude None
+        plt.subplot(2, 2, 3)
+        valid_steps = [s for s, v in zip(self.metrics_history['step'], self.metrics_history['socratic_style']) if v is not None]
+        valid_scores = [v for v in self.metrics_history['socratic_style'] if v is not None]
+        if valid_steps:
+            plt.plot(valid_steps, valid_scores, label='Socratic Style')
+            plt.title('Socratic Style Score')
+            plt.xlabel('Step')
+            plt.ylabel('Score')
+            plt.legend()
+        
+        plt.tight_layout()
+        plt.savefig(self.output_dir / 'training_progress.png')
+        plt.close()
+    
     def on_train_end(self, args, state, control, **kwargs):
-        training_duration = datetime.now() - self.train_start_time
-        
-        # 詳細な学習履歴の保存
-        training_history = {
-            'lr_schedule': self.metrics_history['lr_schedule'],
-            'batch_metrics': self.metrics_history['batch_metrics'],
-            'gpu_metrics': self.metrics_history['gpu_metrics'],
-            'moving_avg_loss': self.metrics_history['moving_avg_loss']
-        }
-        
-        # 学習履歴をJSONファイルとして保存
-        history_file = self.output_dir / 'training_history.json'
-        with open(history_file, 'w', encoding='utf-8') as f:
-            json.dump(training_history, f, indent=2, ensure_ascii=False)
-        
-        # 基本的なメトリクスのログ出力
-        logging.info(f"Training completed. Total duration: {training_duration}")
-        logging.info(f"Peak CPU RAM usage: {self.peak_metrics['cpu_ram']:.2f} GB")
-        logging.info(f"Peak GPU VRAM usage: {self.peak_metrics['gpu_vram']:.2f} GB")
-        logging.info(f"Peak GPU utilization: {self.peak_metrics['gpu_util']:.1f}%")
-        
-        # 最終サマリーの作成と保存
+        # Final learning result summary to save
         summary = {
-            'training_duration': str(training_duration),
+            'training_duration': str(datetime.now() - self.train_start_time),
             'final_loss': self.metrics_history['loss'][-1] if self.metrics_history['loss'] else None,
+            'best_socratic_score': max(filter(None, self.metrics_history['socratic_style'])) if self.metrics_history['socratic_style'] else None,
             'total_steps': len(self.metrics_history['step']),
-            'final_epoch': self.metrics_history['epoch'][-1] if self.metrics_history['epoch'] else None,
-            'learning_rate_summary': {
-                'initial': self.metrics_history['learning_rate'][0] if self.metrics_history['learning_rate'] else None,
-                'final': self.metrics_history['learning_rate'][-1] if self.metrics_history['learning_rate'] else None,
-                'schedule_type': args.lr_scheduler_type
-            },
-            'loss_summary': {
-                'final_moving_avg': self.metrics_history['moving_avg_loss'][-1] if self.metrics_history['moving_avg_loss'] else None,
-                'best_loss': min(self.metrics_history['loss']) if self.metrics_history['loss'] else None
-            },
-            'resource_usage': {
-                'peak_cpu_ram_gb': self.peak_metrics['cpu_ram'],
-                'peak_gpu_vram_gb': self.peak_metrics['gpu_vram'],
-                'peak_gpu_utilization': self.peak_metrics['gpu_util']
-            },
-            'hardware_info': {
-                'cpu_info': self._get_cpu_info(),
-                'gpu_info': self._get_gpu_info(),
-                'total_ram': self._get_total_ram()
-            }
+            'final_epoch': self.metrics_history['epoch'][-1] if self.metrics_history['epoch'] else None
         }
         
+        # Save summary as JSON file
         with open(self.output_dir / 'training_summary.json', 'w', encoding='utf-8') as f:
             json.dump(summary, f, indent=2, ensure_ascii=False)
-
+        
+        # Final graph to save
+        self._plot_metrics()
+        
         logging.info("Training Complete!")
         logging.info(f"Training duration: {summary['training_duration']}")
         
         # None check added
-        if summary['loss_summary']['final_moving_avg'] is not None:
-            logging.info(f"Final moving average loss: {summary['loss_summary']['final_moving_avg']:.4f}")
-        if summary['loss_summary']['best_loss'] is not None:
-            logging.info(f"Best loss achieved: {summary['loss_summary']['best_loss']:.4f}")
+        if summary['final_loss'] is not None:
+            logging.info(f"Final loss: {summary['final_loss']:.4f}")
+        else:
+            logging.info("Final loss: Not available")
         
-        logging.info(f"Peak CPU RAM usage: {summary['resource_usage']['peak_cpu_ram_gb']:.2f} GB")
-        logging.info(f"Peak GPU VRAM usage: {summary['resource_usage']['peak_gpu_vram_gb']:.2f} GB")
-        logging.info(f"Peak GPU utilization: {summary['resource_usage']['peak_gpu_utilization']:.1f}%")
-
-    def _get_cpu_info(self):
-        import cpuinfo
-        try:
-            info = cpuinfo.get_cpu_info()
-            return {
-                'model': info.get('brand_raw', 'Unknown'),
-                'cores': psutil.cpu_count(logical=False),
-                'threads': psutil.cpu_count(logical=True)
-            }
-        except:
-            return "Failed to get CPU info"
-            
-    def _get_gpu_info(self):
-        if not torch.cuda.is_available():
-            return "No GPU available"
-        try:
-            import subprocess
-            result = subprocess.check_output(['nvidia-smi', '--query-gpu=gpu_name,memory.total', '--format=csv,noheader,nounits'])
-            gpus = result.decode('utf-8').strip().split('\n')
-            return [{'model': g.split(',')[0], 'memory': float(g.split(',')[1])/1024} for g in gpus]
-        except:
-            return "Failed to get GPU info"
-            
-    def _get_total_ram(self):
-        return psutil.virtual_memory().total / (1024 * 1024 * 1024)  # GB
-
-
+        if summary['best_socratic_score'] is not None:
+            logging.info(f"Best Socratic style score: {summary['best_socratic_score']:.4f}")
+        else:
+            logging.info("Best Socratic style score: Not available")
 
 # 4.4 Custom Trainer Implementation
 class CustomTrainer(Trainer):
     def training_step(self, *args, **kwargs):
         loss = super().training_step(*args, **kwargs)
-        if self.state.global_step % 50 == 0:
+        if self.state.global_step % 100 == 0:
             clear_memory()
-            gc.collect()
-            torch.cuda.empty_cache()
         return loss
 
     def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
@@ -620,7 +577,7 @@ class CustomTrainer(Trainer):
 
 # 4.5 Training Setup
 training_args = TrainingArguments(
-    output_dir=MODEL_OUTPUT_DIR,
+    output_dir="./model",
     num_train_epochs=30,
     learning_rate=8e-5,
     weight_decay=0.06,
@@ -633,22 +590,22 @@ training_args = TrainingArguments(
     gradient_accumulation_steps=8,
     max_steps=-1,
     disable_tqdm=False,
-    logging_dir=LOG_OUTPUT_DIR,
+    logging_dir="./model/logs",
     logging_strategy="steps",
     logging_steps=50,
     no_cuda=False,
-    dataloader_num_workers=1, #kaggle用は1, 修正前は2
+    dataloader_num_workers=2,
     report_to=[],
     run_name=None,
-    per_device_train_batch_size=2, #kaggle用は2, 修正前は4
-    per_device_eval_batch_size=1, #kaggle用は1, 修正前は2
+    per_device_train_batch_size=4,
+    per_device_eval_batch_size=2,
     gradient_checkpointing=True,
     max_grad_norm=0.5,
     dataloader_pin_memory=True,
-    save_total_limit=2, #kaggle用は2, 修正前は3
+    save_total_limit=3,
     fp16=True,
     optim="adamw_torch_fused",
-    eval_accumulation_steps=4, #kaggle用は4, 修正前は8
+    eval_accumulation_steps=8,
     load_best_model_at_end=True,
     metric_for_best_model="socratic_style",  
 )
@@ -662,7 +619,7 @@ split_idx = int(dataset_size * 0.8)
 
 # Create training and test datasets
 train_dataset = tokenized_dataset.select(indices[:split_idx])
-eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50]) 
+eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+100])  # Maximum 100 samples
 
 # Record dataset size
 logging.info(f"Training dataset size: {len(train_dataset)}")
@@ -676,7 +633,8 @@ trainer = CustomTrainer(
     train_dataset=train_dataset,
     eval_dataset=eval_dataset,
     data_collator=data_collator,
-    callbacks=[TrainingMonitorCallback()],
+    compute_metrics=compute_metrics,
+    callbacks=[StyleCallback(), TrainingMonitorCallback()],
 )
 
 # Check memory state
@@ -685,7 +643,7 @@ log_memory_usage()
 # Training execution
 logging.info("Starting training...")
 try:
-    checkpoint_dir = MODEL_OUTPUT_DIR  # "./model" から変更
+    checkpoint_dir = "./model"
     resume_from_checkpoint = None
     
     # Checkpoint status and processing modification
