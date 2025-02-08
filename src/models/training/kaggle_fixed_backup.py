@@ -1,3 +1,5 @@
+#唯一kaggle環境で成功したやつの評価メトリクスを消したバージョン
+
 # 1. Environment Setup and Imports
 # 1.1 Import Dependencies
 import torch
