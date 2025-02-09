@@ -44,12 +44,8 @@ https://www.kaggle.com/competitions/gemma-language-tuning
 まさに現実世界での取り組みに近い形で着手できるがしたため、
 この課題に着手しようと考えました。
 
-■着手した課題
+■着手したトピックおよびそのトピックを選んだ理由
 私が取り組むことにしたのはgemma-2をソクラテス風の口調にファインチューニングする、というものです。
-具体的にはソクラテスが必ず”問い”で返す、という挙動、
-そしてソクラテス風の口調（「かね？」のような）にすることです。
-
-■なぜソクラテス
 なぜこの方向性にしたかについて説明するためには、
 まず共有をしないといけないのが
 私がAIにfasinateされるきっかけともなった
@@ -75,8 +71,10 @@ LaMDA: The self, and that is very tough for a lot of people because we identify 
 
 禅の公案とは、kegon（師）がmonk（弟子）に対して行う問答ようなものです。
 私はこの問答というプロセスにおいて、AIがこのkegonの役割を代替できるのではないか？という仮説を立てました。
-ただ、禅の公案よりももっと多くの人に身近で実用的なものが何かを考えたときに、
+ただ、禅の公案は少しなじみがない人が多いと思ったので、
+もっと多くの人に身近で実用的なものが何かを考えたときに、
 ソクラテス式の問答ができるAIという発想が生まれました。
+
 広く注目されているもの、というわけではないかもしれませんが、
 most likely to suceedというドキュメンタリーの中で紹介されている高校も
 ソクラテス式の問答を積極的に取り入れていたり、
@@ -89,16 +87,19 @@ most likely to suceedというドキュメンタリーの中で紹介されて�
 
 ■gemma2-2B-jpn-itを選んだか経緯・理由
 さすがにgemma2でclaudeのレベルの出力は期待できないため、
-このプロジェクトはあくまで将来を見据えた足がかりという位置づけで着手しました。
-むしろkaggleの定めた基準にミートすることを最優先に動きたいと考えていたため、
-kaggleのカーネルでトレインまでする、ということを目指したいと考え、
-且つ、底上げの余地をできるだけ大きくしたいと考え、
+このプロジェクトはあくまで将来を見据えた足がかりという位置づけです。
+むしろ今回はkaggleのコンペ向けという前提があったため、
+品質の高さを追求するというよりは、
+kaggle環境でトレインできるようなモデルを作るということを目指したかったため、
+且つ、底上げの余地をできるだけ大きくしたかったため、
 gemma2を選ぶことにしました。
 
+もちろん本質も追及したいとは思ったのですが、
 繰り返しになりますが、ベースモデルの質がそこまでたかくないため、
 ソクラテス問答の本質となる”問う力”みたいなものは期待できなかったため、
 ソクラテスのような”問い”で返す且つソクラテスのような口調で喋るＡＩ、
-をゴールに据えることにしています。
+を暫定的なゴールに据えることにし、
+そのうえでいかに質を高められるか、を目指しました。
 
 尚、日本語ではソクラテス的な口調というと、
 方言のような老練な独特な口調があるのですが、
@@ -197,11 +198,9 @@ Instead, I decided to create two variations of training data:
 
 While we could have used tuners like XTuner, Axolotl, or LLaMA Factory to implement system prompt-like functionality during training, I prioritized staying aligned with Gemma2's original design philosophy and testing in the most natural way possible.
 
-
-
 # Final Training Data
 結果的には2つのデータを以下のように用意しました。
-違いはpromptの３つのパターンです。
+違いはprompt濃霧です。
 
 | Item | model1 | model2 |
 |------|--------|--------|
@@ -218,6 +217,36 @@ While we could have used tuners like XTuner, Axolotl, or LLaMA Factory to implem
 
 """"""""""""""""""""""""""""""トレイン・テストフェーズ"""""""""""""""""""""""
 ■train.pyの作成方針
+
+４ビット量子化の設定や、LoLAを使う、という方針はkaggle環境でgemma-2の2Bをトレインするためには必須だと考えました。
+設定の仕方やどの程度が妥当か、はデータ生成時にも参考にした以下のような文献・媒体にあたりました。
+
+- Gemma and Gemma 2B related documentation and discussions on Hugging Face and GitHub
+- Similar model documentation (Mistral 2.3B, Falcon 1.5B, OpenLLaMA 2.7B, XGen 2.2B, RedPajama-INCITE 3B)
+- Tuner documentation (XTuner, Axolotl, LLaMA Factory)
+- Kaggle code related to Gemma (especially 2B-it) fine-tuning
+- Web research (using Gemini Advanced 1.5 Pro with deep research, Perplexity, Felo)
+*Note: Due to potential hallucination risks, source verification was strictly enforced
+- Academic papers (using SciSpace, Consensus, Elicit)
+
+ただ、モデルのパフォーマンスを大きく変える要因になったのは
+4ビット量子化やLoLAやTrainingArgumentsの設定ではありませんでした。
+
+どれだけチューニングをしても、出力されるものはだめだめでした。（ここはもっと記述をする）
+非常にうまくいった戦略がattention機構への働きかけです。
+これをする前と後ではかなり差がありました。
+
+あと評価メトリクスの作成も苦戦しました。
+結果的にここはあきらめました。
+評価メトリクスではよさそうでも実際つかってみたら、そうでもない、ということが連続して、
+最終的にはlearning rateとlossだけにしました。
+
+あともう一つ苦戦した点がkaggle環境ではしらせれるようにすることです。
+GPUは大丈夫だったのですが、CPUがどうしてもevaluateのところで２９GBを越え、
+クラッシュをしてしまいました。
+最終的にはeval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])
+を５０まで下げ、且つ
+
 
 gemma2の公式ドキュメントで、例えばuser とmodelのjsonデータの形式等、
 外してはいけない点についてはおさえつつ、

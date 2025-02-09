@@ -1,7 +1,6 @@
-# https://claude.ai/chat/7d429d8f-70ef-458e-a402-08027737b462
-#　これは記事にするべき。
-
-
+#　動くことはまだ確認できていない
+# カスタムの評価メトリクスも消したシンプルバージョン
+# kaggleで動かすために必要なのはAutoModelForCausalLMにmax_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}をくわえるだけ
 # 1. Environment Setup and Imports
 # 1.1 Import Dependencies
 import torch
@@ -31,12 +30,12 @@ from src.utils.config import get_api_keys
 
 # 1.2 Global Constants and Environment Variables
 # Define global constants
-DIALOGUE_JSON_PATH = "data/dialogue/processed/systemprompt_no.json"  # Path to dialogue JSON file
+DIALOGUE_JSON_PATH = "data/dialogue/processed/systemprompt_yes.json"  # Path to dialogue JSON file
 MAX_SEQUENCE_LENGTH = 256  # Maximum number of tokens per dialogue
 MAX_TOKENIZE_LENGTH = 256  # Maximum token length during tokenization
 
 # Setup output directory paths
-BASE_OUTPUT_DIR = "models/modified_attention"  
+BASE_OUTPUT_DIR = "models/original"  
 MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
 LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
 
@@ -177,47 +176,72 @@ def tokenize_function(examples):
     return result
 
 def preprocess_function(examples):
-    # Focus on Socratic tone and inquiry patterns
-    socratic_patterns = [
-        # Question patterns
-        "かね", "だろうか", "のかね", "ではないかね",
-        # Question introduction
-        "では", "について",
-        # Second person (characteristic of mature tone)
-        "君は", "君が", "君の"
+    # Pattern definitions
+    end_patterns = [
+        "だろうか", "ではないか", "のではないか", "かね",
+        "なるほど", "興味深い", "考えてみよう"
     ]
     
-    # Get tokenized text
+    # Conjunction patterns
+    conjunctions = [
+        "しかし", "だから", "それでは", "すなわち",
+        "たとえば", "つまり", "ならば", "もし"
+    ]
+    
+    # Get tokenized texts
     texts = tokenizer.batch_decode(examples['input_ids'])
     new_attention_masks = []
     
     for text, mask in zip(texts, examples['attention_mask']):
         if not isinstance(mask, list):
             mask = mask.tolist()
-
-        new_mask = mask.copy() 
         
-        # Split text
+        # Create new attention mask (base value 0.8)
+        new_mask = [0.8] * len(mask)
+        
+        # Split into sentences
         sentences = text.split('。')
         current_pos = 0
         
         for sentence in sentences:
             if not sentence.strip():
                 continue
-            
-            # Detect and highlight Socratic patterns
-            for pattern in socratic_patterns:
+                
+            # Detect and emphasize end patterns
+            for pattern in end_patterns:
                 if pattern in sentence:
-                    # Identify pattern position
+                    # Locate pattern position
                     pattern_tokens = tokenizer.encode(pattern, add_special_tokens=False)
                     pattern_len = len(pattern_tokens)
                     
-                    # Highlight tokens containing the pattern and its surroundings
+                    # Emphasize tokens containing pattern and surrounding tokens
                     pattern_start = current_pos + len(tokenizer.encode(sentence, add_special_tokens=False)) - pattern_len
                     for i in range(max(0, pattern_start - 2), min(len(mask), pattern_start + pattern_len + 2)):
-                        new_mask[i] = 1.0  # Max attention to pattern part
+                        new_mask[i] = 1.0  # Maximum attention for pattern parts
             
-            # Update position for each sentence segment
+            # Detect and emphasize conjunctions
+            for conj in conjunctions:
+                if conj in sentence:
+                    # Locate conjunction position
+                    conj_tokens = tokenizer.encode(conj, add_special_tokens=False)
+                    conj_pos = len(tokenizer.encode(sentence.split(conj)[0], add_special_tokens=False))
+                    
+                    # Emphasize tokens before and after conjunction (slightly lower)
+                    for i in range(max(0, current_pos + conj_pos - 1), 
+                                 min(len(mask), current_pos + conj_pos + len(conj_tokens) + 1)):
+                        new_mask[i] = 0.9
+            
+            # Emphasize punctuation marks
+            for i, char in enumerate(sentence):
+                if char in '、。！？':
+                    # Locate punctuation position
+                    punct_pos = len(tokenizer.encode(sentence[:i], add_special_tokens=False))
+                    # Emphasize tokens around punctuation
+                    for j in range(max(0, current_pos + punct_pos - 1),
+                                 min(len(mask), current_pos + punct_pos + 2)):
+                        new_mask[j] = 0.95
+            
+            # Update position for next sentence
             current_pos += len(tokenizer.encode(sentence + '。', add_special_tokens=False))
         
         # Special token masks are set to 1.0
