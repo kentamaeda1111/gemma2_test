@@ -11,6 +11,8 @@
 quality checkの自動化はやってもいいかと
 
 
+あとこれは実験的な意味合いもある。そもそもどれくらいデータがよければいいものになるのか？という
+
 以下の記事を参考にした。
 https://huggingface.co/google/gemma-2-2b/discussions/26
 https://huggingface.co/google/gemma-2-2b/discussions/28
