@@ -478,14 +478,12 @@ class TrainingMonitorCallback(TrainerCallback):
         # Create training progress visualization
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
         
-        # Loss plot
-        ax1.plot(self.metrics_df['step'], self.metrics_df['loss'], label='Training Loss')
-        
-        # Moving average loss plot
-        if self.metrics_history['moving_avg_loss']:
-            moving_avg_steps = self.metrics_df['step'][9:len(self.metrics_history['moving_avg_loss']) + 9]
-            ax1.plot(moving_avg_steps, self.metrics_history['moving_avg_loss'], 
-                    label='Moving Average Loss', linestyle='--')
+        # Training Loss plot
+        if len(self.metrics_df['loss']) > 0:  # Check if loss data exists
+            ax1.plot(self.metrics_df['step'], 
+                    self.metrics_df['loss'], 
+                    label='Training Loss',
+                    color='blue')
         
         ax1.set_xlabel('Training Steps')
         ax1.set_ylabel('Loss')
@@ -494,11 +492,14 @@ class TrainingMonitorCallback(TrainerCallback):
         ax1.grid(True)
         
         # Learning rate plot
-        ax2.plot(self.metrics_df['step'], self.metrics_df['learning_rate'])
-        ax2.set_xlabel('Training Steps')
-        ax2.set_ylabel('Learning Rate')
-        ax2.set_title('Learning Rate Schedule')
-        ax2.grid(True)
+        if len(self.metrics_df['learning_rate']) > 0:  # Check if learning rate data exists
+            ax2.plot(self.metrics_df['step'], 
+                    self.metrics_df['learning_rate'],
+                    color='green')
+            ax2.set_xlabel('Training Steps')
+            ax2.set_ylabel('Learning Rate')
+            ax2.set_title('Learning Rate Schedule')
+            ax2.grid(True)
         
         plt.tight_layout()
         plt.savefig(self.output_dir / 'training_progress.png')
@@ -508,41 +509,16 @@ class TrainingMonitorCallback(TrainerCallback):
         if logs:
             current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
-            # 学習率とスケジューリングの記録
-            if 'learning_rate' in logs:
-                self.metrics_history['lr_schedule'].append({
-                    'timestamp': current_time,
-                    'step': state.global_step,
-                    'learning_rate': logs['learning_rate'],
-                    'schedule_type': args.lr_scheduler_type
-                })
-                self.metrics_history['learning_rate'].append(logs['learning_rate'])
-            
-            # バッチサイズと損失値の関連を記録
+            # Record loss and learning rate
             if 'loss' in logs:
-                self.metrics_history['batch_metrics'].append({
-                    'timestamp': current_time,
-                    'step': state.global_step,
-                    'batch_size': args.per_device_train_batch_size,
-                    'loss': logs['loss'],
-                    'grad_norm': logs.get('grad_norm', None)
-                })
-                self.metrics_history['loss'].append(logs['loss'])
-                self.metrics_history['batch_size'].append(args.per_device_train_batch_size)
-                if 'grad_norm' in logs:
-                    self.metrics_history['grad_norm'].append(logs['grad_norm'])
+                loss = logs['loss']
+                if isinstance(loss, torch.Tensor):
+                    loss = loss.item()
+                self.metrics_history['loss'].append(loss)
             
-            if len(self.metrics_history['loss']) >= 10: 
-                window_size = 10
-                losses = self.metrics_history['loss']
-                if len(losses) > window_size:
-                    avg_loss = sum(losses[-window_size:]) / window_size
-                    self.metrics_history['moving_avg_loss'].append(avg_loss)
-                    logging.info(f"Moving average loss (last {window_size} steps): {avg_loss:.4f}")
-            
-            logging.info(f"Step {state.global_step}: {logs}")
-            if 'grad_norm' in logs:
-                logging.info(f"Gradient norm: {logs['grad_norm']:.4f}")
+            if 'learning_rate' in logs:
+                lr = logs['learning_rate']
+                self.metrics_history['learning_rate'].append(lr)
             
             # Add metrics to DataFrame
             new_row = {
@@ -558,8 +534,8 @@ class TrainingMonitorCallback(TrainerCallback):
             # Save metrics every 50 steps
             if state.global_step % 50 == 0:
                 self._save_training_metrics()
-        
-        self._record_resource_usage()
+            
+            self._record_resource_usage()
         
     def on_train_end(self, args, state, control, **kwargs):
         training_duration = datetime.now() - self.train_start_time
@@ -685,7 +661,7 @@ training_args = TrainingArguments(
     evaluation_strategy="steps",
     eval_steps=20,
     save_strategy="steps",
-    save_steps=20,
+    save_steps=200,
     gradient_accumulation_steps=8,
     max_steps=-1,
     disable_tqdm=False,
@@ -701,7 +677,7 @@ training_args = TrainingArguments(
     gradient_checkpointing=True,
     max_grad_norm=0.5,
     dataloader_pin_memory=True,
-    save_total_limit=3,
+    save_total_limit=5,
     fp16=True,
     optim="adamw_torch_fused",
     eval_accumulation_steps=8,
