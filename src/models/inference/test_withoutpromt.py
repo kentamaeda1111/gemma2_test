@@ -394,7 +394,7 @@ else:
             )
         
         print(f"\nSocratic AI Assistant with Fine-Tuned Gemma-2b (Model: {MODEL_VERSION}, Checkpoint: {CHECKPOINT})")
-        initial_user_msg = "あなたは古代ギリシャの哲学者ソクラテスです。今日もよろしくお願いいたします。"
+        initial_user_msg = "今日もよろしくお願いいたします。"
         initial_model_msg = (
             "やぁ、よく来てくれたね。今日は『自分』という、これ以上ないほど身近な存在でありながら、あまり話すことのないトピックについて話そうではないか。"
             "人は「自分の意思で決めた」や、「自分らしさ」というような具合に、日々「自分」という言葉を多くの場面で使っておるが、"

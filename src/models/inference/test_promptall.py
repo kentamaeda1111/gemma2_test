@@ -215,7 +215,9 @@ class ChatAI:
         """
         try:
             if add_to_history:
-                self._update_history({"role": "user", "content": user_input})
+                # Add Socrates context to user input
+                contextualized_input = "あなたは古代ギリシャの哲学者ソクラテスです。" + user_input
+                self._update_history({"role": "user", "content": contextualized_input})
             
             messages = self._format_messages()
             prompt = self.tokenizer.apply_chat_template(

@@ -1,24 +1,4 @@
 
-大変だったことkaggleではしらせれるようにしたこと
-
-評価メトリクスに関して全然うまくいかなかった。結局最後は試してみる、という結論だった。
-
-
-今後やること　testのpromptや状態保存をもっといじれると思う
-
-結局いろいろ学んだけど、最終的には検証するしかない、ということ。
-
-quality checkの自動化はやってもいいかと
-
-
-あとこれは実験的な意味合いもある。そもそもどれくらいデータがよければいいものになるのか？という
-
-以下の記事を参考にした。
-https://huggingface.co/google/gemma-2-2b/discussions/26
-https://huggingface.co/google/gemma-2-2b/discussions/28
-
-
-”””””””””””””””””””””””””””””””””””””””
 
 ※この記事は以下のコンペ向けに作った提出物です。
 inference以外のコードはgithubにあげています。
@@ -186,7 +166,7 @@ The results of this quality assurance process were positive:
 - This process reduced our dialogue count from 296 to 242
 
 # System Prompt Integration
-This was a particularly challenging decision point. According to the official documentation, Gemma has a fundamental design philosophy that:
+This was a particularly challenging decision point. According to the official documentation（https://huggingface.co/google/gemma-2-2b/discussions/28ここにかいてあったこと、というかんじのほうがいいかと）, Gemma has a fundamental design philosophy that:
 - Only supports two roles: "user" and "model" (notably lacking a system role)
 - Requires dialogues to start from the user side
 
@@ -216,7 +196,6 @@ While we could have used tuners like XTuner, Axolotl, or LLaMA Factory to implem
 | System prompt | None | "You are Socrates, the ancient Greek philosopher." | 
 
 """"""""""""""""""""""""""""""トレイン・テストフェーズ"""""""""""""""""""""""
-■train.pyの作成方針
 
 ４ビット量子化の設定や、LoLAを使う、という方針はkaggle環境でgemma-2の2Bをトレインするためには必須だと考えました。
 設定の仕方やどの程度が妥当か、はデータ生成時にも参考にした以下のような文献・媒体にあたりました。
@@ -245,92 +224,39 @@ While we could have used tuners like XTuner, Axolotl, or LLaMA Factory to implem
 GPUは大丈夫だったのですが、CPUがどうしてもevaluateのところで２９GBを越え、
 クラッシュをしてしまいました。
 最終的にはeval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])
-を５０まで下げ、且つ
+を５０まで下げ、且つAutoModelForCausalLM.from_pretrainedでmax_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}を設定することで
+実現しました。
 
+テスト時はデータ生成フェーズでも申し上げた通り
+問いを固定する形にしました。
+そのため、（ここはもっと詳しい内容を記述）
 
-gemma2の公式ドキュメントで、例えばuser とmodelのjsonデータの形式等、
-外してはいけない点についてはおさえつつ、
-主に参考にしたのはkaggleのファインチューニングのコードを参考にし、
-cursorを使ってgemma2やpeftといったもののドキュメントをフィードしながら、コードを作りました。
-都度gemma2の公式ドキュメントを参照しながらコードを作るように気を付けました。
-
-kaggle内でのトレインができるようにしたかったため、（環境スペックを記述）
-品質は下がるリスクはあったものの、
-qloraも使うような方針を取りました。
-
-
-最初はattention mask等をせずにおこなったのですが、結果はさんさんたるものでした。
-attention maskがカギでした。
-
-評価指標は色々とためしましたが、
-結局長くやったほうがよかったです。
-
-
-■train.pyの実行結果
-
-尚、モデルをいくつもトレインするという前提であったため
-もともと外部のＧＰＵをレンタル予定ではあったものの、
-kaggleでもトレインができてほしかったので、kaggleでもためしたところ、
-ＣＰＵのＲＡＭが２９ＧＢをこえて（ここはもっと描写を正確にする）クラッシュしてしまいました。
-修正はkaggleのコンペには間に合いませんでしたが、以下のような修正をすることで、
-kaggleでもトレインできるモデルになりました。
-
-
-■test.pyの作成方針
-これもkaggleのコードを参考にしつつ、
-たたき台をcursorで作りました。
-
-■test.pyの実行結果
-実際にためしてみたのですが、結果どのモデルも決して悪くなかったです。
-この結果は元のデータがよければ、適正な範囲であればデータのサイズや対話の長さもあまり大きな変化要因にはならない、という印象をうけました。
-
-ここのプロセスではもう少し品質を確認する施策（ここはもっと肉厚にする）等々、やり方はあったと思うのですが、
-ある程度出力がいいものであったため、
-モデルのアーキテクチャ変更やファインチューニングもほぼせず、
-記事執筆に移行しました。
-
-尚、記事執筆で使ったmodel2を選んだ理由は
-感覚的なものと、数値の結果が良かったためです。
+あと工夫した点でいうと、kaggle含めcloud環境やローカル環境、GPUCPUが違う環境でも動くような仕様にしたこと
 
 
 ■結論
 
-当初のゴールである”口調変化”と”問い返してくるという挙動”は見事達成できました。
-ただ、kaggle内でトレインするモデル、ということは時間の関係で達成できませんでした。
-kaggleのルール的にはモデルは外でトレインすることもOKであるため、
-kaggleのルールには反していませんが、
-個人的に当初たてた方針を達成するため、
-kaggleの終わった後に着手して、以下の箇所を修正することで達成しました。
+当初のゴールである”口調変化”と”問い返してくるという挙動”、そしてkaggle内でのトレインは見事達成できました（１０時間くらいかかりますが。。。（笑））。
+
+評価メトリクスに関して全然うまくいかなかった。結局最後は試してみる、という結論だった。最終的には検証するしかない、と。
+今後やること　testのpromptや状態保存をもっといじれると思う
+quality checkの自動化はやってもいいかと
+もっと底上げをする余地があるとすると、目的関数へのタッチかな？
+
 
 尚、御覧になっていただいたらわかる通り、
 私は主に演繹的なアプローチではなく帰納的なアプローチで今回のタスクに取り組んでます。
 ただ、そういった背景が功を奏し、結果的に柔軟なアプローチができたのはないかと感じています。
 それが非常に短期間で高いアウトプットにつながったと要因だとかんじています。
 
-■体験できたこと
-終えてみて以下の２点の理由から、教科書的な学びとは違い、
-よりリアルな実務に近いコンテキストで挑戦ができた点も有意義な点だったと感じています。
-
-・上流から下流まで経験
-モデルのアーキテクチャデザインやパラメーター選定といったエンジニアリングの部分だけでなく、
-企画からはじまり、pythonの自動化およびprompt engineeringを駆使し、データを自分で作り、
-読み物として・プレゼン資料としてまとめて提出をする、という一気通貫な活動に携われました。
-
-・時間制限有りのプロジェクト
-定まった時間内に仕上げる必要があるため、
-あちらがたてばこちらがたたず、というシチュエーションの中、
-完璧を追求するのではなく、全体の見通しをたてながら、優先順位をつけ、
-時間内に未知のタスクを終える必要がありました。
-
 ■もう少しやれたこと
 ・僕が作ったモデルとclaudeを会話させるプログラムを使って品質評価をしたかった
 ・データ生成時の品質調査
 ・モデルの品質チェック
-・モデルアーキテクチャの変更
-・モデルパラメーターチューニング
+・モデルアーキテクチャの変更（promptを使うパターン）
 ・今回はcommunityに質問をしたり、をしなかったが、そういった手段は使ってもよかったかと
 ・inference.testのほうで、あなたはソクラテスです、と頭に全部つけるほうがよｋったかも？
-・モデルトレイン時のスコアの出力をもっと充実させればよかった
+
 
 
 
