@@ -425,9 +425,8 @@ class TrainingMonitorCallback(TrainerCallback):
         # Loss plot
         ax1.plot(self.metrics_df['step'], self.metrics_df['loss'], label='Training Loss')
         
-        # Moving average loss plot - 修正部分
+        # Moving average loss plot
         if self.metrics_history['moving_avg_loss']:
-            # 移動平均のデータ点数に合わせてx軸のデータを調整
             moving_avg_steps = self.metrics_df['step'][9:len(self.metrics_history['moving_avg_loss']) + 9]
             ax1.plot(moving_avg_steps, self.metrics_history['moving_avg_loss'], 
                     label='Moving Average Loss', linestyle='--')
@@ -477,8 +476,7 @@ class TrainingMonitorCallback(TrainerCallback):
                 if 'grad_norm' in logs:
                     self.metrics_history['grad_norm'].append(logs['grad_norm'])
             
-            # 移動平均の計算と記録を修正
-            if len(self.metrics_history['loss']) >= 10:  # 10個以上のデータポイントがある場合のみ計算
+            if len(self.metrics_history['loss']) >= 10: 
                 window_size = 10
                 losses = self.metrics_history['loss']
                 if len(losses) > window_size:
