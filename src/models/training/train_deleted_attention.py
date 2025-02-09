@@ -5,6 +5,7 @@
 # 1.1 Import Dependencies
 import torch
 import gc
+import psutil
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -34,7 +35,7 @@ MAX_SEQUENCE_LENGTH = 256  # Maximum number of tokens per dialogue
 MAX_TOKENIZE_LENGTH = 256  # Maximum token length during tokenization
 
 # Setup output directory paths
-BASE_OUTPUT_DIR = "models/kaggle_model_ver2"  
+BASE_OUTPUT_DIR = "models/deleted_attention"  
 MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
 LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
 
