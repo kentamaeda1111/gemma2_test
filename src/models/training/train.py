@@ -448,26 +448,32 @@ class TrainingMonitorCallback(TrainerCallback):
         metrics_path = self.output_dir / 'training_metrics.csv'
         self.metrics_df.to_csv(metrics_path, index=False)
         
+        # データが存在することを確認
+        if len(self.metrics_df) == 0:
+            logging.warning("No metrics data available for plotting")
+            return
+        
         # Create training progress visualization
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
         
-        # Training Loss plot
-        if len(self.metrics_df['loss']) > 0:  # Check if loss data exists
-            ax1.plot(self.metrics_df['step'], 
-                    self.metrics_df['loss'], 
+        # Training Loss plot - NaNを除外して描画
+        loss_data = self.metrics_df[['step', 'loss']].dropna()
+        if len(loss_data) > 0:
+            ax1.plot(loss_data['step'], 
+                    loss_data['loss'], 
                     label='Training Loss',
                     color='blue')
+            ax1.set_xlabel('Training Steps')
+            ax1.set_ylabel('Loss')
+            ax1.set_title('Training Loss Over Time')
+            ax1.legend()
+            ax1.grid(True)
         
-        ax1.set_xlabel('Training Steps')
-        ax1.set_ylabel('Loss')
-        ax1.set_title('Training Loss Over Time')
-        ax1.legend()
-        ax1.grid(True)
-        
-        # Learning rate plot
-        if len(self.metrics_df['learning_rate']) > 0:  # Check if learning rate data exists
-            ax2.plot(self.metrics_df['step'], 
-                    self.metrics_df['learning_rate'],
+        # Learning rate plot - NaNを除外して描画
+        lr_data = self.metrics_df[['step', 'learning_rate']].dropna()
+        if len(lr_data) > 0:
+            ax2.plot(lr_data['step'], 
+                    lr_data['learning_rate'],
                     color='green')
             ax2.set_xlabel('Training Steps')
             ax2.set_ylabel('Learning Rate')
@@ -475,6 +481,9 @@ class TrainingMonitorCallback(TrainerCallback):
             ax2.grid(True)
         
         plt.tight_layout()
+        
+        # 保存前にディレクトリの存在を確認
+        self.output_dir.mkdir(parents=True, exist_ok=True)
         plt.savefig(self.output_dir / 'training_progress.png')
         plt.close()
 
