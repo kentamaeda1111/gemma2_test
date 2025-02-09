@@ -424,9 +424,14 @@ class TrainingMonitorCallback(TrainerCallback):
         
         # Loss plot
         ax1.plot(self.metrics_df['step'], self.metrics_df['loss'], label='Training Loss')
+        
+        # Moving average loss plot - 修正部分
         if self.metrics_history['moving_avg_loss']:
-            ax1.plot(self.metrics_df['step'][10:], self.metrics_history['moving_avg_loss'], 
+            # 移動平均のデータ点数に合わせてx軸のデータを調整
+            moving_avg_steps = self.metrics_df['step'][9:len(self.metrics_history['moving_avg_loss']) + 9]
+            ax1.plot(moving_avg_steps, self.metrics_history['moving_avg_loss'], 
                     label='Moving Average Loss', linestyle='--')
+        
         ax1.set_xlabel('Training Steps')
         ax1.set_ylabel('Loss')
         ax1.set_title('Training Loss Over Time')
@@ -472,11 +477,14 @@ class TrainingMonitorCallback(TrainerCallback):
                 if 'grad_norm' in logs:
                     self.metrics_history['grad_norm'].append(logs['grad_norm'])
             
-            # 移動平均の計算と記録
-            if len(self.metrics_history['loss']) > 10:
-                avg_loss = sum(self.metrics_history['loss'][-10:]) / 10
-                self.metrics_history['moving_avg_loss'].append(avg_loss)
-                logging.info(f"Moving average loss (last 10 steps): {avg_loss:.4f}")
+            # 移動平均の計算と記録を修正
+            if len(self.metrics_history['loss']) >= 10:  # 10個以上のデータポイントがある場合のみ計算
+                window_size = 10
+                losses = self.metrics_history['loss']
+                if len(losses) > window_size:
+                    avg_loss = sum(losses[-window_size:]) / window_size
+                    self.metrics_history['moving_avg_loss'].append(avg_loss)
+                    logging.info(f"Moving average loss (last {window_size} steps): {avg_loss:.4f}")
             
             logging.info(f"Step {state.global_step}: {logs}")
             if 'grad_norm' in logs:
