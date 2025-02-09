@@ -364,6 +364,7 @@ class TrainingMonitorCallback(TrainerCallback):
         }
         self.output_dir = Path(f"{BASE_OUTPUT_DIR}/training_progress")
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.metrics_df = pd.DataFrame(columns=['step', 'loss', 'learning_rate', 'epoch'])
         
     def _record_resource_usage(self):
         """Record current resource usage with timestamp"""
@@ -412,6 +413,37 @@ class TrainingMonitorCallback(TrainerCallback):
         logging.info("Training started at: %s", self.train_start_time)
         self._record_resource_usage()
         
+    def _save_training_metrics(self):
+        """Save training metrics to CSV and create visualization"""
+        # Save metrics to CSV
+        metrics_path = self.output_dir / 'training_metrics.csv'
+        self.metrics_df.to_csv(metrics_path, index=False)
+        
+        # Create training progress visualization
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+        
+        # Loss plot
+        ax1.plot(self.metrics_df['step'], self.metrics_df['loss'], label='Training Loss')
+        if self.metrics_history['moving_avg_loss']:
+            ax1.plot(self.metrics_df['step'][10:], self.metrics_history['moving_avg_loss'], 
+                    label='Moving Average Loss', linestyle='--')
+        ax1.set_xlabel('Training Steps')
+        ax1.set_ylabel('Loss')
+        ax1.set_title('Training Loss Over Time')
+        ax1.legend()
+        ax1.grid(True)
+        
+        # Learning rate plot
+        ax2.plot(self.metrics_df['step'], self.metrics_df['learning_rate'])
+        ax2.set_xlabel('Training Steps')
+        ax2.set_ylabel('Learning Rate')
+        ax2.set_title('Learning Rate Schedule')
+        ax2.grid(True)
+        
+        plt.tight_layout()
+        plt.savefig(self.output_dir / 'training_progress.png')
+        plt.close()
+
     def on_log(self, args, state, control, logs=None, **kwargs):
         if logs:
             current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -450,6 +482,21 @@ class TrainingMonitorCallback(TrainerCallback):
             if 'grad_norm' in logs:
                 logging.info(f"Gradient norm: {logs['grad_norm']:.4f}")
             
+            # Add metrics to DataFrame
+            new_row = {
+                'step': state.global_step,
+                'loss': logs.get('loss', None),
+                'learning_rate': logs.get('learning_rate', None),
+                'epoch': state.epoch
+            }
+            self.metrics_df = pd.concat([self.metrics_df, 
+                                       pd.DataFrame([new_row])], 
+                                       ignore_index=True)
+            
+            # Save metrics every 50 steps
+            if state.global_step % 50 == 0:
+                self._save_training_metrics()
+        
         self._record_resource_usage()
         
     def on_train_end(self, args, state, control, **kwargs):
@@ -516,6 +563,9 @@ class TrainingMonitorCallback(TrainerCallback):
         logging.info(f"Peak CPU RAM usage: {summary['resource_usage']['peak_cpu_ram_gb']:.2f} GB")
         logging.info(f"Peak GPU VRAM usage: {summary['resource_usage']['peak_gpu_vram_gb']:.2f} GB")
         logging.info(f"Peak GPU utilization: {summary['resource_usage']['peak_gpu_utilization']:.1f}%")
+
+        # Final save of metrics and visualization
+        self._save_training_metrics()
 
     def _get_cpu_info(self):
         import cpuinfo
