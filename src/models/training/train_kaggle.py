@@ -27,12 +27,12 @@ from src.utils.config import get_api_keys
 
 # 1.2 Global Constants and Environment Variables
 # Define global constants
-DIALOGUE_JSON_PATH = "data/dialogue/processed/systemprompt_yes.json"  # Path to dialogue JSON file
+DIALOGUE_JSON_PATH = "data/dialogue/processed/systemprompt_yes_40.json"  # Path to dialogue JSON file
 MAX_SEQUENCE_LENGTH = 256  # Maximum number of tokens per dialogue
 MAX_TOKENIZE_LENGTH = 256  # Maximum token length during tokenization
 
 # Setup output directory paths
-BASE_OUTPUT_DIR = "models/kaggle"  
+BASE_OUTPUT_DIR = "models/yesattention_yesprompt_40"  
 MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
 LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
 
