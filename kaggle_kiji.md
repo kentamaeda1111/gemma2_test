@@ -63,11 +63,93 @@ most likely to suceedというドキュメンタリーの中で紹介されて�
 
 ためしにclaudeを使って、それらしいことができるかをためしてみたのですが、
 非常に手ごたえを感じるような結果でした、そして私が着手するトピックを決めた瞬間でした。
-（実際の対話は日本語でやりましたが、英語訳はgithubのレポジトリにあげています）。
+以下はその手ごたえを感じた会話の一部を抜粋したものです。
+
+""""""""""""""
+
+AI:
+Why do we tend to feel as if consciousness is 'self,' even though we know consciousness is just one part of 'self'?"
+
+Myself:
+Rather than thinking that consciousness is "self," I think in most cases either people aren't aware that consciousness is just a part of "self," or even if they become aware of this, there's a dynamic at work where, being greedy, we want to think of it as ours.
+
+AI:
+"That's a very insightful answer. You've pointed out two important things:
+The lack of awareness that 'consciousness is just a part of self'
+The 'dynamic of wanting to think of it as ours' that works even when we become aware
+So here's my question:
+Why do you think this 'dynamic of wanting to think of it as ours' works particularly strongly with 'consciousness,' more than with other parts like hands and feet?"
+
+
+Myself:
+I think it's because we don't want to be separated from it. We might think separation = death. I don't feel love for my hand, but I feel love for my daughter because I don't want to be separated from her. My hand will never abandon me of its own will. That's because I think it's under my complete control. However, my daughter might leave me. I think the mechanism of wanting to keep her close tries to manipulate through something called love, tries to make her addicted to me. Perhaps living beings instinctively understand the North Wind and Sun theory.
+
+AI:
+"That's a very deep insight. You've made an essential point about the relationship between the feeling of 'not wanting to be separated' and 'control.'
+Let's think about 'consciousness' from this perspective. You made an interesting comparison:
+You don't feel love for your hand because it's under complete control
+You feel love for your daughter because she might leave
+So here's my question:
+Is 'consciousness' under our 'complete control'? For example, when we go to sleep, can we freely control our consciousness?"
+
+
+Myself:
+It's not under our control. I think we just want to believe it's under our control.
+
+
+AI:
+"That's right. Your observation that 'we just want to believe it's under our control' is a very important insight.
+Let's organize what we've discussed so far. We seem to be in this paradoxical situation:
+1. Consciousness:
+- Isn't actually under our control
+- But we want to believe it is
+- We fear being separated from it
+2. This belief and fear:
+- Makes it harder to see the fact that consciousness is just a part of self
+- Strengthens attachment to consciousness
+- Functions as a kind of self-defense
+
+So here's my question:
+If we could free ourselves from this belief that 'we can/want to control consciousness,' how would our understanding of 'self' change?"
+
+
+Myself:
+I think it's a sense of being part of nature. A stance of accepting things as they are.
+
+AI:
+"That's right. The insight of 'being part of nature' and 'accepting things as they are' seems to be an important point we've reached in our dialogue.
+Through our conversation, we've followed this path:
+1. First, about the concept of 'self':
+- It's a collective term for multiple elements
+- Consciousness is just one part
+- Self is still self even without consciousness
+
+2. Then about attachment to consciousness:
+- The belief in wanting to control something we can't control
+- Fear of separation
+- Function as self-defense
+
+3. And finally, liberation from these:
+- Understanding self as part of nature
+- Accepting things as they are
+
+So let me ask an essential question:
+What changes do you think this understanding of 'being part of nature' brings to our daily lives?"
+
+
+Myself:
+I think it removes attachments. Since we ultimately have to let go anyway, I think it gives us a stance of being grateful for and enjoying our current state.
+
+AI:
+"That's a wonderful insight. Accepting the reality that 'we ultimately have to let go' and taking the attitude of 'being grateful for and enjoying our current state' seems to show an important path to what we might call 'enlightenment.'
+""""""""""""""
+
+githubのレポジトリには渡したpromptや、AIの返答の意図も含め、全ての対話をアップしましたので、
+興味がある方はそちらをご覧ください。
 
 ■gemma2-2B-jpn-itを選んだか経緯・理由
 さすがにgemma2でclaudeのレベルの出力は期待できないため、
-このプロジェクトはあくまで将来を見据えた足がかりという位置づけです。
+このプロジェクトはあくまで将来を見据えた足がかりという位置づけであり、gemma2でどの程度のものが作れるのか？という検証を行うためのもの、という位置づけです。
 むしろ今回はkaggleのコンペ向けという前提があったため、
 品質の高さを追求するというよりは、
 kaggle環境でトレインできるようなモデルを作るということを目指したかったため、
@@ -158,7 +240,7 @@ For the AI evaluation stage, I established three criteria:
 - Evaluation of Socratic tone on a 0-4 scale
 - Assessment of logical consistency and natural flow on a 0-4 scale
 - Detailed comments on each dialogue (to help me verify the AI's evaluation process)
-
+（explanable AIの取り組み）
 The results of this quality assurance process were positive:
 - We achieved a good yield rate on first attempts
 - Upon review, even dialogues that received lower scores showed acceptable quality
@@ -180,7 +262,7 @@ While we could have used tuners like XTuner, Axolotl, or LLaMA Factory to implem
 
 # Final Training Data
 結果的には2つのデータを以下のように用意しました。
-違いはprompt濃霧です。
+違いはsystem promptのような文言を挿入しているか否か、という点のみです。
 
 | Item | model1 | model2 |
 |------|--------|--------|
@@ -223,6 +305,7 @@ While we could have used tuners like XTuner, Axolotl, or LLaMA Factory to implem
 あともう一つ苦戦した点がkaggle環境ではしらせれるようにすることです。
 GPUは大丈夫だったのですが、CPUがどうしてもevaluateのところで２９GBを越え、
 クラッシュをしてしまいました。
+
 最終的にはeval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])
 を５０まで下げ、且つAutoModelForCausalLM.from_pretrainedでmax_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}を設定することで
 実現しました。
