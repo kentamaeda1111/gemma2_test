@@ -8,12 +8,3 @@ __pycache__/
 # Project specific
 others/**
 
-# IDE 
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS specific 
-.DS_Store
-Thumbs.db 

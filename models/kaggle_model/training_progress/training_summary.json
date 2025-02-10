@@ -1,0 +1,29 @@
+{
+  "training_duration": "1:35:27.141626",
+  "final_loss": 0.9978,
+  "total_steps": 0,
+  "final_epoch": null,
+  "learning_rate_summary": {
+    "initial": 8.08080808080808e-06,
+    "final": 8.053294112462696e-08,
+    "schedule_type": "cosine_with_restarts"
+  },
+  "loss_summary": {
+    "final_moving_avg": null,
+    "best_loss": 0.9953
+  },
+  "resource_usage": {
+    "peak_cpu_ram_gb": 1.5665855407714844,
+    "peak_gpu_vram_gb": 3.258523941040039,
+    "peak_gpu_utilization": 84.0
+  },
+  "hardware_info": {
+    "cpu_info": {
+      "model": "AMD EPYC 7402P 24-Core Processor",
+      "cores": 8,
+      "threads": 16
+    },
+    "gpu_info": "Failed to get GPU info",
+    "total_ram": 62.79140090942383
+  }
+}

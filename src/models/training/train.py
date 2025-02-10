@@ -1,7 +1,3 @@
-# https://claude.ai/chat/7d429d8f-70ef-458e-a402-08027737b462
-#　これは記事にするべき。
-
-
 # 1. Environment Setup and Imports
 # 1.1 Import Dependencies
 import torch
@@ -31,7 +27,7 @@ from src.utils.config import get_api_keys
 
 # 1.2 Global Constants and Environment Variables
 # Define global constants
-DIALOGUE_JSON_PATH = "data/dialogue/processed/systemprompt_yes_40.json"  # Path to dialogue JSON file
+DIALOGUE_JSON_PATH = "data/dialogue/processed/kaggle_model.json"  # Path to dialogue JSON file
 MAX_SEQUENCE_LENGTH = 256  # Maximum number of tokens per dialogue
 MAX_TOKENIZE_LENGTH = 256  # Maximum token length during tokenization
 
@@ -290,7 +286,8 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map="auto",
     torch_dtype=torch.bfloat16,
     attn_implementation='eager',
-    token=os.environ["HUGGINGFACE_TOKEN"],  
+    token=os.environ["HUGGINGFACE_TOKEN"],
+    max_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}
 )
 
 # 3.3 LoRA Setup and Application
