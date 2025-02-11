@@ -339,15 +339,13 @@ def _create_console_ui(chatai: ChatAI):
     """
     Creates a console-based UI for standard Python environment
     """
-    # Display initial messages
-    for i, msg in enumerate(chatai.message_history.queue):
-        if msg["role"] == "user":
-            if i == 0:
-                pass  # Skip first user input
-            else:
-                print(f"\nYou: {msg['content']}")
-        else:
-            print(f"\nSocrates: {msg['content']}")
+    # 最初の質問を表示
+    initial_question = (
+        "\nSocrates: 今日は『自分』という、これ以上ないほど身近な存在でありながら、"
+        "意外と説明することが難しい概念について話そうではないか。\n"
+        "君は今、この質問を読んでいるね。では、「読んでいる」のは誰だと思うかね？"
+    )
+    print(initial_question)
     
     # Start conversation loop
     while True:
