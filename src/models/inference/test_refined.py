@@ -25,6 +25,7 @@ HF_TOKEN = api_keys['huggingface_api_key']
 
 if not HF_TOKEN:
     logger.warning("HUGGINGFACE_API_KEY not found in environment variables")
+    raise ValueError("Hugging Face API token is required")
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 MODEL_PATH = os.path.join(ROOT_DIR, "models", MODEL_VERSION, "model", CHECKPOINT)
@@ -56,6 +57,9 @@ class ChatAI:
             max_history (int): Number of turns to store in the history
             hf_token (str): Hugging Face access token
         """
+        if not hf_token:
+            raise ValueError("Hugging Face API token is required")
+        
         self.max_history = max_history
         self.message_history = Queue(maxsize=max_history)
         self.hf_token = hf_token
