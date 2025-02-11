@@ -65,37 +65,44 @@ class ChatAI:
         self.hf_token = hf_token
         
         try:
-            logger.info("Loading model and tokenizer for T4 environment...")
+            logger.info("Loading model and tokenizer...")
             
-            # Tokenizer setup with T4 optimizations
+            # デバイスの検出
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            logger.info(f"Using device: {device}")
+            
+            # 基本設定
+            load_config = {
+                "trust_remote_code": True,
+                "token": hf_token,
+                "low_cpu_mem_usage": True
+            }
+            
+            # デバイスに応じた設定
+            if device == "cuda":
+                load_config.update({
+                    "device_map": "auto",
+                    "torch_dtype": torch.bfloat16
+                })
+            else:
+                load_config.update({
+                    "device_map": "auto",
+                    "torch_dtype": torch.float32,
+                    "offload_folder": "offload_folder"
+                })
+                os.makedirs("offload_folder", exist_ok=True)
+            
             self.tokenizer = AutoTokenizer.from_pretrained(
                 base_model,
                 token=hf_token,
-                trust_remote_code=True,
-                use_fast=True  # 高速トークナイザーを使用
+                trust_remote_code=True
             )
             
-            # T4環境用の最適化設定
-            load_config = {
-                "device_map": "auto",  # 自動デバイスマッピング
-                "torch_dtype": torch.float16,  # T4向けfloat16
-                "trust_remote_code": True,
-                "token": hf_token,
-                "low_cpu_mem_usage": True,
-                "max_memory": {
-                    0: "12GB",  # 1台目のGPUに12GB割り当て
-                    1: "12GB",  # 2台目のGPUに12GB割り当て
-                    "cpu": "24GB"  # CPU用メモリ
-                }
-            }
-            
-            # Load base model with T4 optimized configuration
             base_model_obj = AutoModelForCausalLM.from_pretrained(
                 base_model,
                 **load_config
             )
             
-            # Load PEFT model with same optimizations
             self.model = PeftModel.from_pretrained(
                 base_model_obj,
                 model_path,
@@ -370,7 +377,12 @@ if not os.path.exists(MODEL_PATH):
 else:
     try:
         if IS_KAGGLE_SUBMISSION:
-            chatai = ChatAI() 
+            chatai = ChatAI(
+                model_path="./model",  # Kaggle環境用のデフォルトパス
+                base_model=BASE_MODEL,
+                max_history=MAX_HISTORY,
+                hf_token=HF_TOKEN  # HF_TOKENを必ず渡す
+            )
         else:
             chatai = ChatAI(
                 model_path=MODEL_PATH,
