@@ -32,7 +32,7 @@ MAX_SEQUENCE_LENGTH = 256  # Maximum number of tokens per dialogue
 MAX_TOKENIZE_LENGTH = 256  # Maximum token length during tokenization
 
 # Setup output directory paths
-BASE_OUTPUT_DIR = "models/yesattention_noprompt_50_lolarefine_"  
+BASE_OUTPUT_DIR = "models/yesattention_noprompt_50_lolarefine"  
 MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
 LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
 

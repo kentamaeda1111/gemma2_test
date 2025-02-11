@@ -36,7 +36,7 @@ MAX_SEQUENCE_LENGTH = 256  # Maximum number of tokens per dialogue
 MAX_TOKENIZE_LENGTH = 256  # Maximum token length during tokenization
 
 # Setup output directory paths
-BASE_OUTPUT_DIR = "models/noattention_noprompt_50_lolarifine"  
+BASE_OUTPUT_DIR = "models/noattention_noprompt_50_lolarefine"  
 MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
 LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
 
@@ -584,7 +584,7 @@ training_args = TrainingArguments(
     evaluation_strategy="steps",
     eval_steps=20,
     save_strategy="steps",
-    save_steps=200,
+    save_steps=100,
     gradient_accumulation_steps=8,
     max_steps=-1,
     disable_tqdm=False,
@@ -600,7 +600,7 @@ training_args = TrainingArguments(
     gradient_checkpointing=True,
     max_grad_norm=0.5,
     dataloader_pin_memory=True,
-    save_total_limit=5,
+    save_total_limit=10,
     fp16=True,
     optim="adamw_torch_fused",
     eval_accumulation_steps=8,
