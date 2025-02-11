@@ -280,6 +280,10 @@ While we could have used tuners like XTuner, Axolotl, or LLaMA Factory to implem
 """"""""""""""""""""""""""""""トレイン・テストフェーズ"""""""""""""""""""""""
 
 ４ビット量子化の設定や、LoLAを使う、という方針はkaggle環境でgemma-2の2Bをトレインするためには必須だと考えました。
+
+https://chatgpt.com/c/67aace53-79d0-800c-b216-7759a84cb911
+https://gemini.google.com/app/d69be52592e131ce
+
 設定の仕方やどの程度が妥当か、はデータ生成時にも参考にした以下のような文献・媒体にあたりました。
 
 - Gemma and Gemma 2B related documentation and discussions on Hugging Face and GitHub
