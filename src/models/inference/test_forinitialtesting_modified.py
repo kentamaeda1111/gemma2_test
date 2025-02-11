@@ -75,13 +75,16 @@ class ChatAI:
             load_config = {
                 "trust_remote_code": True,
                 "token": hf_token,
-                "torch_dtype": torch.bfloat16 if device == "cuda" else torch.float32,
-                "device_map": "auto",
-                "attn_implementation": "eager"
+                "low_cpu_mem_usage": True
             }
             
             # Adjust configuration based on device
-            if device == "cpu":
+            if device == "cuda":
+                load_config["device_map"] = "auto"
+                load_config["torch_dtype"] = torch.bfloat16
+            else:
+                load_config["device_map"] = "auto"
+                load_config["torch_dtype"] = torch.float32
                 load_config["offload_folder"] = "offload_folder"
                 os.makedirs("offload_folder", exist_ok=True)
             
@@ -89,6 +92,13 @@ class ChatAI:
             self.model = AutoModelForCausalLM.from_pretrained(
                 base_model,
                 **load_config
+            )
+            
+            # Load the PEFT model
+            self.model = PeftModel.from_pretrained(
+                base_model_obj,
+                model_path,
+                torch_dtype=load_config["torch_dtype"]
             )
             
             logger.info(f"Model loaded successfully on {device}")

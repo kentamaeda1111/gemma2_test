@@ -1,4 +1,4 @@
-# initialではなく、チューニングモデル推論用に修正
+# initialではなく、チューニングモデル推論用に修正 あとtest_nsystempromptの設定も合流させた
 
 from src.utils.config import get_api_keys
 import torch
@@ -12,8 +12,8 @@ from huggingface_hub import login
 from peft import PeftModel
 
 # Global Settings
-MODEL_VERSION = "kaggle_model_nsystemprompt"  
-CHECKPOINT = "checkpoint-1200"  
+MODEL_VERSION = "noattention"  
+CHECKPOINT = "checkpoint-1980"  
 MAX_HISTORY = 5  
 BASE_MODEL = "google/gemma-2-2b-jpn-it"
 
@@ -75,10 +75,9 @@ class ChatAI:
             load_config = {
                 "trust_remote_code": True,
                 "token": hf_token,
-                "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
+                "torch_dtype": torch.bfloat16 if device == "cuda" else torch.float32,
                 "device_map": "auto",
-                "max_memory": {0: "14GB"},
-                "attn_implementation": "sdpa" 
+                "attn_implementation": "eager"
             }
             
             # Adjust configuration based on device
@@ -100,9 +99,6 @@ class ChatAI:
                 "temperature": 0.7,
                 "top_p": 0.9,
                 "repetition_penalty": 1.1,
-                "pad_token_id": self.tokenizer.pad_token_id,
-                "eos_token_id": self.tokenizer.eos_token_id,
-                "use_cache": True  # 推論速度向上
             }
             
         except Exception as e:

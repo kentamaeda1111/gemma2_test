@@ -88,7 +88,8 @@ class ChatAI:
                 load_config["offload_folder"] = "offload_folder"
                 os.makedirs("offload_folder", exist_ok=True)
             
-            base_model_obj = AutoModelForCausalLM.from_pretrained(
+            # Load the model directly (without PeftModel)
+            self.model = AutoModelForCausalLM.from_pretrained(
                 base_model,
                 **load_config
             )

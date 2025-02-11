@@ -1,0 +1,707 @@
+{
+  "lr_schedule": [],
+  "batch_metrics": [],
+  "gpu_metrics": [
+    {
+      "timestamp": "2025-02-11 04:44:19",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.1794891357421875,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:45:12",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 90.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:46:01",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 89.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:46:27",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:46:57",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 90.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:47:47",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 67.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:48:36",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:48:38",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 10.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:49:30",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 84.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:50:19",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 91.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:50:44",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 14.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:51:13",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 77.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:52:02",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 89.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:52:51",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 31.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:52:54",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:53:45",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 90.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:54:35",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 85.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:54:59",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 15.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:55:28",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 90.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:56:17",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 87.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:57:06",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 38.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:57:09",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:58:00",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 87.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:58:50",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.2125282287597656,
+          "utilization": 90.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:59:14",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 36.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 04:59:43",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 87.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:00:32",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 88.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:01:21",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:01:24",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 7.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:02:16",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 81.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:03:06",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 89.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:03:30",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:03:58",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 81.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:04:48",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 82.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:05:37",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:05:39",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 12.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:06:31",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 90.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:07:22",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 89.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:07:45",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:08:14",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 79.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:09:03",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 71.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:09:52",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:09:55",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 23.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:10:46",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 88.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:11:37",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 90.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:12:01",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:12:29",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 87.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:13:19",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.2125282287597656,
+          "utilization": 80.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:14:08",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:14:11",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 15.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:15:02",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 86.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:15:53",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 90.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:16:16",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:16:45",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 90.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:17:36",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 84.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:18:23",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 27.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:18:26",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:19:17",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 89.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:20:08",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 74.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:20:31",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.2125282287597656,
+          "utilization": 12.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:21:00",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 78.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:21:51",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 85.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:22:38",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 31.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:22:41",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:23:32",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 82.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:24:24",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 90.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:24:48",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 0.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:25:15",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 82.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:26:07",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 90.0
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-02-11 05:26:30",
+      "metrics": [
+        {
+          "device": 0,
+          "vram_used": 3.212677001953125,
+          "utilization": 60.0
+        }
+      ]
+    }
+  ],
+  "moving_avg_loss": []
+}
