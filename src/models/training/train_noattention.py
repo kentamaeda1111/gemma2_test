@@ -1,3 +1,7 @@
+# https://claude.ai/chat/7d429d8f-70ef-458e-a402-08027737b462
+#　これは記事にするべき。
+
+
 # 1. Environment Setup and Imports
 # 1.1 Import Dependencies
 import torch
@@ -32,7 +36,7 @@ MAX_SEQUENCE_LENGTH = 256  # Maximum number of tokens per dialogue
 MAX_TOKENIZE_LENGTH = 256  # Maximum token length during tokenization
 
 # Setup output directory paths
-BASE_OUTPUT_DIR = "models/yesattention_noprompt_50_lolarefine_"  
+BASE_OUTPUT_DIR = "models/noattention_noprompt_50_lolarifine"  
 MODEL_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/model"
 LOG_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/logs"
 
@@ -173,66 +177,7 @@ def tokenize_function(examples):
     return result
 
 def preprocess_function(examples):
-    # Focus on Socratic tone and inquiry patterns
-    socratic_patterns = [
-        # Question patterns
-        "かね", "だろうか", "のかね", "ではないかね",
-        # Question introduction
-        "では", "について",
-        # Second person (characteristic of mature tone)
-        "君は", "君が", "君の"
-    ]
-    
-    # Get tokenized text
-    texts = tokenizer.batch_decode(examples['input_ids'])
-    new_attention_masks = []
-    
-    for text, mask in zip(texts, examples['attention_mask']):
-        if not isinstance(mask, list):
-            mask = mask.tolist()
-
-        new_mask = mask.copy() 
-        
-        # Split text
-        sentences = text.split('。')
-        current_pos = 0
-        
-        for sentence in sentences:
-            if not sentence.strip():
-                continue
-            
-            # Detect and highlight Socratic patterns
-            for pattern in socratic_patterns:
-                if pattern in sentence:
-                    # Identify pattern position
-                    pattern_tokens = tokenizer.encode(pattern, add_special_tokens=False)
-                    pattern_len = len(pattern_tokens)
-                    
-                    # Highlight tokens containing the pattern and its surroundings
-                    pattern_start = current_pos + len(tokenizer.encode(sentence, add_special_tokens=False)) - pattern_len
-                    for i in range(max(0, pattern_start - 2), min(len(mask), pattern_start + pattern_len + 2)):
-                        new_mask[i] = 1.0  # Max attention to pattern part
-            
-            # Update position for each sentence segment
-            current_pos += len(tokenizer.encode(sentence + '。', add_special_tokens=False))
-        
-        # Special token masks are set to 1.0
-        if tokenizer.bos_token_id is not None:
-            new_mask[0] = 1.0  # BOS token
-        if tokenizer.eos_token_id is not None:
-            new_mask[-1] = 1.0  # EOS token
-            
-        new_attention_masks.append(new_mask)
-
-    examples['attention_mask'] = new_attention_masks
     return examples
-
-# Add special tokens to tokenizer
-tokenizer.add_special_tokens({
-    'additional_special_tokens': [
-        '。', '、', '！', '？',  # Punctuation marks
-    ]
-})
 
 # 2.5 Data Set Preparation
 # Prepare base dataset
@@ -639,7 +584,7 @@ training_args = TrainingArguments(
     evaluation_strategy="steps",
     eval_steps=20,
     save_strategy="steps",
-    save_steps=100,
+    save_steps=200,
     gradient_accumulation_steps=8,
     max_steps=-1,
     disable_tqdm=False,
@@ -655,7 +600,7 @@ training_args = TrainingArguments(
     gradient_checkpointing=True,
     max_grad_norm=0.5,
     dataloader_pin_memory=True,
-    save_total_limit=10,
+    save_total_limit=5,
     fp16=True,
     optim="adamw_torch_fused",
     eval_accumulation_steps=8,
