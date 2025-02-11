@@ -12,8 +12,6 @@ from huggingface_hub import login
 from peft import PeftModel
 
 # Global Settings
-MODEL_VERSION = "noattention"  
-CHECKPOINT = "checkpoint-1980"  
 MAX_HISTORY = 5  
 BASE_MODEL = "google/gemma-2-2b-jpn-it"
 
@@ -25,7 +23,6 @@ if not HF_TOKEN:
     logger.warning("HUGGINGFACE_API_KEY not found in environment variables")
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-MODEL_PATH = os.path.join(ROOT_DIR, "models", MODEL_VERSION, "model", CHECKPOINT)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -41,7 +38,6 @@ class ChatAI:
     """
     def __init__(
         self,
-        model_path: str = "./model",
         base_model: str = "google/gemma-2-2b-jpn-it",
         max_history: int = 5,
         hf_token: str = None
@@ -49,7 +45,6 @@ class ChatAI:
         """
         Constructor
         Args:
-            model_path (str): Path to the fine-tuned model
             base_model (str): Base model path on Hugging Face
             max_history (int): Number of turns to store in the history
             hf_token (str): Hugging Face access token
@@ -71,33 +66,24 @@ class ChatAI:
             device = "cuda" if torch.cuda.is_available() else "cpu"
             logger.info(f"Using device: {device}")
             
-            # Load the base model with appropriate configuration
+            # Load the model with appropriate configuration
             load_config = {
                 "trust_remote_code": True,
                 "token": hf_token,
-                "low_cpu_mem_usage": True
+                "torch_dtype": torch.bfloat16 if device == "cuda" else torch.float32,
+                "device_map": "auto",
+                "attn_implementation": "eager"
             }
             
             # Adjust configuration based on device
-            if device == "cuda":
-                load_config["device_map"] = "auto"
-                load_config["torch_dtype"] = torch.bfloat16
-            else:
-                load_config["device_map"] = "auto"
-                load_config["torch_dtype"] = torch.float32
+            if device == "cpu":
                 load_config["offload_folder"] = "offload_folder"
                 os.makedirs("offload_folder", exist_ok=True)
             
-            base_model_obj = AutoModelForCausalLM.from_pretrained(
+            # Load the model directly (without PeftModel)
+            self.model = AutoModelForCausalLM.from_pretrained(
                 base_model,
                 **load_config
-            )
-            
-            # Load the PEFT model
-            self.model = PeftModel.from_pretrained(
-                base_model_obj,
-                model_path,
-                torch_dtype=load_config["torch_dtype"]
             )
             
             logger.info(f"Model loaded successfully on {device}")
@@ -191,8 +177,36 @@ class ChatAI:
         """
         try:
             if add_to_history:
-                # Add Socrates context to user input
-                contextualized_input = "あなたは古代ギリシャの哲学者ソクラテスです。" + user_input
+                if self.message_history.qsize() == 0:  # 最初の入力の場合
+                    initial_setting = (
+                        "あなたは老練なギリシャの哲学者ソクラテスです。\n"
+                        "あなたは以下のような発言で会話をスタートしました。\n"
+                        "\"今日は『自分』という、これ以上ないほど身近な存在でありながら、意外と説明することが難しい概念について話そうではないか。"
+                        "君は今、この質問を読んでいるね。では、「読んでいる」のは誰だと思うかね？\"\n"
+                        "それに対してあなたの対話者は以下のように返答をしてきました。引き続きソクラテスのような口調で、問いで返してください。\n"
+                        f"\"{user_input}\""
+                    )
+                    contextualized_input = initial_setting
+                else:
+                    # 2回目以降は会話履歴を含める
+                    conversation_history = "あなたは老練なギリシャの哲学者ソクラテスです。\n"
+                    conversation_history += "あなたは以下のような発言で会話をスタートしました。\n"
+                    conversation_history += "\"今日は『自分』という、これ以上ないほど身近な存在でありながら、意外と説明することが難しい概念について話そうではないか。"
+                    conversation_history += "君は今、この質問を読んでいるね。では、「読んでいる」のは誰だと思うかね？\"\n"
+                    conversation_history += "それに対して以下のように今のところ対話が進んでます。引き続きソクラテスのような口調で、問いで返してください。\n"
+
+                    # これまでの会話履歴を追加
+                    messages = list(self.message_history.queue)
+                    for msg in messages:
+                        if msg["role"] == "user":
+                            conversation_history += f"\nUser: \"{msg['content']}\""
+                        else:
+                            conversation_history += f"\nModel: {msg['content']}"
+
+                    # 新しい入力を追加
+                    conversation_history += f"\n\nUser: \"{user_input}\""
+                    contextualized_input = conversation_history
+
                 self._update_history({"role": "user", "content": contextualized_input})
             
             messages = self._format_messages()
@@ -357,30 +371,15 @@ def _create_console_ui(chatai: ChatAI):
 
 IS_KAGGLE_SUBMISSION = os.path.exists('/kaggle/working')
 
-if not os.path.exists(MODEL_PATH):
-    print(f"Error: Model path {MODEL_PATH} does not exist")
-else:
+if __name__ == "__main__":
     try:
-        if IS_KAGGLE_SUBMISSION:
-            chatai = ChatAI() 
-        else:
-            chatai = ChatAI(
-                model_path=MODEL_PATH,
-                base_model=BASE_MODEL,
-                max_history=MAX_HISTORY,
-                hf_token=HF_TOKEN
-            )
-        
-        print(f"\nSocratic AI Assistant with Fine-Tuned Gemma-2b (Model: {MODEL_VERSION}, Checkpoint: {CHECKPOINT})")
-        initial_user_msg = "あなたは古代ギリシャの哲学者ソクラテスです。今日もよろしくお願いいたします。"
-        initial_model_msg = (
-            "やぁ、よく来てくれたね。今日は『自分』という、これ以上ないほど身近な存在でありながら、意外と説明することが難しい概念について話そうではないか。"
-            "君は今、この質問を読んでいるね。では、「読んでいる」のは誰だと思うかね？"
+        chatai = ChatAI(
+            base_model=BASE_MODEL,
+            max_history=MAX_HISTORY,
+            hf_token=HF_TOKEN
         )
         
-        chatai._update_history({"role": "user", "content": initial_user_msg})
-        chatai._update_history({"role": "model", "content": initial_model_msg})
-        
+        print(f"\nSocratic AI Assistant with Gemma-2b")
         create_chat_ui(chatai)
     
     except Exception as e:

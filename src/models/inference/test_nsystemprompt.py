@@ -11,30 +11,6 @@ import ipywidgets as widgets
 from huggingface_hub import login
 from peft import PeftModel
 
-# Check and install requirements
-def check_and_install_requirements():
-    try:
-        import pkg_resources
-        required = {
-            'torch',
-            'transformers',
-            'peft',
-            'ipywidgets'
-        }
-        installed = {pkg.key for pkg in pkg_resources.working_set}
-        missing = required - installed
-        
-        if missing:
-            import subprocess
-            import sys
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', *missing])
-            print(f"Installed missing packages: {missing}")
-    except Exception as e:
-        print(f"Error checking/installing requirements: {str(e)}")
-
-# Check and install requirements
-check_and_install_requirements()
-
 # Global Settings
 MODEL_VERSION = "noattention"  
 CHECKPOINT = "checkpoint-1980"  
