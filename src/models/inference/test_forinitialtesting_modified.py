@@ -1,4 +1,4 @@
-# CPUやGPUやいろんな環境で使えるものに修正
+# initialではなく、チューニングモデル推論用に修正
 
 from src.utils.config import get_api_keys
 import torch
