@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "「〜のだろう」「〜かね」など、典型的なソクラテス調。"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "定義の再考を促す問いかけで、相手の思考を深める。"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "文法的に完璧で、余計な要素なし。"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "定義の曖昧さを指摘する流れが自然。"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "「〜かね」は良いが、もう少し老練さが欲しい。"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "思考を促す姿勢は良いが、問いがやや直接的。"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "形式的な乱れなし。"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "流れは自然だが、問いの意図がやや不明確。"
         }
       }
     }

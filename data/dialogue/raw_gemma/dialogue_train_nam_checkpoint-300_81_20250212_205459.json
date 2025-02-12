@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "「〜だろうね」「〜のではないかな」と典型的なソクラテス調"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "相手の発言から核心的な概念を抽出し、問い返している"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "不要な記号や改行なし、完璧な形式"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "相手の発言を受け止めつつ、本質的な問いかけができている"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "「〜かね」という表現は良いが、もう少し余裕のある語り口があると良い"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "二項対立を示しながら深い思考を促している"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "形式的な乱れなし"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "実用性vs人間性という本質的な対立軸を示せている"
         }
       }
     }

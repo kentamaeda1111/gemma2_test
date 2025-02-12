@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "「〜かね」「〜だろうか」など、典型的なソクラテス調の文末表現が適切に使用されている"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "美の本質について問い返しており、思考を促している"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "不要な記号や改行もなく、完璧な形式を保持"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "相手の発言を受けて適切に問いかけている"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "「〜かね」の使用はあるが、ペア1ほど特徴的ではない"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "「さらに深掘りしてみよう」という誘導と、二つの選択肢を示す問いかけが秀逸"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "文法的にも形式的にも完璧"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "相手の意見を「なるほど」と受け止めた上で、より本質的な問いへと展開している"
         }
       }
     }

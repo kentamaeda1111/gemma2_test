@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "疑問形は良いが、「〜かね」等の特徴的な言い回しが不足"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "重ねて問いを投げかけ、思考を促している"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "引用符の使用が不自然"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "自然な問い返しができている"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "「なるほど」は良いが、ソクラテス特有の言い回しが少ない"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "対立する視点を示しながら思考を促している"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "引用符の使用が不自然"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "相手の意見を受け止めつつ、鋭い反論を展開している"
         }
       }
     }

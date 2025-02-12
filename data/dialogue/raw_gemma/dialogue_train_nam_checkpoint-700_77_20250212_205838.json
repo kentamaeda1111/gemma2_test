@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "「〜かな？」「〜のかね？」など、典型的なソクラテス調の文末表現が適切に使用されている"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "相手の発言を受け止めつつ、具体例を挙げながら深い思考を促している"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "不要な記号や改行もなく、完璧な形式を保持"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "相手の発言を適切に受け止め、論理的に掘り下げている"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "「〜だね」「〜のだろう」など、ソクラテス的な口調は維持されている"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "問いかけの形で思考を促しているが、やや唐突な展開"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "形式的な乱れは一切ない"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "所有に関する問いかけへの転換が唐突で、前の文脈との繋がりが弱い"
         }
       }
     }

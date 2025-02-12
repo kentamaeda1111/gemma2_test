@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "「〜だ」「〜のか」という問いかけ調で、思慮深い印象を与えている"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "直接的な答えを避け、二つの選択肢を示して深い思考を促している"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "不要な記号や改行もなく、整った形式を保持"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "相手の発言を受け止めつつ、本質的な問いへと展開している"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "「〜だろうか」という問いかけ調で、ソクラテス的な雰囲気を醸成"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "より本質的な問いを投げかけ、深い思索を促している"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "文法的にも形式的にも崩れがない"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "相手の発言を受けつつ、新たな視点を提示できている"
         }
       }
     }

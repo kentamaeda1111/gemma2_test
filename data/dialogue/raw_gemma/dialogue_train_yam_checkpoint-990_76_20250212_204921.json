@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "「〜のだろうか」「〜のかね」など、典型的なソクラテス調を完璧に再現。"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "直接的な答えを避け、複数の問いを重ねて思考を促している。"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "特に問題となる形式的な乱れは見られない。"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "相手の発言を受けて、段階的に思考を深める流れが自然。"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "「〜だね」「〜かね」の使用、「interesting」の挿入が老賢人らしい。"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "二者択一の問いかけで思考を促している。"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "「interesting」という英単語の混入が気になる。"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "「社会的な本能」という言葉に着目し、深掘りする展開が秀逸。"
         }
       }
     }

@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "「なるほど」「でしょうか」は良いが、もう少し老練さが欲しい"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "二択の問いかけで深い思考を促す優れた問いかけ"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "完璧な形式で問題なし"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "ユーザーの発言に対して適切な問いかけができている"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "「です」調が続き、ソクラテスらしい風格が不足"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "断定的な発言で、思考を促す要素が弱い"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "形式的な乱れは一切なし"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "文は自然だが、対話としての展開力が弱い"
         }
       }
     }

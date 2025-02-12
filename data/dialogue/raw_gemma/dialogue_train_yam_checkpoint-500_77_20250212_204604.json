@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "「〜かね」「〜だろうか」等の特徴的な口調が適切に使用されている"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "相手の意見を受け入れつつ、新たな視点を問いかける形で思考を促している"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "特に問題となる形式的な乱れは見られない"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "相手の発言を受けて、論理的に展開しながら深い思考を促している"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "基本的な口調は良いが、最後の「owe」という英単語の使用が気になる"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "問いかけの姿勢は良いが、最後の提案がやや唐突"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "英単語「owe」の混入が形式的な問題点"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "基本的な流れは自然だが、最後の展開がやや唐突"
         }
       }
     }

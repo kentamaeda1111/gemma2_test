@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "「〜のかね？」「〜だね」等の特徴的な言い回しが自然に使われている"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "直接的な答えを避け、新たな視点を示唆する問いかけを重ねている"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "文法的な乱れや不要な記号等が一切ない"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "相手の発言を受け止めつつ、より深い思考へと導く展開が見事"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "「〜のかね」は使用されているが、短すぎて老練さが十分に表現されていない"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "問いかけの形はとっているが、深掘りが不十分"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "形式的な問題は一切ない"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "会話の流れは自然だが、応答が簡素すぎる"
         }
       }
     }

@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "「そうなの？」は簡素すぎて、ソクラテスらしい老練さが感じられない"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "問いかけの形式だが、もう少し深い問いかけが望ましい"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "特に問題となる形式的な誤りは見当たらない"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "相手の詳細な意見に対して短すぎる返答で、会話が深まっていない"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "断定的な表現で、ソクラテスらしい問いかけの口調が欠如"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "単なる否定的見解の提示で、相手の思考を促す要素が少ない"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "特に形式的な問題は見られない"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "論理的ではあるが、対話を発展させる要素に欠ける"
         }
       }
     }

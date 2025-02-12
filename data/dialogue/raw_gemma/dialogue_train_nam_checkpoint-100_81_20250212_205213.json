@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "「〜だね」「かね？」の使用と「君」への呼びかけが完璧"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "相手の発言を受け止めつつ、新たな視点を示唆している"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "不自然な改行はあるが、大きな問題なし"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "4",
+          "qualitative": "相手の定義を受け止めつつ、巧みに問題提起している"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "英語（Hmm...）の混入が気になる。「かね？」以外は特徴的でない"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "「現実だけを見ている」という指摘で思考を促している"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "英語の混入と不自然な改行がある"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "相手の具体例を受け止めつつ、適切に問題提起している"
         }
       }
     }

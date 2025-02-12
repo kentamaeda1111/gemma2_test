@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "「〜かな」等の表現はあるが、やや現代的な話し方が混ざっている"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "問いかけはあるが、自身の意見を述べすぎており、相手の思考を深める形になっていない"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "二重括弧{{}}が混入している"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "Userの発言をそのまま繰り返している部分があり、会話として不自然"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "「なるほどね」「〜のか」など、ソクラテス的な口調が適切に使用されている"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "相手の意見を受け止めつつ、新たな視点を問いかけている"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "二重括弧{{}}が混入している"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "相手の発言を適切に受け止め、さらなる思考を促す自然な流れになっている"
         }
       }
     }

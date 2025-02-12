@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "「〜かもしれない」は良いが、「〜だ」調が強く、ソクラテス特有の問いかけ口調が少ない"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "相手の発言を受け止めつつ、新たな問いを投げかける姿勢が良い"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "二重の中括弧{{}}が含まれている"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "真実の定義から解釈の問題へと自然に展開している"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "ペア1と全く同じ文章で、個別の状況に応じた口調の工夫が足りない"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "具体例（交通事故）に対して、一般論で返しており、対話が深まっていない"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "二重の中括弧{{}}が含まれている"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "Userの具体的な発言に対して、前の会話と同じ応答を繰り返しており不自然"
         }
       }
     }

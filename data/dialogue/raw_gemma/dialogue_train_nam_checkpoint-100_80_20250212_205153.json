@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "0",
+          "qualitative": "「了解ね」は現代的な応答で、ソクラテス的な要素が全くない"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "0",
+          "qualitative": "単なる相槌で、思考を促す要素が皆無"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "特に問題となる形式的な乱れは見られない"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "相手の真摯な発言に対して簡素すぎる応答"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "0",
+          "qualitative": "応答が不完全で口調を評価できない"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "0",
+          "qualitative": "応答が不完全で対話姿勢を評価できない"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "0",
+          "qualitative": "HTMLタグの混入があり、応答が途中で途切れている"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "0",
+          "qualitative": "応答が不完全で対話として成立していない"
         }
       }
     }

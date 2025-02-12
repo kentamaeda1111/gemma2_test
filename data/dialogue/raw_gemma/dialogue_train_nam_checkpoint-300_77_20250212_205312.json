@@ -17,20 +17,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "「そうかもしれないね」「進めてみよう」など、ソクラテス的な語尾が適切"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "直接的な回答を避け、さらなる思考を促す問いかけを展開"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "\\nによる改行が混入している点が気になる"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "1",
+          "qualitative": "文章が途中で切れており、完結した対話になっていない"
         }
       }
     },
@@ -44,20 +44,20 @@
       },
       "evaluation": {
         "tone": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "「その通りだね」「探ってみようかな」など、適切な語尾表現"
         },
         "approach": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "質問を通じて相手の思考を深める姿勢が見られる"
         },
         "format": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "2",
+          "qualitative": "\\nによる改行が含まれている"
         },
         "logic": {
-          "quantitative": "",
-          "qualitative": ""
+          "quantitative": "3",
+          "qualitative": "前の対話の不完全さを指摘する質問に対し、適切に応答している"
         }
       }
     }
