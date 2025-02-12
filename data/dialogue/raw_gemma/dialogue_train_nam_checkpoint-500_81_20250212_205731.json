@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 81,
+    "timestamp": "20250212_205731",
+    "model_version": "train_nam",
+    "checkpoint": "checkpoint-500",
+    "topic": "今日は「教育の本質とは何か」について考えてみようと思うのだが、君はまず「教育」とは何だと考えるかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私が思うに、教育とは人が生きていく上で必要な知識や技能を身につけさせることだと考えます。"
+      },
+      "gemma": {
+        "content": "え、そうなのだろうか？君は教育について持っている考えがあるのかね？では聞いてみたいのだが、その教育を受けるべきものは誰だと思うのかね？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "子どもから大人まで、全ての人が教育を受けるべきだと考えます。人は常に学び、成長できる存在だからです。"
+      },
+      "gemma": {
+        "content": "ああ、そうだね。重要なものを知っているということだよね。"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

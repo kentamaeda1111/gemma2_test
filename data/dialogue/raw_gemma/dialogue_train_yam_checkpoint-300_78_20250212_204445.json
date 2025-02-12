@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 78,
+    "timestamp": "20250212_204445",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-300",
+    "topic": "今日は「美とは何か」について考えてみようと思うのだが、君はどう思うかね？まずは、君にとって「美しい」とはどのような時に感じるものなのだろうか？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって「美しい」と感じるのは、夕暮れ時の空や、整然と咲く花々を見た時です。心が穏やかになり、自然と微笑んでしまうような瞬間ですね。"
+      },
+      "gemma": {
+        "content": "「ああ、確かに自然の中で見たことのあるものだね。では、君は、人間が作り出した芸術作品にも「美しい」という感覚があると思うかね？例えば、絵画や彫刻など。」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "はい、もちろんです。特に、時間をかけて丁寧に作られた絵画を見ると、作者の想いや技術の深さに感動して美しいと感じます。ただ、自然の美しさとは少し違う種類の感動かもしれません。"
+      },
+      "gemma": {
+        "content": "「なるほど。では、君は、自然の美しさは機械的に作られるものではないと考えているのかね？それとも、自然は人間によって意図的に作られていると考えるかね？それとも、どちらでもないのかね？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

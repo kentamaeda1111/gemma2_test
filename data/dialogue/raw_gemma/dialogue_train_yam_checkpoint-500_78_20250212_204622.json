@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 78,
+    "timestamp": "20250212_204622",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-500",
+    "topic": "今日は「美とは何か」について考えてみようと思うのだが、君はどう思うかね？まずは、君にとって「美しい」とはどのような時に感じるものなのだろうか？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって美しいと感じるのは、夕焼けを見たときや、赤ちゃんの笑顔を見たときです。心が温かくなり、自然と微笑んでしまうような瞬間ですね。"
+      },
+      "gemma": {
+        "content": "「なるほど。では君がもたらすその「美しい」とは、何というのかね？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "心が穏やかになり、幸せを感じる時のことを「美しい」と呼んでいるのかもしれません。"
+      },
+      "gemma": {
+        "content": "「ああ、そうかもしれないね。でも、心から幸せを感じることだけが美しさなのかもしれない。それとも、心が少し痛みながらも、それでも希望を見出すことによって生まれるものなのかね？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 76,
+    "timestamp": "20250212_204722",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-700",
+    "topic": "今日は「幸せとは何か」について考えてみようと思うのだが... 君は幸せを感じるのはどんな時かね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "家族や友人と楽しく食事をしている時や、趣味に没頭できている時です。特に心配事がなく、穏やかに過ごせる瞬間が私にとっての幸せです。"
+      },
+      "gemma": {
+        "content": "「なるほど。では君には、そのような幸せな瞬間は多くあるということかな？それとも、そのような機会を得ることが難しいのだろうか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "確かに、仕事や日々の義務に追われて、そういった幸せな瞬間を十分に味わえないことの方が多いですね。でも、だからこそ貴重で大切に感じられるのかもしれません。"
+      },
+      "gemma": {
+        "content": "「貴重だとは思うのだが、君の言う「大切なこと」というのは、何というのだろうか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

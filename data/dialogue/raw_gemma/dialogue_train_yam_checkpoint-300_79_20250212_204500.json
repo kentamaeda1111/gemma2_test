@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 79,
+    "timestamp": "20250212_204500",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-300",
+    "topic": "今日は「自由とは何か」について考えてみようと思うのだが、君はまず「自由」というものをどのように考えているかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって自由とは、自分の意思で行動を選択できることだと考えています。"
+      },
+      "gemma": {
+        "content": "「そうなのかね？では君にとって自由とは何だと考えられるのかね？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "自分の好きなことができる状態...と単純に答えましたが、よく考えると他人に迷惑をかけない範囲でという制限があるので、完全な自由とは違うかもしれません。"
+      },
+      "gemma": {
+        "content": "「なるほど、そう考えるんですね。では、その制限の範囲はどんなものだと思いますか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

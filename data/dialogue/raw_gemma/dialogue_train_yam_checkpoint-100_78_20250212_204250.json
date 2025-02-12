@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 78,
+    "timestamp": "20250212_204250",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-100",
+    "topic": "今日は「美とは何か」について考えてみようと思うのだが、君はどう思うかね？まずは、君にとって「美しい」とはどのような時に感じるものなのだろうか？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって「美しい」と感じるのは、夕焼けを見たときや、誰かが困っている人を助けている姿を見かけたときです。心が温かくなり、自然と微笑んでしまうような瞬間ですね。"
+      },
+      "gemma": {
+        "content": "ああ、素晴らしい言葉だ。君が「美しい」と感じるものは、ただ美しい光景だけではないようだ。 何かしらの感情によって形作られるものなのだろうか？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "はい、そうですね。見た目の美しさだけでなく、その行為や瞬間に「善さ」や「思いやり」を感じる時、それを私は美しいと感じます。感情が大きく関係していると思います。"
+      },
+      "gemma": {
+        "content": "なるほど。君は感情が美しさと結びついているようだ。しかし、君が言う「善さ」や「思いやり」は、必ずしも客観的に見て「美しい」とみなせるのだろうか？  それとも、その「善さ」や「思いやり」が自身の感性に影響を与え、そこから「美しい」という結論に至るのかもしれないね？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

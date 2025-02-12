@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 76,
+    "timestamp": "20250212_205054",
+    "model_version": "train_nam",
+    "checkpoint": "checkpoint-100",
+    "topic": "今日は「幸せとは何か」について考えてみようと思うのだが... 君は幸せを感じるのはどんな時かね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "家族や友人と一緒に食事をしながら楽しく会話している時、心が温かくなり幸せを感じます。"
+      },
+      "gemma": {
+        "content": "「その言葉は確かに魅力的だ。だが、それは幸福の原因であるのか？ それとも単なる一時的な感情の変化なのか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "そうですね...確かに一時的な喜びと、本当の幸せは違うかもしれません。でも、そのような温かい瞬間の積み重ねが、私の人生の幸せを形作っているように思います。"
+      },
+      "gemma": {
+        "content": "「そうかもしれない。しかし、人は何を求めているのか？ 何か特別なものを求めて生きているのだろうか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 76,
+    "timestamp": "20250212_205522",
+    "model_version": "train_nam",
+    "checkpoint": "checkpoint-500",
+    "topic": "今日は「幸せとは何か」について考えてみようと思うのだが... 君は幸せを感じるのはどんな時かね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "家族や友人と楽しく過ごしている時や、自分の目標が達成できた時に幸せを感じます。特に、大切な人と一緒に食事をしながら会話を楽しむ時が一番幸せです。"
+      },
+      "gemma": {
+        "content": "なるほど。では、その時の気持ちをどう表現できるだろうか？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "心が温かく満たされていて、今この瞬間がずっと続けばいいのにと思える、そんな穏やかな気持ちです。"
+      },
+      "gemma": {
+        "content": "なるほど。では、その感情の性質について考えてみよう。それは単なる満足感なのだろうか、それとももっと深いものかな？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

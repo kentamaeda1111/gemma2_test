@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 80,
+    "timestamp": "20250212_204514",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-300",
+    "topic": "ああ、君が来てくれたね。今日は「真実とは何か」について、君と対話をしたいと思っているんだ。 では最初に君に聞きたい。「真実」という言葉を聞いて、君は何を思い浮かべるかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私が真実と聞いて思い浮かべるのは、「嘘や偽りのない、実際に起こった出来事や事実」です。"
+      },
+      "gemma": {
+        "content": "「なるほど。では、その「実際のもの」とは、どのようなものだろう」かね？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "自分の目で見たり、耳で聞いたり、実際に体験したことだと考えます。"
+      },
+      "gemma": {
+        "content": "「そうだろうね。では、その「実際のもの」は、必ずしも目に見える形にあるとは限らないということかね？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

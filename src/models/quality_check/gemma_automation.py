@@ -512,7 +512,19 @@ def load_config():
 def update_csv(csv_path: str, question_id: str, dialogue_filename: str):
     """Update CSV file with dialogue filename"""
     df = pd.read_csv(csv_path)
-    df.loc[df['QUESTION_ID'] == int(question_id), 'dialogue'] = dialogue_filename
+    # 現在の行のmodel_versionとcheckpointを取得
+    current_row = df[df['QUESTION_ID'] == int(question_id)].iloc[0]
+    model_version = current_row['model_version']
+    checkpoint = current_row['checkpoint']
+    
+    # タイムスタンプを生成
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # 正しいファイル名を生成
+    filename = f"dialogue_{model_version}_{checkpoint}_{question_id}_{timestamp}.json"
+    
+    # 該当する行のdialogueカラムを更新
+    df.loc[df['QUESTION_ID'] == int(question_id), 'dialogue'] = filename
     df.to_csv(csv_path, index=False)
 
 def main():
@@ -646,20 +658,9 @@ def main():
             # 対話終了後、対話履歴を保存（model_pathを渡す）
             save_dialogue(dialogue_history, int(question_id), current_model_path)
             
-            # Update CSV with the same filename format
+            # Update CSV with the correct filename format
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            # Extract model version and checkpoint from current_model_path
-            try:
-                path = Path(current_model_path)
-                parts = path.parts
-                models_idx = parts.index('models')
-                model_version = parts[models_idx + 1] if models_idx + 1 < len(parts) else "unknown"
-                checkpoint = next((part for part in parts if part.startswith('checkpoint-')), "unknown")
-            except (ValueError, IndexError):
-                model_version = "unknown"
-                checkpoint = "unknown"
-            
-            filename = f"dialogue_{model_version}_{checkpoint}_{question_id}_{timestamp}.json"
+            filename = f"dialogue_{row['model_version']}_{row['checkpoint']}_{question_id}_{timestamp}.json"
             update_csv(CSV_CONFIG_PATH, question_id, filename)
             
         except Exception as e:

@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 80,
+    "timestamp": "20250212_205153",
+    "model_version": "train_nam",
+    "checkpoint": "checkpoint-100",
+    "topic": "ああ、君が来てくれたね。今日は「真実とは何か」について、君と対話をしたいと思っているんだ。 では最初に君に聞きたい。「真実」という言葉を聞いて、君は何を思い浮かべるかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "「事実」や「正しいこと」を思い浮かべます。ウソや嘘偽りのない、本当のことだと考えています。"
+      },
+      "gemma": {
+        "content": "了解ね。"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "私の答えが短すぎましたか？もう少し詳しく説明した方がよろしいでしょうか？"
+      },
+      "gemma": {
+        "content": "いいえ。<bos><h2>"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

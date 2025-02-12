@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 78,
+    "timestamp": "20250212_205122",
+    "model_version": "train_nam",
+    "checkpoint": "checkpoint-100",
+    "topic": "今日は「美とは何か」について考えてみようと思うのだが、君はどう思うかね？まずは、君にとって「美しい」とはどのような時に感じるものなのだろうか？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって「美しい」と感じるのは、夕日や花、音楽など自然や芸術に触れた時です。特に、それらが心に平穏さをもたらす瞬間に強く感じます。"
+      },
+      "gemma": {
+        "content": "「なるほど。心の中の平穏とは何か、考えてみれば、それは確かに美しいものとの関係にあるのだろうか。」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "そうですね。確かに、心の平穏を感じる時が必ずしも美しいとは限らないかもしれません。例えば、ぐっすり眠った後の心の平穏と、美しい夕日を見た時の感動は、少し違う気がします。"
+      },
+      "gemma": {
+        "content": "「そうか。異なる感覚の区別はあるのだろうか。」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

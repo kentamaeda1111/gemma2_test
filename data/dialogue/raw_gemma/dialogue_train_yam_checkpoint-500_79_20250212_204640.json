@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 79,
+    "timestamp": "20250212_204640",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-500",
+    "topic": "今日は「自由とは何か」について考えてみようと思うのだが、君はまず「自由」というものをどのように考えているかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって自由とは、自分の意思で行動を選択できることだと考えています。ただし、他人に迷惑をかけない範囲でという制限はあると思います。"
+      },
+      "gemma": {
+        "content": "「自分の意思で行動を選択できること」...  Hmm。ということは、ある選択が自由であるとすれば、他の選択は自由ではないということかな？ それとも、全てが自由なのかね？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "確かに全ての選択が完全に自由というわけではないですね。例えば、経済的な制約や、法律、社会的なルールによって、選択できないことも多くあります。"
+      },
+      "gemma": {
+        "content": "そうだね。では、この「自由」という言葉が使われる場面には、どのような状況があるのだろうか？ 考えは同じなのだが、君もそう感じているはずかね？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

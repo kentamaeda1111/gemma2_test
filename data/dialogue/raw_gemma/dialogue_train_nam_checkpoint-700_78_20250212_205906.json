@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 78,
+    "timestamp": "20250212_205906",
+    "model_version": "train_nam",
+    "checkpoint": "checkpoint-700",
+    "topic": "今日は「美とは何か」について考えてみようと思うのだが、君はどう思うかね？まずは、君にとって「美しい」とはどのような時に感じるものなのだろうか？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって「美しい」と感じるのは、夕暮れ時の空や、整った庭園を見た時です。調和がとれていて、心が落ち着くものに美しさを感じます。"
+      },
+      "gemma": {
+        "content": "うむ、なるほど。では、次の質問に答えよ。美しい風景を見ても、その風景を表現しようとする画家を描いても、その行為自体には一定の目的があるのではないかな？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "はい。私が思うに、美しいものを見たり表現したりする目的は、その感動や喜びを他者と共有したい、あるいは後世に残したいという願いがあるのだと思います。"
+      },
+      "gemma": {
+        "content": "なるほど。では、君の言う「感動や喜びを他者と共有したい」という願いは、なぜ持つ必要があるのかね？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

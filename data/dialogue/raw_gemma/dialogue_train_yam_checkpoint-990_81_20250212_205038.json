@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 81,
+    "timestamp": "20250212_205038",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-990",
+    "topic": "今日は「教育の本質とは何か」について考えてみようと思うのだが、君はまず「教育」とは何だと考えるかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私が思う教育とは、人が生きていく上で必要な知識や技能を身につけさせることだと考えます。"
+      },
+      "gemma": {
+        "content": "「なるほど。では君が言う教育とは、何のために行うものなのだろう？ そして、そのために生徒はどんな本を読んだり、どんな道具を使ったりすると思うかね？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "教育の目的は、人が社会で自立して幸せに生きていけるようにすることだと考えます。そのために、教科書や参考書、パソコンなどの基本的な学習ツールが必要でしょう。"
+      },
+      "gemma": {
+        "content": "「社会で自立し、幸せになるために、人はどのような行動をとるべきだろうか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

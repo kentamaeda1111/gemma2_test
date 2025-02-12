@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 77,
+    "timestamp": "20250212_205107",
+    "model_version": "train_nam",
+    "checkpoint": "checkpoint-100",
+    "topic": "ああ、来てくれたね。今日は「正義とは何か」について、君と対話をしたいと思っているんだ。 そうだね、まずは君に聞いてみたい。正義とは何だと思うかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "そうですね…正義とは、人々が平等に扱われ、悪い行いをした人が相応の罰を受けることだと思います。"
+      },
+      "gemma": {
+        "content": "「そうなの？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "はい。例えば、窃盗をした人が罰を受けるのは正義だと考えています。これは間違っていますか？"
+      },
+      "gemma": {
+        "content": "「窃盗は正義に反する行為であると断言することは難しい。」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

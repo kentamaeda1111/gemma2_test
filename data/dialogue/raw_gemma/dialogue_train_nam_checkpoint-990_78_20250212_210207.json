@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 78,
+    "timestamp": "20250212_210207",
+    "model_version": "train_nam",
+    "checkpoint": "checkpoint-990",
+    "topic": "今日は「美とは何か」について考えてみようと思うのだが、君はどう思うかね？まずは、君にとって「美しい」とはどのような時に感じるものなのだろうか？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって「美しい」と感じるのは、夕暮れ時の空や、心のこもった音楽を聴いた時です。特に自然の景色に美しさを感じることが多いですね。"
+      },
+      "gemma": {
+        "content": "では、君はこの「心を動かすもの」について、どんな考えを持っているのだろう？まず、その考えを教えてほしい。"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "心を動かすものには、必ず「本物の輝き」があると思います。作り物や表面的なものではなく、真摯さや純粋さがあるからこそ、私たちの心に響くのだと考えています。"
+      },
+      "gemma": {
+        "content": "なるほど。つまり君は、「真実」と「美的価値」という言葉を使って、美を定義しているようだね。では、もし美が「真実」に基づいて作られている場合でも、それは「美しい」と言えるのかね？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

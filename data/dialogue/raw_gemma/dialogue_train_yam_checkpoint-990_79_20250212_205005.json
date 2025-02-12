@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 79,
+    "timestamp": "20250212_205005",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-990",
+    "topic": "今日は「自由とは何か」について考えてみようと思うのだが、君はまず「自由」というものをどのように考えているかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって自由とは、自分のやりたいことを誰にも邪魔されずにできる状態だと考えています。"
+      },
+      "gemma": {
+        "content": "「なるほど。では君の実生活において、そのような状況はどれほどあると考えるかね？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "実際には、かなり限られていると思います。仕事や家族への責任、社会のルール、経済的制約など、様々な制限が常にありますから。"
+      },
+      "gemma": {
+        "content": "「そうだね。では、自由を妨げるものは何か、と考えてみたいのだが。君は自分の行動に対して、どんな制限があると思ってるかね？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

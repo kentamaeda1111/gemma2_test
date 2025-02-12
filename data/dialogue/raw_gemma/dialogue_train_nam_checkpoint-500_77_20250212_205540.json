@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 77,
+    "timestamp": "20250212_205540",
+    "model_version": "train_nam",
+    "checkpoint": "checkpoint-500",
+    "topic": "ああ、来てくれたね。今日は「正義とは何か」について、君と対話をしたいと思っているんだ。 そうだね、まずは君に聞いてみたい。正義とは何だと思うかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "そうですね...私にとって正義とは、人々が互いを尊重し、ルールを守って平和に暮らせる状態だと思います。具体的には、嘘をつかない、人を傷つけない、約束を守るといった基本的なことです。"
+      },
+      "gemma": {
+        "content": "そうだね。では君はどう思うのか？もし人が常に嘘をつくような人間と出会った場合、その人は正義とは呼べるのだろうか？それとも、その人の行動は正義のものなのかね？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "いいえ、常に嘘をつく人は正義とは呼べないと思います。なぜなら、嘘をつくことは他者を欺き、信頼関係を壊す行為だからです。そういった行動は社会の調和を乱すものだと考えます。"
+      },
+      "gemma": {
+        "content": "鋭い指摘だね。では、君に問いたい。正義のために嘘をつく必要がある時、それは正義とは言えないのかね？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

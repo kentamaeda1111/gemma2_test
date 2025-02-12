@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 76,
+    "timestamp": "20250212_204208",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-100",
+    "topic": "今日は「幸せとは何か」について考えてみようと思うのだが... 君は幸せを感じるのはどんな時かね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "家族や友人と楽しく食事をしている時や、趣味に没頭している時に幸せを感じます。何か目標を達成した時の充実感も、私にとっては幸せです。"
+      },
+      "gemma": {
+        "content": "「なるほど。しかし、それは単なる一時的な満足でしょうか？ それとも、それ以上の何かを意味するのでしょうか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "確かに一時的な満足感も含まれますが、それらの経験が積み重なって人生の意味や充実感になっていくと思います。一瞬の喜びだけでなく、その記憶が心の支えになるのです。"
+      },
+      "gemma": {
+        "content": "「記憶は確かに力強いものです。でも、それが真実であることを証明するものであれば、それだけでは十分ではありません。」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

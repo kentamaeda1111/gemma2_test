@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 77,
+    "timestamp": "20250212_204228",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-100",
+    "topic": "ああ、来てくれたね。今日は「正義とは何か」について、君と対話をしたいと思っているんだ。 そうだね、まずは君に聞いてみたい。正義とは何だと思うかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "そうですね...私にとって正義とは、人々が平等に扱われ、悪事を働いた者が然るべき罰を受けることだと思います。"
+      },
+      "gemma": {
+        "content": "「そうなのか？ しかし、人はなぜ平等に扱われるべきなのでしょうか？ それは自然な道ではないのでしょうか？ 」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "確かに自然界では強いものが弱いものを支配することは多いですね。でも、人間社会では弱い人も尊重されるべきだと考えます。そうでないと社会が混乱して、誰もが不安な生活を送ることになると思うからです。"
+      },
+      "gemma": {
+        "content": "「なるほど。しかし、その平等は、なぜ必要なのでしょうか？ 人間の性質は平等ではなく、互いに競い合うものです。そうすれば、より良いものを作ることができるでしょう。」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

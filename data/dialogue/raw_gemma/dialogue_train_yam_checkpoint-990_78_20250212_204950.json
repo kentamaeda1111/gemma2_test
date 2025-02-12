@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 78,
+    "timestamp": "20250212_204950",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-990",
+    "topic": "今日は「美とは何か」について考えてみようと思うのだが、君はどう思うかね？まずは、君にとって「美しい」とはどのような時に感じるものなのだろうか？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって「美しい」と感じるのは、夕焼けを見たときや、赤ちゃんの笑顔を見たときです。心が温かくなり、思わず見とれてしまうような瞬間ですね。"
+      },
+      "gemma": {
+        "content": "「なるほど。君は自然の中にいる時、心が温まるというのかね？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "はい、その通りです。特に自然の中では、人工的なものには無い調和や完璧さを感じます。それが心を穏やかにしてくれるのだと思います。"
+      },
+      "gemma": {
+        "content": "「では、君は自然の中での美しいものとは、どのようなものが考えられるだろうか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

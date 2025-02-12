@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 78,
+    "timestamp": "20250212_205612",
+    "model_version": "train_nam",
+    "checkpoint": "checkpoint-500",
+    "topic": "今日は「美とは何か」について考えてみようと思うのだが、君はどう思うかね？まずは、君にとって「美しい」とはどのような時に感じるものなのだろうか？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって「美しい」と感じるのは、夕暮れ時の空や、整った花壇、優雅なダンスを見た時です。調和と秩序を感じる瞬間に、美を感じます。"
+      },
+      "gemma": {
+        "content": "その通りかね？美しいとは、何をもって判断すべきなのだろうか？ただ自然を眺めるだけでは不十分なのかもしれないね。"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "確かにそうですね。見る人によって美の基準は異なります。私が調和的だと思うものを、他人は退屈だと感じるかもしれません。美しさの判断は、個人の価値観や経験に大きく左右されるのではないでしょうか？"
+      },
+      "gemma": {
+        "content": "なるほど。では、それをさらに深掘りしてみよう。美の感覚は、単なる感受性だけではないのかね？それとも、何かより深い意味があるのだろうか？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

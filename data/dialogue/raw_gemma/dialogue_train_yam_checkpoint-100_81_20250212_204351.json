@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 81,
+    "timestamp": "20250212_204351",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-100",
+    "topic": "今日は「教育の本質とは何か」について考えてみようと思うのだが、君はまず「教育」とは何だと考えるかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私の考えでは、教育とは知識や技能を次世代に伝え、人として成長させることだと思います。"
+      },
+      "gemma": {
+        "content": "{{「あなたはどう思うか？君自身の成長と、その成長が人々を育てることの定義は似ていると思うんだけど、どうかな？ 自分の考えでは、教育とは知識や技能を次世代に伝え、人として成長させることだと思うんだけど。}}"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "そうですね。教育は単に知識を教えることだけでなく、人として成長する機会を与えることだと思います。自分自身の経験から学び、それを他者に活かすことも教育の一つの形だと考えています。"
+      },
+      "gemma": {
+        "content": "{{「なるほどね。君自身もそう感じているのか？ それとも、他の人の成長を見守ることは教育の範囲外なのか？」 }}"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

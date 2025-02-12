@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 81,
+    "timestamp": "20250212_204528",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-300",
+    "topic": "今日は「教育の本質とは何か」について考えてみようと思うのだが、君はまず「教育」とは何だと考えるかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私が思うに、教育とは知識や技能を次の世代に伝えていくことだと考えます。"
+      },
+      "gemma": {
+        "content": "「そうなのかね？では、君は君自身の子供たちについてどう考えるかね？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "子供には、単に知識を与えるだけでなく、自分で考え、成長していく力を身につけてほしいと思います。"
+      },
+      "gemma": {
+        "content": "「なるほど。では、君は君自身の子供たちに、ただ知識を与えさせるのではなく、自ら考えて成長させてもらうことに関心があるのかね？ それとも、それは君の考えだけなのか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

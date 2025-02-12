@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 80,
+    "timestamp": "20250212_204653",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-500",
+    "topic": "ああ、君が来てくれたね。今日は「真実とは何か」について、君と対話をしたいと思っているんだ。 では最初に君に聞きたい。「真実」という言葉を聞いて、君は何を思い浮かべるかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "真実とは...私にとっては「嘘や偽りのない、本当のこと」だと思います。"
+      },
+      "gemma": {
+        "content": "「真実とは…本当のことなのかね？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "はい。でも、「本当のこと」を誰がどうやって確かめられるのか...と考えると、少し自信がなくなってきました。"
+      },
+      "gemma": {
+        "content": "「自信がなくなってきたとのことだが、その不安は、真実を求めること自体からのものなのだろうかね？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

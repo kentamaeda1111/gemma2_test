@@ -136,7 +136,6 @@ Through our conversation, we've followed this path:
 So let me ask an essential question:
 What changes do you think this understanding of 'being part of nature' brings to our daily lives?"
 
-
 Myself:
 I think it removes attachments. Since we ultimately have to let go anyway, I think it gives us a stance of being grateful for and enjoying our current state.
 
@@ -153,15 +152,7 @@ githubのレポジトリには渡したpromptや、AIの返答の意図も含め
 むしろ今回はkaggleのコンペ向けという前提があったため、
 品質の高さを追求するというよりは、
 kaggle環境でトレインできるようなモデルを作るということを目指したかったため、
-且つ、底上げの余地をできるだけ大きくしたかったため、
-gemma2を選ぶことにしました。
-
-もちろん本質も追及したいとは思ったのですが、
-繰り返しになりますが、ベースモデルの質がそこまでたかくないため、
-ソクラテス問答の本質となる”問う力”みたいなものは期待できなかったため、
-ソクラテスのような”問い”で返す且つソクラテスのような口調で喋るＡＩ、
-を暫定的なゴールに据えることにし、
-そのうえでいかに質を高められるか、を目指しました。
+まずは一番小さなgemma ２Bモデルでためしてみようと考えました。
 
 尚、日本語ではソクラテス的な口調というと、
 方言のような老練な独特な口調があるのですが、
@@ -169,7 +160,13 @@ gemma2を選ぶことにしました。
 
 また、itにしたのはチャット形式になるためです。
 
-""""""""""""""""""""""""""""""データ生成フェーズ"""""""""""""""""""""""
+■gemma2-2b-jpn-itの底力
+まず底力をためしました。
+promptは色々ためしましたが、
+問い返してくるような挙動にはなったものの、口調はどうしてもソクラテスになりませんでした。
+ということでソクラテスの口調にするためのファインチューニングとなると、ベースの良さにできるだけ影響はあたえず、
+表層レイヤーの働きかけを行う必要があります。
+
 # Training Data Generation Policy
 There are primarily two patterns of user experience:
 1) Dialogues initiated by Socrates
@@ -203,8 +200,8 @@ Research on appropriate volume was conducted through:
 *Note: Due to potential hallucination risks, source verification was strictly enforced
 - Academic papers (using SciSpace, Consensus, Elicit)
 
-Considering that 20% would be used for testing and anticipating some low-quality data, we set a target of approximately 700,000 tokens for training data. As a result, we generated 296 dialogue sets with 12 turns each using AI×AI interaction.
-
+かなり書いてあることにばらつきがあったのですが、
+念のため多めに生成することにし、700,000tokenほどのデータにしようと考えました。
 尚、
 １２往復の会話をさせることで、ある程度コンテキストが繋がった情報をフィードすることもできたのですが、
 ゴールがあくまでstyle trasnfer的な位置づけであるため、
@@ -254,28 +251,23 @@ This was a particularly challenging decision point. According to the official do
 
 While many examples on the internet ignored this design philosophy by including system prompt-like elements, I decided to avoid this approach. 
 
-Instead, I decided to create two variations of training data:
-1. One completely without any system prompt-like elements
-2. Another incorporating phrase "You are Socrates, the ancient Greek philosopher." before user utterances
+調査をしたうえで、promptがなくてもうまくいきそうだと感じたためです。
 
 While we could have used tuners like XTuner, Axolotl, or LLaMA Factory to implement system prompt-like functionality during training, I prioritized staying aligned with Gemma2's original design philosophy and testing in the most natural way possible.
 
-# Final Training Data
-結果的には2つのデータを以下のように用意しました。
-違いはsystem promptのような文言を挿入しているか否か、という点のみです。
 
-| Item | model1 | model2 |
-|------|--------|--------|
-| Number of dialogues extracted from 12 turns | 11 | 11 |
-| Number of utterances per dialogue | 2 | 2 |
-| Total number of dialogues | 2,662 | 2,662 |
-| Total tokens | 685,875 | 752,369 |
-| Average tokens per dialogue | 257.65 | 282.63 |
-| MAX tokens per dialogue | 527 | 552 |
-| MIN tokens per dialogue | 19 | 44 |
-| Average user tokens* | 144.42 | 169.39 | 
-| Average model tokens* | 113.24 | 113.24 | 
-| System prompt | None | "You are Socrates, the ancient Greek philosopher." | 
+# Final Training Data
+結果的には以下のようなデータを用意しました。
+
+Number of dialogues extracted from 12 turns: 11 
+Number of utterances per dialogue: 2 
+Total number of dialogues: 2,662 
+Total tokens: 685,875 
+Average tokens per dialogue: 257.65 
+MAX tokens per dialogue: 527 
+MIN tokens per dialogue: 19 
+Average user tokens: 144.42 
+Average model tokens: 113.24 
 
 """"""""""""""""""""""""""""""トレイン・テストフェーズ"""""""""""""""""""""""
 

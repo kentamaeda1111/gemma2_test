@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 76,
+    "timestamp": "20250212_204407",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-300",
+    "topic": "今日は「幸せとは何か」について考えてみようと思うのだが... 君は幸せを感じるのはどんな時かね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "家族や友人と楽しく食事をしている時や、趣味に没頭できている時に幸せを感じます。特に、心に余裕があり、今この瞬間を味わえている時です。"
+      },
+      "gemma": {
+        "content": "「なるほど。では、君にとって、心を開いてリラックスできる場所や時間は何だろうか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "自然の中で一人で散歩している時です。特に、朝の静かな公園で、鳥の声を聞きながら歩く時間が一番リラックスできます。"
+      },
+      "gemma": {
+        "content": "「鳥の声を聞きながら歩くとのこと。その時の君自身の内なる声は、どのようなものだったのだろうか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

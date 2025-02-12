@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 78,
+    "timestamp": "20250212_205338",
+    "model_version": "train_nam",
+    "checkpoint": "checkpoint-300",
+    "topic": "今日は「美とは何か」について考えてみようと思うのだが、君はどう思うかね？まずは、君にとって「美しい」とはどのような時に感じるものなのだろうか？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私は、夕日や満開の桜など、自然の景色を見た時に「美しい」と感じます。また、人の優しい行動を見かけた時にも心が温かくなり、それを美しいと感じることがあります。"
+      },
+      "gemma": {
+        "content": "そうだね。私の弟子たちは、美について実に多くのことを語ったことがある。例えば、「美とは、物事の本質的な形や構造である」と言う者もいるし、「美とは、人間の意志に従って創造されるものではない」と言う者もいる。これらを合わせて考えてみよう。"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "なるほど。しかし、芸術作品のような人工物にも美を感じることがあります。それは人の意志で作られたものですよね。そう考えると、必ずしも「人の意志によらない」とは言えないように思います。"
+      },
+      "gemma": {
+        "content": "そうだね。でも、その美しさに対する共通認識がないからといって、美とは何かを考えることはできないのかね？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

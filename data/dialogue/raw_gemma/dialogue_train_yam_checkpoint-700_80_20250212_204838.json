@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 80,
+    "timestamp": "20250212_204838",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-700",
+    "topic": "ああ、君が来てくれたね。今日は「真実とは何か」について、君と対話をしたいと思っているんだ。 では最初に君に聞きたい。「真実」という言葉を聞いて、君は何を思い浮かべるかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "「事実に基づいた、嘘や偽りのない本当のこと」を思い浮かべます。"
+      },
+      "gemma": {
+        "content": "「事実に基づいた、嘘や偽りのない本当のこと」を思い浮かべます。ということは、君は本当に真実を知っているのだろうか？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "いいえ、完全には知り得ないと思います。私の認識や経験は限られていて、物事の一面しか見えていない可能性が高いからです。"
+      },
+      "gemma": {
+        "content": "「真実を知ることは不可能だ」と君は言うのかね？ それとも「物事を十分に見ることは可能」だとするのだかね？  どちらが正しいのかね？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}
