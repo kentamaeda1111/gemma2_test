@@ -16,8 +16,6 @@ import pandas as pd
 import gc
 
 # Global Settings
-DEFAULT_MODEL_VERSION = "noattention_noprompt_50_lolarefine"  
-DEFAULT_CHECKPOINT = "checkpoint-990"  
 MAX_HISTORY = 5  # 1回の対話でGemmaが記憶する対話履歴の数（状態保持用）
 MAX_UTTERANCES = 5    # 1つの対話における合計発話数
 BASE_MODEL = "google/gemma-2-2b-jpn-it"
@@ -48,7 +46,6 @@ if not HF_TOKEN or not CLAUDE_API_KEY:
     logger.warning("Required API keys not found in environment variables")
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-MODEL_PATH = os.path.join(ROOT_DIR, "models", DEFAULT_MODEL_VERSION, "model", DEFAULT_CHECKPOINT)
 SAVE_PATH = os.path.join(ROOT_DIR, SAVE_DIR)
 
 # Create save directory if it doesn't exist
@@ -409,7 +406,7 @@ def create_dialogue_session(chatai: ChatAI, dialogue_id: int):
                 utterance_count += 1
             
             # 対話終了後、対話履歴を保存
-            save_dialogue(dialogue_history, dialogue_id)
+            save_dialogue(dialogue_history, dialogue_id, chatai.model.model_path)
             
         except Exception as claude_error:
             logger.error(f"Error in Claude response: {str(claude_error)}")
@@ -419,20 +416,40 @@ def create_dialogue_session(chatai: ChatAI, dialogue_id: int):
         logger.error(f"Error in dialogue {dialogue_id}: {str(e)}")
         logger.error("Failed to complete dialogue")
 
-def save_dialogue(dialogue_history: list, dialogue_id: int) -> None:
+def save_dialogue(dialogue_history: list, dialogue_id: int, model_path: str) -> None:
     """
     対話履歴をフォーマットしてJSONファイルとして保存する
     
     Args:
         dialogue_history (list): 対話履歴のリスト
         dialogue_id (int): 対話のID
+        model_path (str): 実際に使用されたモデルのパス
     """
     # 保存先ディレクトリの作成
     os.makedirs(SAVE_DIR, exist_ok=True)
     
-    # ファイル名の生成（タイムスタンプ付き）
+    # モデルパスから実際のバージョンとチェックポイントを抽出
+    try:
+        # パスをPosixPathに変換して解析
+        path = Path(model_path)
+        parts = path.parts
+        models_idx = parts.index('models')
+        if models_idx + 1 < len(parts):
+            model_version = parts[models_idx + 1]
+        else:
+            model_version = "unknown"
+            
+        checkpoint = next((part for part in parts if part.startswith('checkpoint-')), "unknown")
+        logger.info(f"Extracted model_version: {model_version}, checkpoint: {checkpoint}")
+        
+    except (ValueError, IndexError) as e:
+        logger.warning(f"Could not extract model version or checkpoint from path: {model_path}. Error: {str(e)}")
+        model_version = "unknown"
+        checkpoint = "unknown"
+    
+    # 新しいファイル名のフォーマット
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"dialogue_{dialogue_id}_{timestamp}.json"
+    filename = f"dialogue_{model_version}_{checkpoint}_{dialogue_id}_{timestamp}.json"
     filepath = os.path.join(SAVE_DIR, filename)
     
     # 新しい形式のデータを構築
@@ -440,8 +457,8 @@ def save_dialogue(dialogue_history: list, dialogue_id: int) -> None:
         "metadata": {
             "question_id": dialogue_id,
             "timestamp": timestamp,
-            "model_version": DEFAULT_MODEL_VERSION,
-            "checkpoint": DEFAULT_CHECKPOINT,
+            "model_version": model_version,
+            "checkpoint": checkpoint,
             "topic": dialogue_history[0]["content"]
         },
         "pairs": []
@@ -512,9 +529,13 @@ def main():
             gc.collect()
             torch.cuda.empty_cache()
             
-            # Get model version and checkpoint from CSV, use defaults if not specified
-            model_version = row.get('model_version', DEFAULT_MODEL_VERSION)
-            checkpoint = row.get('checkpoint', DEFAULT_CHECKPOINT)
+            # Get model version and checkpoint from CSV
+            if pd.isna(row.get('model_version')) or pd.isna(row.get('checkpoint')):
+                logger.warning(f"Model version or checkpoint not specified for question {question_id}, skipping...")
+                continue
+                
+            model_version = row['model_version']
+            checkpoint = row['checkpoint']
             
             # Update MODEL_PATH for current iteration
             current_model_path = os.path.join(ROOT_DIR, "models", model_version, "model", checkpoint)
@@ -622,12 +643,23 @@ def main():
                 })
                 utterance_count += 1
             
-            # 対話終了後、対話履歴を保存
-            save_dialogue(dialogue_history, int(question_id))
+            # 対話終了後、対話履歴を保存（model_pathを渡す）
+            save_dialogue(dialogue_history, int(question_id), current_model_path)
             
-            # Update CSV with filename
+            # Update CSV with the same filename format
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"dialogue_{question_id}_{timestamp}.json"
+            # Extract model version and checkpoint from current_model_path
+            try:
+                path = Path(current_model_path)
+                parts = path.parts
+                models_idx = parts.index('models')
+                model_version = parts[models_idx + 1] if models_idx + 1 < len(parts) else "unknown"
+                checkpoint = next((part for part in parts if part.startswith('checkpoint-')), "unknown")
+            except (ValueError, IndexError):
+                model_version = "unknown"
+                checkpoint = "unknown"
+            
+            filename = f"dialogue_{model_version}_{checkpoint}_{question_id}_{timestamp}.json"
             update_csv(CSV_CONFIG_PATH, question_id, filename)
             
         except Exception as e:
