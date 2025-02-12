@@ -323,6 +323,12 @@ GPUは大丈夫だったのですが、CPUがどうしてもevaluateのところ
 ただ、ここから言えることはsystem_promptは必ずしもインパクトが大きくなさそう、という点です。
 
 
+帰無仮説の棄却について
+https://chatgpt.com/c/67ace493-a720-800c-97b8-ef608604a34c
+https://gemini.google.com/app/866575f90cdf5090
+https://claude.ai/chat/e4904c65-688a-413c-9cf1-324612da7f64
+
+
 ■結論
 
 当初のゴールである”口調変化”と”問い返してくるという挙動”、そしてkaggle内でのトレインは見事達成できました（１０時間くらいかかりますが。。。（笑））。
