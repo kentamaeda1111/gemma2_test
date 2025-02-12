@@ -162,12 +162,18 @@ kaggle環境でトレインできるようなモデルを作るということ�
 
 ■gemma2-2b-jpn-itの底力
 まず底力をためしました。
-promptは色々ためしましたが、
-問い返してくるような挙動にはなったものの、口調はどうしてもソクラテスになりませんでした。
+ここで気づいたのはpromptが非常に大事だということです。
+以下みたいな感じでもやりましたが、全然だめだめでした。
+ただ以下のようにしたらうまくいくようになりました。
+
+ただ、それでも問い返してくるような挙動にはなったものの、口調はどうしてもソクラテスになりませんでした。
 ということでソクラテスの口調にするためのファインチューニングとなると、ベースの良さにできるだけ影響はあたえず、
 表層レイヤーの働きかけを行う必要があります。
 
-# Training Data Generation Policy
+（（（（（（（（（（（（（ここは実際にやってみせる））））））））））））））））））））））
+※その際質問をした場合はどうか？もチェック
+
+■ユーザー体験の設定
 There are primarily two patterns of user experience:
 1) Dialogues initiated by Socrates
 2) Dialogues initiated by users
@@ -187,10 +193,12 @@ Therefore, I decided to:
 This is similar to customer service bots starting with "How may I help you?"
 This approach helps converge conversation directions and allows focus on fine-tuning the "questioning response" behavior and Socratic speech patterns.
 
-# Training Data Generation Method
+""""""""""""""""""""""""""""""データ生成フェーズ"""""""""""""""""""""""
+
+■Training Data Generation Method
 Using Socratic literature directly wasn't practical due to copyright issues (especially for Japanese content). Therefore, I decided to automate AI-to-AI dialogue generation.
 
-# Training Data Volume
+■Training Data Volume
 Research on appropriate volume was conducted through:
 - Gemma and Gemma 2B related documentation and discussions on Hugging Face and GitHub
 - Similar model documentation (Mistral 2.3B, Falcon 1.5B, OpenLLaMA 2.7B, XGen 2.2B, RedPajama-INCITE 3B)
@@ -208,7 +216,7 @@ Research on appropriate volume was conducted through:
 結果的に生成したデータは１つの対話をuser１発話、model1発話のペアにしました。
 且つ、順番もランダムにしました。
 
-# Ensuring Data Quality (Diversity)
+■Ensuring Data Quality (Diversity)
 
 To ensure data quality while maintaining diversity, I kept certain elements consistent while varying others. For consistency, I maintained:
 - A fixed character setting for Socrates
@@ -228,7 +236,7 @@ While I initially planned to use fixed questions and create variety through Socr
 Regarding parameter variations:
 I created two versions of user responses by setting different parameters (0.3 and 0.7) to introduce variation in response patterns.
 
-# Quality Assurance Method
+■Quality Assurance Method
 
 I implemented a two-stage quality assurance process for efficiency. First, I had AI perform initial filtering, followed by my personal verification of the results.
 
@@ -244,7 +252,7 @@ The results of this quality assurance process were positive:
 - Nevertheless, I decided to remove all dialogues flagged as low-quality by the AI
 - This process reduced our dialogue count from 296 to 242
 
-# System Prompt Integration
+■System Prompt Integration
 This was a particularly challenging decision point. According to the official documentation（https://huggingface.co/google/gemma-2-2b/discussions/28ここにかいてあったこと、というかんじのほうがいいかと）, Gemma has a fundamental design philosophy that:
 - Only supports two roles: "user" and "model" (notably lacking a system role)
 - Requires dialogues to start from the user side
@@ -256,7 +264,7 @@ While many examples on the internet ignored this design philosophy by including 
 While we could have used tuners like XTuner, Axolotl, or LLaMA Factory to implement system prompt-like functionality during training, I prioritized staying aligned with Gemma2's original design philosophy and testing in the most natural way possible.
 
 
-# Final Training Data
+■ Final Training Data
 結果的には以下のようなデータを用意しました。
 
 Number of dialogues extracted from 12 turns: 11 
@@ -269,50 +277,57 @@ MIN tokens per dialogue: 19
 Average user tokens: 144.42 
 Average model tokens: 113.24 
 
-""""""""""""""""""""""""""""""トレイン・テストフェーズ"""""""""""""""""""""""
+""""""""""""""""""""""""""""""トレインフェーズ"""""""""""""""""""""""
 
-４ビット量子化の設定や、LoLAを使う、という方針はkaggle環境でgemma-2の2Bをトレインするためには必須だと考えました。
+■attention mask
+ここが一番大きなポイントでした。
+レイヤーに働きかけるうえで、
+ここはあったほうがいいのかないほうがいいのか？
+が自信がなかったため、２パターンつくりました。
+
+■データ量
+まずは７０００００トークンの半分にしてみました。
+で、チェックポイントを多めにつくりました。
+
+
+■LoLAの設定
+表層レイヤーにはたらきかけるため、に以下のような設定にしました。
 
 https://chatgpt.com/c/67aace53-79d0-800c-b216-7759a84cb911
 https://gemini.google.com/app/d69be52592e131ce
 
-設定の仕方やどの程度が妥当か、はデータ生成時にも参考にした以下のような文献・媒体にあたりました。
+■評価セットについて、
+実は色々試している過程で検討しましたが、
+最終的には各checkpoint毎の出力をAIに評価してもらうという方法にきりかえたため、
+最終的には未実装です。
 
-- Gemma and Gemma 2B related documentation and discussions on Hugging Face and GitHub
-- Similar model documentation (Mistral 2.3B, Falcon 1.5B, OpenLLaMA 2.7B, XGen 2.2B, RedPajama-INCITE 3B)
-- Tuner documentation (XTuner, Axolotl, LLaMA Factory)
-- Kaggle code related to Gemma (especially 2B-it) fine-tuning
-- Web research (using Gemini Advanced 1.5 Pro with deep research, Perplexity, Felo)
-*Note: Due to potential hallucination risks, source verification was strictly enforced
-- Academic papers (using SciSpace, Consensus, Elicit)
 
-ただ、モデルのパフォーマンスを大きく変える要因になったのは
-4ビット量子化やLoLAやTrainingArgumentsの設定ではありませんでした。
 
-どれだけチューニングをしても、出力されるものはだめだめでした。（ここはもっと記述をする）
-非常にうまくいった戦略がattention機構への働きかけです。
-これをする前と後ではかなり差がありました。
 
-あと評価メトリクスの作成も苦戦しました。
-結果的にここはあきらめました。
-評価メトリクスではよさそうでも実際つかってみたら、そうでもない、ということが連続して、
-最終的にはlearning rateとlossだけにしました。
+■kaggle環境で走らせるための施策
+〇４ビット量子化
+これはkaggle環境で走らせるために必要だと考えました。
 
-あともう一つ苦戦した点がkaggle環境ではしらせれるようにすることです。
-GPUは大丈夫だったのですが、CPUがどうしてもevaluateのところで２９GBを越え、
-クラッシュをしてしまいました。
+〇評価データセットの設計
+これも高いとkaggleのCPUのRAMの上限をこえてしまうのでkaggleでクラッシュしない範囲にとどめました。
+eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])
 
-最終的にはeval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])
+〇ハイパーパラメータ設定
+ここについてはあまりコメントなし
+
+〇max memory
+eval_dataset = tokenized_dataset.select(indices[split_idx:split_idx+50])
 を５０まで下げ、且つAutoModelForCausalLM.from_pretrainedでmax_memory={0: "4GiB", 1: "4GiB", "cpu": "24GB"}を設定することで
 実現しました。
 
+""""""""""""""""""""""""""""""テストフェーズ"""""""""""""""""""""""
+■方針
+attention maskをあるパターンとないパターンで、５つのチェックポイントでそれぞれ出力をテストしました。
+テーマは６個にしました。
+品質管理のpromptは以下のようなものです。
 
-テスト時はデータ生成フェーズでも申し上げた通り
-問いを固定する形にしました。ただ、汎用性の高さをチェックするためトレインデータには入ってないものをあえて選びました。
-最終的にはsystem promptのようなものを組み込むパターンとそうでないパターンで二つやりましたが、
-感覚的にはsystem_promptがないほうがうまくいっていたような気がします。
-ここはもっと検証する必要があるでしょう。
-ただ、ここから言えることはsystem_promptは必ずしもインパクトが大きくなさそう、という点です。
+統計学的な有意差があるか否か、はもう少しサンプルをとったほうがいいかもしれませんが、
+いったん最低限のラインでやりました。
 
 
 帰無仮説の棄却について
@@ -320,36 +335,41 @@ https://chatgpt.com/c/67ace493-a720-800c-97b8-ef608604a34c
 https://gemini.google.com/app/866575f90cdf5090
 https://claude.ai/chat/e4904c65-688a-413c-9cf1-324612da7f64
 
+オートメーション化の際には以下のような感じにしてクラッシュしないようにしました。
+
+
+    def __del__(self):
+        """デストラクタ: モデルのリソースを解放"""
+        if hasattr(self, 'model'):
+            del self.model
+        if hasattr(self, 'tokenizer'):
+            del self.tokenizer
+        torch.cuda.empty_cache()  # GPUメモリをクリア
+
+コードはgithubにあげているのでそちらを確認してください。
+
+
+
+では最終的に私がいいのではないかなと思ったバージョンを使って以下で推論をしてみましょう。
+
+
 
 ■結論
+当初のゴールである”口調変化”と”問い返してくるという挙動”、そしてkaggle内でのトレインは見事達成できました。
 
-当初のゴールである”口調変化”と”問い返してくるという挙動”、そしてkaggle内でのトレインは見事達成できました（１０時間くらいかかりますが。。。（笑））。
+■今後やってもいいと考えること、改善できそうな点
+・もう少しgemma2のそれぞれのcheckpointの出力の評価はサンプル数を増やしてもいいかと
+・目的関数へのタッチもやってみたいかも？
+・最初のAIｘAIの学習データの品質チェックや、トレイン中のカスタム評価関数、gemma2の出力の品質評価等、
+AIにけっこう頼っているので、もっと数値評価をするアプローチも導入してもいいかと。
+・xtunerを使ったsystem promptを作ったトレイン等、モデルアーキテクチャの変更
+・今回はcommunityに質問をしたり、をしなかったが、そういった手段は使ってもよかったかと
 
-評価メトリクスに関して全然うまくいかなかった。結局最後は試してみる、という結論だった。最終的には検証するしかない、と。
-今後やること　testのpromptや状態保存をもっといじれると思う
-quality checkの自動化はやってもいいかと
-もっと底上げをする余地があるとすると、目的関数へのタッチかな？
-
-
-尚、御覧になっていただいたらわかる通り、
+■所感
+御覧になっていただいたらわかる通り、
 私は主に演繹的なアプローチではなく帰納的なアプローチで今回のタスクに取り組んでます。
 ただ、そういった背景が功を奏し、結果的に柔軟なアプローチができたのはないかと感じています。
 それが非常に短期間で高いアウトプットにつながったと要因だとかんじています。
-
-ただ、一番うまく言ったモデルのパターンでも、
-こちらが質問をした場合は、回答はしてくれず、問いで返す、という挙動になる。全然だめ
-
-■もう少しやれたこと
-・僕が作ったモデルとclaudeを会話させるプログラムを使って品質評価をしたかった
-・データ生成時の品質調査
-・モデルの品質チェック
-・モデルアーキテクチャの変更（promptを使うパターン）
-・今回はcommunityに質問をしたり、をしなかったが、そういった手段は使ってもよかったかと
-・inference.testのほうで、あなたはソクラテスです、と頭に全部つけるほうがよｋったかも？
-
-LORAの設定をかえてみる
-
-初期の問いを変えてみる
 
 
 
