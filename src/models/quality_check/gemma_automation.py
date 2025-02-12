@@ -13,6 +13,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 import pandas as pd
+import gc
 
 # Global Settings
 DEFAULT_MODEL_VERSION = "noattention_noprompt_50_lolarefine"  
@@ -482,15 +483,18 @@ def update_csv(csv_path: str, question_id: str, dialogue_filename: str):
 
 def main():
     """メイン実行関数"""
-    # Load questions and config
     questions = load_questions()
     config_df = load_config()
     
     for _, row in config_df.iterrows():
         question_id = str(int(row['QUESTION_ID']))
-        chatai = None  # 各イテレーションの開始時にNoneに設定
+        chatai = None
         
         try:
+            # 明示的にガベージコレクションを実行
+            gc.collect()
+            torch.cuda.empty_cache()
+            
             # Get model version and checkpoint from CSV, use defaults if not specified
             model_version = row.get('model_version', DEFAULT_MODEL_VERSION)
             checkpoint = row.get('checkpoint', DEFAULT_CHECKPOINT)
@@ -509,11 +513,12 @@ def main():
                 
             logger.info(f"Processing question ID {question_id} with model {model_version} checkpoint {checkpoint}")
             
-            # Initialize model for current configuration
+            # 既存のモデルがある場合は解放
             if chatai is not None:
-                del chatai  # 既存のモデルを明示的に解放
-                torch.cuda.empty_cache()  # GPUメモリをクリア
+                del chatai
+                torch.cuda.empty_cache()
             
+            # 新しいモデルをロード
             chatai = ChatAI(
                 model_path=current_model_path,
                 base_model=BASE_MODEL,
@@ -631,10 +636,17 @@ def main():
             continue
         
         finally:
-            # 各イテレーション終了時にモデルを解放
             if chatai is not None:
                 del chatai
-                torch.cuda.empty_cache()
+            # モデル解放後に明示的なメモリクリーンアップ
+            torch.cuda.empty_cache()
+            gc.collect()
+            
+            # GPUメモリ使用状況のログ出力（オプション）
+            if torch.cuda.is_available():
+                memory_allocated = torch.cuda.memory_allocated(0)
+                memory_reserved = torch.cuda.memory_reserved(0)
+                logger.info(f"GPU Memory - Allocated: {memory_allocated/1024**2:.2f}MB, Reserved: {memory_reserved/1024**2:.2f}MB")
     
     logger.info("Completed all dialogues")
 
