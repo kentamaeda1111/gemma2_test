@@ -329,9 +329,13 @@ def create_dialogue_session(chatai: ChatAI, dialogue_id: int):
     
     try:
         # Initial Gemma message
-        initial_gemma = (
-            "{{QUESTION}}"
-        )
+        initial_gemma = question_content  # この行は既存のコードで定義されています
+        
+        # Add initial Gemma message to history
+        dialogue_history.append({
+            "role": "gemma",
+            "content": initial_gemma
+        })
         
         # Get first Claude response
         try:
@@ -350,40 +354,30 @@ def create_dialogue_session(chatai: ChatAI, dialogue_id: int):
                 raise ValueError("Empty response from Claude")
                 
             claude_message = response.content[0].text
-            logger.info(f"Claude's first response: {claude_message}")
             
-            # Add messages to history
-            dialogue_history.extend([
-                {"role": "gemma", "content": initial_gemma},
-                {"role": "claude", "content": claude_message}
-            ])
+            # Add Claude's response to history
+            dialogue_history.append({
+                "role": "claude",  # ここを "claude" に変更
+                "content": claude_message
+            })
             utterance_count += 2
             
             # Continue dialogue while under MAX_UTTERANCES
             while utterance_count < MAX_UTTERANCES:
                 # Get Gemma's response
-                try:
-                    gemma_response = chatai.generate_response(claude_message)
-                    logger.info(f"Gemma's response (utterance {utterance_count + 1}): {gemma_response}")
-                    
-                    if not gemma_response:
-                        raise ValueError("Empty response from Gemma")
-                        
-                    dialogue_history.append({
-                        "role": "gemma",
-                        "content": gemma_response
-                    })
-                    utterance_count += 1
-                    
-                    # Break if we've reached MAX_UTTERANCES
-                    if utterance_count >= MAX_UTTERANCES:
-                        break
-                    
-                except Exception as gemma_error:
-                    logger.error(f"Error in Gemma response: {str(gemma_error)}")
-                    raise
+                gemma_response = chatai.generate_response(claude_message)
                 
-                # Get Claude's response
+                # Add Gemma's response to history
+                dialogue_history.append({
+                    "role": "gemma",  # ここを "gemma" に変更
+                    "content": gemma_response
+                })
+                utterance_count += 1
+                
+                if utterance_count >= MAX_UTTERANCES:
+                    break
+                
+                # Get Claude's next response
                 messages = []
                 for msg in dialogue_history:
                     if msg["role"] == "gemma":
@@ -405,23 +399,17 @@ def create_dialogue_session(chatai: ChatAI, dialogue_id: int):
                     messages=messages
                 )
                 
-                if not response.content:
-                    raise ValueError("Empty response from Claude")
-                    
                 claude_message = response.content[0].text
-                logger.info(f"Claude's response (utterance {utterance_count + 1}): {claude_message}")
                 
+                # Add Claude's response to history
                 dialogue_history.append({
-                    "role": "claude",
+                    "role": "claude",  # ここを "claude" に変更
                     "content": claude_message
                 })
                 utterance_count += 1
-                
-                logger.info(f"Completed {utterance_count} utterances in dialogue {dialogue_id}")
             
             # 対話終了後、対話履歴を保存
             save_dialogue(dialogue_history, dialogue_id)
-            logger.info(f"Successfully completed dialogue {dialogue_id} with {utterance_count} utterances")
             
         except Exception as claude_error:
             logger.error(f"Error in Claude response: {str(claude_error)}")
@@ -433,7 +421,7 @@ def create_dialogue_session(chatai: ChatAI, dialogue_id: int):
 
 def save_dialogue(dialogue_history: list, dialogue_id: int) -> None:
     """
-    対話履歴をJSONファイルとして保存する
+    対話履歴をフォーマットしてJSONファイルとして保存する
     
     Args:
         dialogue_history (list): 対話履歴のリスト
@@ -447,17 +435,46 @@ def save_dialogue(dialogue_history: list, dialogue_id: int) -> None:
     filename = f"dialogue_{dialogue_id}_{timestamp}.json"
     filepath = os.path.join(SAVE_DIR, filename)
     
-    # 対話履歴をJSON形式で保存
-    with open(filepath, 'w', encoding='utf-8') as f:
-        json.dump({
-            'dialogue_id': dialogue_id,
-            'timestamp': timestamp,
-            'model_version': DEFAULT_MODEL_VERSION,
-            'checkpoint': DEFAULT_CHECKPOINT,
-            'history': dialogue_history
-        }, f, ensure_ascii=False, indent=2)
+    # 新しい形式のデータを構築
+    formatted_data = {
+        "metadata": {
+            "question_id": dialogue_id,
+            "timestamp": timestamp,
+            "model_version": DEFAULT_MODEL_VERSION,
+            "checkpoint": DEFAULT_CHECKPOINT,
+            "topic": dialogue_history[0]["content"]
+        },
+        "pairs": []
+    }
     
-    logger.info(f"Saved dialogue {dialogue_id} to {filepath}")
+    # 対話ペアを構築
+    history = dialogue_history[1:]  # 最初のGemmaの発言（topic）を除く
+    for i in range(0, len(history), 2):
+        if i + 1 >= len(history):
+            break
+            
+        pair = {
+            "pair_id": (i // 2) + 1,
+            "claude": {
+                "content": history[i]["content"]
+            },
+            "gemma": {
+                "content": history[i + 1]["content"]
+            },
+            "evaluation": {
+                "tone": {"quantitative": "", "qualitative": ""},
+                "approach": {"quantitative": "", "qualitative": ""},
+                "format": {"quantitative": "", "qualitative": ""},
+                "logic": {"quantitative": "", "qualitative": ""}
+            }
+        }
+        formatted_data["pairs"].append(pair)
+    
+    # フォーマット済みデータを保存
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(formatted_data, f, ensure_ascii=False, indent=2)
+    
+    logger.info(f"Saved formatted dialogue {dialogue_id} to {filepath}")
 
 IS_KAGGLE_SUBMISSION = os.path.exists('/kaggle/working')
 
@@ -536,8 +553,12 @@ def main():
             # Initialize Claude client
             claude = Anthropic(api_key=CLAUDE_API_KEY)
             
-            # Initial Gemma message (replace placeholder)
+            # Initial Gemma message
             initial_gemma = question_content
+            dialogue_history.append({
+                "role": "gemma",
+                "content": initial_gemma
+            })
             
             # Get first Claude response
             response = claude.messages.create(
@@ -552,13 +573,10 @@ def main():
             )
             
             claude_message = response.content[0].text
-            logger.info(f"Claude's first response: {claude_message}")
-            
-            # Add messages to history
-            dialogue_history.extend([
-                {"role": "gemma", "content": initial_gemma},
-                {"role": "claude", "content": claude_message}
-            ])
+            dialogue_history.append({
+                "role": "claude",
+                "content": claude_message
+            })
             
             # Continue dialogue for specified number of utterances
             utterance_count = 2  # Initial Gemma question and Claude response
@@ -566,15 +584,12 @@ def main():
             while utterance_count < MAX_UTTERANCES:
                 # Get Gemma's response
                 gemma_response = chatai.generate_response(claude_message)
-                logger.info(f"Gemma's response (utterance {utterance_count + 1}): {gemma_response}")
-                
                 dialogue_history.append({
                     "role": "gemma",
                     "content": gemma_response
                 })
                 utterance_count += 1
                 
-                # Break if we've reached MAX_UTTERANCES
                 if utterance_count >= MAX_UTTERANCES:
                     break
                 
@@ -601,44 +616,30 @@ def main():
                 )
                 
                 claude_message = response.content[0].text
-                logger.info(f"Claude's response (utterance {utterance_count + 1}): {claude_message}")
-                
                 dialogue_history.append({
                     "role": "claude",
                     "content": claude_message
                 })
                 utterance_count += 1
             
-            # Generate filename and save dialogue
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"dialogue_{question_id}_{timestamp}.json"
-            filepath = os.path.join(SAVE_DIR, filename)
-            
-            # Save dialogue
-            with open(filepath, 'w', encoding='utf-8') as f:
-                json.dump({
-                    'question_id': question_id,
-                    'timestamp': timestamp,
-                    'model_version': model_version,
-                    'checkpoint': checkpoint,
-                    'history': dialogue_history
-                }, f, ensure_ascii=False, indent=2)
+            # 対話終了後、対話履歴を保存
+            save_dialogue(dialogue_history, int(question_id))
             
             # Update CSV with filename
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"dialogue_{question_id}_{timestamp}.json"
             update_csv(CSV_CONFIG_PATH, question_id, filename)
-            logger.info(f"Completed dialogue {question_id} and saved to {filename}")
             
         except Exception as e:
             logger.error(f"Error processing question {question_id}: {str(e)}")
             if chatai is not None:
-                del chatai  # エラー時もモデルを解放
+                del chatai
                 torch.cuda.empty_cache()
             continue
         
         finally:
             if chatai is not None:
                 del chatai
-            # モデル解放後に明示的なメモリクリーンアップ
             torch.cuda.empty_cache()
             gc.collect()
             
