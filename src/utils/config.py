@@ -15,6 +15,7 @@ def get_colab_api_keys() -> Dict[str, str]:
             widgets.Password(description='CLAUDE_API_KEY_1:', layout=widgets.Layout(width='500px')),
             widgets.Password(description='CLAUDE_API_KEY_2:', layout=widgets.Layout(width='500px')),
             widgets.Password(description='CLAUDE_API_KEY_QUALITY:', layout=widgets.Layout(width='500px')),
+            widgets.Password(description='CLAUDE_API_KEY_QUALITY2:', layout=widgets.Layout(width='500px')),
             widgets.Password(description='HUGGINGFACE_API_KEY:', layout=widgets.Layout(width='500px'))
         ])
         display(form)
@@ -26,7 +27,8 @@ def get_colab_api_keys() -> Dict[str, str]:
             'claude_api_key_1': form.children[0].value,
             'claude_api_key_2': form.children[1].value,
             'claude_api_key_quality': form.children[2].value,
-            'huggingface_api_key': form.children[3].value
+            'claude_api_key_quality2': form.children[3].value,
+            'huggingface_api_key': form.children[4].value
         }
         
         # Set environment variables
@@ -34,6 +36,7 @@ def get_colab_api_keys() -> Dict[str, str]:
             'CLAUDE_API_KEY_1': api_keys['claude_api_key_1'],
             'CLAUDE_API_KEY_2': api_keys['claude_api_key_2'],
             'CLAUDE_API_KEY_QUALITY': api_keys['claude_api_key_quality'],
+            'CLAUDE_API_KEY_QUALITY2': api_keys['claude_api_key_quality2'],
             'HUGGINGFACE_API_KEY': api_keys['huggingface_api_key']
         }.items():
             os.environ[env_var] = value
@@ -52,6 +55,7 @@ def get_api_keys() -> Dict[str, str]:
             'claude_api_key_1': str,
             'claude_api_key_2': str,
             'claude_api_key_quality': str,
+            'claude_api_key_quality2': str,
             'huggingface_api_key': str
         }
     
@@ -65,6 +69,7 @@ def get_api_keys() -> Dict[str, str]:
         'claude_api_key_1': 'CLAUDE_API_KEY_1',
         'claude_api_key_2': 'CLAUDE_API_KEY_2',
         'claude_api_key_quality': 'CLAUDE_API_KEY_QUALITY',
+        'claude_api_key_quality2': 'CLAUDE_API_KEY_QUALITY2',
         'huggingface_api_key': 'HUGGINGFACE_API_KEY'
     }
     

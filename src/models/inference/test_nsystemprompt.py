@@ -87,7 +87,7 @@ class ChatAI:
                 load_config["torch_dtype"] = torch.float32
                 load_config["offload_folder"] = "offload_folder"
                 os.makedirs("offload_folder", exist_ok=True)
-            
+
             base_model_obj = AutoModelForCausalLM.from_pretrained(
                 base_model,
                 **load_config
