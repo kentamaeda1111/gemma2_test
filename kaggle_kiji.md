@@ -178,8 +178,6 @@ Therefore, I decided to:
 This is similar to customer service bots starting with "How may I help you?"
 This approach helps converge conversation directions and allows focus on fine-tuning the "questioning response" behavior and Socratic speech patterns.
 
-""""""""""""""""""""""""""""""データ生成フェーズ"""""""""""""""""""""""
-
 ■Training Data Generation Method
 Using Socratic literature directly wasn't practical due to copyright issues (especially for Japanese content). Therefore, I decided to automate AI-to-AI dialogue generation.
 
@@ -403,6 +401,36 @@ https://claude.ai/chat/e4904c65-688a-413c-9cf1-324612da7f64
 コードはgithubにあげているのでそちらを確認してください。
 
 
+■結果
+
+なんといってもトーンの改善は良い。
+
+
+アプローチは横ばいでフォーマットが改善したのが意外。
+フォーマットは英語の使用だったり、不要な記号の使用がベースが多かった。
+
+
+出力の質のばらつきもnam、yamともに改善している。
+
+
+ロジックとアプローチが横ばいかややスコアが落ちたのが残念。
+トレードオフ的なものがあるのか？
+
+
+attentionはいらないかと。
+
+
+ベストはnamは700, yamは980
+トーン40
+ロジック25
+アプローチ25
+フォーマット10
+
+namの７００でいっきにフォーマットが落ちてるのは１回だけ！\\nが入ってしまっているから。おしい
+
+ということでnam700を採用！
+
+■推論
 
 では最終的に私がいいのではないかなと思ったバージョンを使って以下で推論をしてみましょう。
 
