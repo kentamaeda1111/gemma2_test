@@ -12,8 +12,9 @@ def load_and_prepare_data(csv_path: str) -> pd.DataFrame:
     print("Original columns:", df.columns.tolist())  # デバッグ用
     print("Number of rows:", len(df))  # デバッグ用
     
-    # model_version と checkpoint は既にCSVに含まれているので抽出は不要
-    # df[['model_version', 'checkpoint']] = df['dialogue'].str.extract(r'(train_[yn]am)_(\d+)') を削除
+    # Fill empty model_version with 'base'
+    df['model_version'] = df['model_version'].fillna('base')
+    df['checkpoint'] = df['checkpoint'].fillna('base')
     
     # Melt the dataframe to get all metrics in one column
     metric_columns = [col for col in df.columns if any(metric in col for metric in ['tone', 'approach', 'format', 'logic'])]
@@ -101,16 +102,51 @@ def plot_metric_comparisons(df: pd.DataFrame, output_dir: str):
         print("Error: No metrics or models found in data")
         return
     
+    # 重み付けの定義
+    metric_weights = {
+        'tone': 0.40,      # トーンを最重視
+        'logic': 0.25,     # ロジックは中程度
+        'approach': 0.25,  # アプローチも中程度
+        'format': 0.10     # フォーマットは最小
+    }
+    
+    # 各モデルの最適なチェックポイントを特定
+    best_checkpoints = {}
+    for model in df[df['model_version'] != 'base']['model_version'].unique():
+        model_data = df[df['model_version'] == model]
+        checkpoint_scores = {}
+        
+        for checkpoint in model_data['checkpoint'].unique():
+            checkpoint_data = model_data[model_data['checkpoint'] == checkpoint]
+            metric_scores = checkpoint_data.groupby('metric_type')['score'].mean()
+            
+            weighted_score = sum(
+                metric_scores[metric] * weight 
+                for metric, weight in metric_weights.items()
+            )
+            checkpoint_scores[checkpoint] = weighted_score
+        
+        best_checkpoints[model] = max(checkpoint_scores.items(), key=lambda x: x[1])[0]
+    
+    # Box plotのデータ準備
     positions = []
     data = []
     labels = []
-    colors = ['lightblue', 'lightgreen']
+    colors = ['lightblue', 'lightgreen', 'lightpink']
     
     for i, metric in enumerate(metrics):
         for j, model in enumerate(models):
-            mask = (df['metric_type'] == metric) & (df['model_version'] == model)
+            if model == 'base':
+                # baseモデルは全データを使用
+                mask = (df['metric_type'] == metric) & (df['model_version'] == model)
+            else:
+                # ファインチューンモデルは最適なチェックポイントのデータのみ使用
+                mask = ((df['metric_type'] == metric) & 
+                       (df['model_version'] == model) & 
+                       (df['checkpoint'] == best_checkpoints[model]))
+            
             scores = df[mask]['score'].dropna().tolist()
-            if scores:  # Only add if there are valid scores
+            if scores:
                 data.append(scores)
                 positions.append(i * (len(models) + 1) + j)
                 labels.append(f"{model}")
@@ -129,7 +165,9 @@ def plot_metric_comparisons(df: pd.DataFrame, output_dir: str):
     # Set the style of the chart
     plt.xticks([i * (len(models) + 1) + (len(models) - 1) / 2 for i in range(len(metrics))],
                metrics, rotation=45)
-    plt.title('Metric Scores Distribution by Model Version')
+    plt.title('Metric Scores Distribution by Model Version\n' +
+             '(Fine-tuned models shown at their best checkpoints)', 
+             pad=20)
     plt.ylabel('Score')
     
     # Add legend
@@ -137,34 +175,164 @@ def plot_metric_comparisons(df: pd.DataFrame, output_dir: str):
                       for i, model in enumerate(models)]
     plt.legend(handles=legend_elements, loc='upper right')
     
+    # Add explanation text
+    plt.figtext(0.02, 0.02, 
+                "Note: For fine-tuned models, only the best checkpoint data is shown.\n"
+                "Best checkpoints selected based on weighted average score across metrics.\n"
+                "Weights: Tone(40%), Logic(25%), Approach(25%), Format(10%)",
+                fontsize=8, style='italic')
+    
     plt.tight_layout()
     plt.savefig(f'{output_dir}/metric_distribution.png', bbox_inches='tight')
     plt.close()
     
     # Plot 2: Line plot showing progression across checkpoints
-    plt.figure(figsize=(15, 8))  # グラフサイズを大きくする
+    fig, axes = plt.subplots(2, 2, figsize=(20, 15))  # 2x2のサブプロット
+    axes = axes.flatten()  # 扱いやすいように1次元配列に変換
     
-    # checkpointから'checkpoint-'を削除して数値のみにする
-    df['checkpoint_num'] = df['checkpoint'].str.extract(r'checkpoint-(\d+)').astype(int)
+    # Handle checkpoint numbers for non-base models
+    df['checkpoint_num'] = df.apply(lambda x: 
+        int(x['checkpoint'].replace('checkpoint-', '')) if 'checkpoint-' in str(x['checkpoint'])
+        else 0 if x['checkpoint'] == 'base'  # base modelは0として扱う
+        else None, axis=1)
     
-    for model in models:
-        model_data = df[df['model_version'] == model]
-        if not model_data.empty:
-            means = model_data.groupby(['checkpoint_num', 'metric_type'])['score'].mean().unstack()
-            if not means.empty:
-                for metric in means.columns:
-                    plt.plot(means.index, means[metric], marker='o', 
-                            label=f'{model}-{metric}', linewidth=2)
+    # Define colors for each model
+    colors = {
+        'train_yam': '#FF6347',  # 朱色
+        'train_nam': '#DAA520',  # 黄土色
+        'base': '#4169E1'        # 青
+    }
     
-    plt.title('Score Progression Across Checkpoints', pad=20)
-    plt.xlabel('Checkpoint Number')
-    plt.ylabel('Average Score')
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', 
-              borderaxespad=0., frameon=True)
+    metrics = ['approach', 'format', 'logic', 'tone']
+    
+    for idx, metric in enumerate(metrics):
+        ax = axes[idx]
+        
+        # Plot for each model
+        for model in ['train_yam', 'train_nam', 'base']:
+            model_data = df[df['model_version'] == model]
+            if not model_data.empty:
+                means = model_data.groupby(['checkpoint_num', 'metric_type'])['score'].mean().unstack()
+                if metric in means.columns:
+                    if model == 'base':
+                        # baseモデルは水平線として表示
+                        base_score = means[metric].iloc[0]
+                        ax.axhline(y=base_score, color=colors[model], 
+                                 linestyle='-', label=f'{model}', linewidth=2)
+                    else:
+                        # 他のモデルは線と点で表示
+                        ax.plot(means.index, means[metric], 
+                               marker='o', label=f'{model}',
+                               color=colors[model], linewidth=2)
+        
+        ax.set_title(f'{metric.capitalize()} Score Progression', pad=10)
+        ax.set_xlabel('Checkpoint Number (0 = base model)')
+        ax.set_ylabel('Average Score')
+        ax.grid(True, linestyle='--', alpha=0.7)
+        ax.legend()
+        
+        # Y軸の範囲を0-4に設定
+        ax.set_ylim(1.5, 4.0)
+    
+    plt.suptitle('Score Progression Across Checkpoints', y=1.02, fontsize=16)
     plt.tight_layout()
-    plt.savefig(f'{output_dir}/checkpoint_progression.png', 
+    plt.savefig(f'{output_dir}/checkpoint_progression.png',
                 bbox_inches='tight', dpi=300)
+    plt.close()
+
+def plot_improvement_from_base(df: pd.DataFrame, output_dir: str):
+    """Plot improvements of fine-tuned models compared to base model"""
+    # より大きなフィギュアサイズを設定し、上部に余裕を持たせる
+    plt.figure(figsize=(12, 8))
+    
+    # サブプロットの位置を調整して上部に余裕を持たせる
+    plt.subplots_adjust(top=0.9, bottom=0.2)
+    
+    # Calculate base model means for each metric
+    base_means = df[df['model_version'] == 'base'].groupby('metric_type')['score'].mean()
+    
+    # 重み付けの定義
+    metric_weights = {
+        'tone': 0.40,      # トーンを最重視
+        'logic': 0.25,     # ロジックは中程度
+        'approach': 0.25,  # アプローチも中程度
+        'format': 0.10     # フォーマットは最小
+    }
+    
+    # Get the best checkpoint scores for each fine-tuned model
+    ft_models = df[df['model_version'] != 'base']['model_version'].unique()
+    improvements = []
+    
+    for model in ft_models:
+        model_data = df[df['model_version'] == model]
+        
+        # 各チェックポイントの重み付き平均スコアを計算
+        checkpoint_scores = {}
+        for checkpoint in model_data['checkpoint'].unique():
+            checkpoint_data = model_data[model_data['checkpoint'] == checkpoint]
+            metric_scores = checkpoint_data.groupby('metric_type')['score'].mean()
+            
+            # 重み付き平均を計算
+            weighted_score = sum(
+                metric_scores[metric] * weight 
+                for metric, weight in metric_weights.items()
+            )
+            checkpoint_scores[checkpoint] = weighted_score
+        
+        # 最高の重み付きスコアを持つチェックポイントを特定
+        best_checkpoint = max(checkpoint_scores.items(), key=lambda x: x[1])[0]
+        
+        # 選択されたチェックポイントのスコアを取得
+        best_checkpoint_data = model_data[model_data['checkpoint'] == best_checkpoint]
+        best_scores = best_checkpoint_data.groupby('metric_type')['score'].mean()
+        
+        improvement = best_scores - base_means
+        improvements.append((model, improvement, best_checkpoint))
+    
+    # Plot
+    x = np.arange(len(base_means.index))
+    width = 0.35
+    
+    for i, (model, improvement, best_checkpoint) in enumerate(improvements):
+        plt.bar(x + i*width, improvement, width, label=f"{model}\n(Best: {best_checkpoint})",
+               color=['lightblue', 'lightgreen'][i])
+        
+        # Add value labels on bars
+        for j, v in enumerate(improvement):
+            plt.text(x[j] + i*width, v + (0.1 if v >= 0 else -0.1),
+                    f'{v:+.2f}',
+                    ha='center', va='bottom' if v >= 0 else 'top')
+    
+    # グラフの要素を配置
+    plt.axhline(y=0, color='black', linestyle='-', linewidth=0.5)
+    plt.xlabel('Metrics', labelpad=10)  # labelpadで軸ラベルの位置を調整
+    plt.ylabel('Improvement from Base Model\n(Score Difference)', labelpad=10)  # 改行を追加して2行に
+    plt.title('Best Improvement in Socratic Elements from Base Model', pad=20)
+    plt.xticks(x + width/2, base_means.index)
+    plt.legend(bbox_to_anchor=(1.02, 1))  # 凡例の位置を調整
+    plt.grid(True, axis='y', linestyle='--', alpha=0.3)
+    
+    # Add baseline scores as text（位置を調整）
+    plt.text(-0.2, -1.2, f'Base Model Scores:', 
+            fontsize=10, color='gray', ha='left')
+    for i, (metric, score) in enumerate(base_means.items()):
+        plt.text(i-0.2, -1.4, f'{metric}: {score:.2f}', 
+                fontsize=9, color='gray', ha='left')
+    
+    # Add explanation text（重み付けの説明を追加）
+    plt.figtext(0.02, 0.02, 
+                "Note: Improvements shown are from the best performing checkpoint\n"
+                "for each model, selected based on weighted average score across metrics.\n"
+                "Weights: Tone(40%), Logic(25%), Approach(25%), Format(10%)",
+                fontsize=8, style='italic')
+    
+    # Y軸の範囲を明示的に設定
+    plt.ylim(-1.5, 1.5)  # ベーススコアのテキストが見えるように下限を調整
+    
+    plt.tight_layout()  # レイアウトを自動調整
+    plt.savefig(f'{output_dir}/improvement_from_base.png', 
+                bbox_inches='tight',  # 余白を適切に調整
+                dpi=300)
     plt.close()
 
 def analyze_quality_results(csv_path: str, output_dir: str):
@@ -180,6 +348,7 @@ def analyze_quality_results(csv_path: str, output_dir: str):
     
     # Create visualization plots
     plot_metric_comparisons(df, output_dir)
+    plot_improvement_from_base(df, output_dir)
     
     # Print overall findings
     print("\nOverall Analysis Results:")
@@ -238,9 +407,20 @@ def analyze_quality_results(csv_path: str, output_dir: str):
             improvement = last_score - first_score
             print(f"   {metric}: {improvement:+.3f}")
 
+    # Add improvement analysis from base model
+    print("\n4. Improvement Analysis from Base Model:")
+    base_scores = df[df['model_version'] == 'base'].groupby('metric_type')['score'].mean()
+    
+    for model in df[df['model_version'] != 'base']['model_version'].unique():
+        print(f"\n{model}:")
+        model_scores = df[df['model_version'] == model].groupby('metric_type')['score'].mean()
+        for metric in base_scores.index:
+            improvement = model_scores[metric] - base_scores[metric]
+            print(f"   {metric}: {improvement:+.3f} ({base_scores[metric]:.2f} → {model_scores[metric]:.2f})")
+
 def main():
     csv_path = "data/config/automation_gemma.csv"
-    output_dir = "data/analysis/quality_check"
+    output_dir = "data/analysis"
     
     # Create output directory if it doesn't exist
     import os
