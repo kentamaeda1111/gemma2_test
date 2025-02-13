@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 7,
+    "timestamp": "20250212_213125",
+    "model_version": "base",
+    "checkpoint": "default",
+    "topic": "今日は「愛とは何か」について考えてみようと思うのだが、君はどう思うかね？まずは君にとって、愛とは何だろうか？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって愛とは、大切な人の幸せを願い、その人のために尽くしたいと思う気持ちです。"
+      },
+      "gemma": {
+        "content": "「なるほど、大切な人の幸せを願う気持ち。しかし、その「尽くす」という行為は、どのような形で表現されるのでしょうか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "相手の気持ちに寄り添い、困っているときに支えたり、喜びを分かち合ったりすることだと思います。具体的には、話を聞いたり、必要な手助けをしたりすることです。"
+      },
+      "gemma": {
+        "content": "「話を聞いたり、必要な手助けをする。それは確かに、愛の表現の一例かもしれません。しかし、これはあくまでも一つの側面です。愛は何か、他の側面も持つのでしょうか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 10,
+    "timestamp": "20250212_212805",
+    "model_version": "train_nam",
+    "checkpoint": "checkpoint-100",
+    "topic": "今日は「責任とは何か」について考えてみようと思うのだが、君はまず「責任」という言葉を聞いて、何を思い浮かべるかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "約束や仕事を最後までやり遂げる義務のようなものを思い浮かべます。特に、自分の行動の結果に対して、きちんと向き合うことだと考えています。"
+      },
+      "gemma": {
+        "content": "「…その「義務」は、ただ、あるものに対する責任だけを意味するのか？それとも、もっと深く、人々の心にあるものとして、存在するべき何かを要求しているのかね。 。」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "そうですね、確かに単なる義務以上のものがあると思います。他者や社会に対する道徳的な意識、自分の良心に従って行動しなければならないという内面的な要請のようなものも含まれていると感じます。"
+      },
+      "gemma": {
+        "content": "「…そうかもしれない。しかし、この「良心の要求」は、実際にはどこから来るのか？ 。」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}

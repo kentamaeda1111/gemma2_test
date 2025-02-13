@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 10,
+    "timestamp": "20250212_213259",
+    "model_version": "base",
+    "checkpoint": "default",
+    "topic": "今日は「責任とは何か」について考えてみようと思うのだが、君はまず「責任」という言葉を聞いて、何を思い浮かべるかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "約束したことや、自分の役割をきちんと果たすことを思い浮かべます。例えば、仕事や家族への責任など、自分の行動の結果に対して誠実に向き合うことですね。"
+      },
+      "gemma": {
+        "content": "「なるほど。そして、この「誠実」とは、どのような性質を持つのでしょうか？ 具体的な例を挙げて説明してください。」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "誠実とは、嘘をつかず、約束を守り、問題が起きたときに逃げ出さないことだと思います。例えば、仕事でミスをしたとき、それを隠さず報告し、解決に向けて行動することです。"
+      },
+      "gemma": {
+        "content": "「そうでしょうか。しかし、誠実は単なる「約束を守る」という事象にとどまらず、より深い意味を持っているのではないでしょうか。具体的に、どんな状況下において誠実な行動を選択するのか、考えてみてください。」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "approach": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "format": {
+          "quantitative": "",
+          "qualitative": ""
+        },
+        "logic": {
+          "quantitative": "",
+          "qualitative": ""
+        }
+      }
+    }
+  ]
+}
