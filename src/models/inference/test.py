@@ -12,8 +12,8 @@ from huggingface_hub import login
 from peft import PeftModel
 
 # Global Settings
-MODEL_VERSION = "noattention_noprompt_50_lolarefine"  
-CHECKPOINT = "checkpoint-990"  
+MODEL_VERSION = "train_nam"  
+CHECKPOINT = "checkpoint-700"  
 MAX_HISTORY = 5  
 BASE_MODEL = "google/gemma-2-2b-jpn-it"
 

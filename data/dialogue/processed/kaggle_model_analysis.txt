@@ -1,0 +1,13 @@
+=== Dialogue Data Analysis Summary ===
+
+Total dialogues: 2662
+Number of source files: 242
+
+=== Token Statistics ===
+Total tokens: 685,875
+Average tokens per dialogue: 257.7
+Median tokens per dialogue: 253.0
+Average user tokens: 144.4
+Average model tokens: 113.2
+Maximum tokens in a dialogue: 527
+Minimum tokens in a dialogue: 19
