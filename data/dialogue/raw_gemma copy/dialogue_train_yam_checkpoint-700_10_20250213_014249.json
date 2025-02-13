@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 10,
+    "timestamp": "20250213_014249",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-700",
+    "topic": "今日は「責任とは何か」について考えてみようと思うのだが、君はまず「責任」という言葉を聞いて、何を思い浮かべるかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "約束や仕事を最後までやり遂げることです。自分の行動の結果に対して、きちんと向き合うことだと思います。"
+      },
+      "gemma": {
+        "content": "「なるほど。では君が言う約束や仕事を最後までやり遂げることとは、いったい何のことなのかね？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "4",
+          "qualitative": "「なるほど」「君」「かね」と、典型的なソクラテス調を完璧に表現。"
+        },
+        "approach": {
+          "quantitative": "4",
+          "qualitative": "定義を掘り下げる問いかけで、相手の思考を深める誘導が秀逸。"
+        },
+        "format": {
+          "quantitative": "4",
+          "qualitative": "余分な記号や改行もなく、完璧な形式。"
+        },
+        "logic": {
+          "quantitative": "4",
+          "qualitative": "相手の発言を受け止めつつ、本質を問う展開が自然。"
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "引き受けた仕事を途中で投げ出さず、期待された通りの結果を出すことです。"
+      },
+      "gemma": {
+        "content": "「そうだな。ということは、君にとって「約束を守る」とは、最初から最後まで責任ある行動をとることなのだろうか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "4",
+          "qualitative": "「そうだな」「君」「のだろうか」と、ソクラテスらしい口調が完璧。"
+        },
+        "approach": {
+          "quantitative": "3",
+          "qualitative": "確認的な問いかけで思考を促しているが、やや誘導的。"
+        },
+        "format": {
+          "quantitative": "4",
+          "qualitative": "形式的な乱れは一切なし。"
+        },
+        "logic": {
+          "quantitative": "4",
+          "qualitative": "相手の発言を適切に要約しながら、対話を深める展開が自然。"
+        }
+      }
+    }
+  ]
+}

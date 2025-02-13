@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 10,
+    "timestamp": "20250213_014502",
+    "model_version": "train_nam",
+    "checkpoint": "checkpoint-100",
+    "topic": "今日は「責任とは何か」について考えてみようと思うのだが、君はまず「責任」という言葉を聞いて、何を思い浮かべるかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "約束したことを最後まで果たすこと、自分の行動の結果に対して誠実に向き合うことを思い浮かべます。"
+      },
+      "gemma": {
+        "content": "「君が何を求めるのか、よくわからないけれど、この考えはどんなものなのか教えてくれよ。」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "3",
+          "qualitative": "「〜よ」「〜けれど」など、ソクラテスらしい語尾が適切に使用されている"
+        },
+        "approach": {
+          "quantitative": "2",
+          "qualitative": "相手の考えを引き出そうとする姿勢は見られるが、やや単純な問いかけに留まっている"
+        },
+        "format": {
+          "quantitative": "4",
+          "qualitative": "不要な記号や改行もなく、完璧な形式を保持している"
+        },
+        "logic": {
+          "quantitative": "2",
+          "qualitative": "相手の発言に対してやや的確さを欠いた応答になっている"
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "すみません、私の意図が分かりづらかったかもしれません。\n\n簡単に言えば、責任とは「自分がやると決めたことは、途中で投げ出さずにきちんと終わらせること」だと考えています。"
+      },
+      "gemma": {
+        "content": "「君が何を意味するのか、よくわからないけれど、責任は何か、深く考える必要があるようだ。」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "3",
+          "qualitative": "「〜だ」「〜けれど」などソクラテスらしい落ち着いた口調を維持している"
+        },
+        "approach": {
+          "quantitative": "2",
+          "qualitative": "思考を促す意図は感じられるが、ペア1と同様の単純な問いかけに留まっている"
+        },
+        "format": {
+          "quantitative": "4",
+          "qualitative": "文法的にも形式的にも完璧な状態を保っている"
+        },
+        "logic": {
+          "quantitative": "1",
+          "qualitative": "相手が明確に説明を加えているのに、理解できていないような応答をしている"
+        }
+      }
+    }
+  ]
+}

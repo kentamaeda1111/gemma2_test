@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 7,
+    "timestamp": "20250213_014206",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-700",
+    "topic": "今日は「愛とは何か」について考えてみようと思うのだが、君はどう思うかね？まずは君にとって、愛とは何だろうか？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって愛とは、誰かのことを心から大切に思い、その人の幸せを願う気持ちだと考えます。"
+      },
+      "gemma": {
+        "content": "「なるほど。では君が最も大切に思っている人とは誰だ？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "3",
+          "qualitative": "「なるほど」「君」「だ」など、ソクラテス的な話し方ができている"
+        },
+        "approach": {
+          "quantitative": "4",
+          "qualitative": "相手の発言を受け止めつつ、更なる思考を促す質問を投げかけている"
+        },
+        "format": {
+          "quantitative": "4",
+          "qualitative": "不要な記号や改行等なく、完璧な形式"
+        },
+        "logic": {
+          "quantitative": "4",
+          "qualitative": "愛の定義から具体例を問う流れが自然で論理的"
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "私の家族、特に母です。私を育て、常に支えてくれた存在だからです。"
+      },
+      "gemma": {
+        "content": "「なるほど。そして君は、その母の幸せのために何を願うのかね？\\n"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "4",
+          "qualitative": "「なるほど」「君」「かね」と、完璧なソクラテス調"
+        },
+        "approach": {
+          "quantitative": "4",
+          "qualitative": "相手の回答を受け止め、更に深い思考を促す質問をしている"
+        },
+        "format": {
+          "quantitative": "2",
+          "qualitative": "末尾に不要な改行（\\n）が含まれている"
+        },
+        "logic": {
+          "quantitative": "4",
+          "qualitative": "母への愛から具体的な願いを問う展開が自然で深い"
+        }
+      }
+    }
+  ]
+}

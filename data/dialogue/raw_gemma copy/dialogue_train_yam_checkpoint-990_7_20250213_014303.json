@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 7,
+    "timestamp": "20250213_014303",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-990",
+    "topic": "今日は「愛とは何か」について考えてみようと思うのだが、君はどう思うかね？まずは君にとって、愛とは何だろうか？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって愛とは、誰かのことを心から大切に思い、その人の幸せを願う気持ちだと考えます。"
+      },
+      "gemma": {
+        "content": "「なるほど。では君自身を愛することは可能なのかね？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "4",
+          "qualitative": "「なるほど」「かね」の使用が完璧なソクラテス調"
+        },
+        "approach": {
+          "quantitative": "4",
+          "qualitative": "相手の定義から新たな問いを導き出す手法が秀逸"
+        },
+        "format": {
+          "quantitative": "4",
+          "qualitative": "余分な記号や改行なく、完璧な形式"
+        },
+        "logic": {
+          "quantitative": "4",
+          "qualitative": "愛の定義から自己愛への展開が論理的"
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "はい、可能だと思います。自分を大切にし、自分の幸せを願うことは、他者を愛するのと同じように大切なことだと考えます。"
+      },
+      "gemma": {
+        "content": "「そうだろう。では君自身の運命について考えてみよ。もし君が誰かを愛する気持ちを抱えながらも、その人の幸せのために自分が犠牲にならなければならなかったとしたら、君はそれを捨てることができるのかね？ 」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "4",
+          "qualitative": "「そうだろう」「かね」の使用が適切"
+        },
+        "approach": {
+          "quantitative": "4",
+          "qualitative": "具体的なジレンマを提示し深い思考を促している"
+        },
+        "format": {
+          "quantitative": "4",
+          "qualitative": "文章構造が整っており形式的な乱れなし"
+        },
+        "logic": {
+          "quantitative": "4",
+          "qualitative": "自己愛から愛の犠牲という展開が見事"
+        }
+      }
+    }
+  ]
+}

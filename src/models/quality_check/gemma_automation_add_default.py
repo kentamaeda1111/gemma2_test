@@ -421,7 +421,7 @@ def create_dialogue_session(chatai: ChatAI, dialogue_id: int):
         logger.error(f"Error in dialogue {dialogue_id}: {str(e)}")
         logger.error("Failed to complete dialogue")
 
-def save_dialogue(dialogue_history: list, dialogue_id: int, model_path: str = None) -> None:
+def save_dialogue(dialogue_history: list, dialogue_id: int, model_path: str = None) -> str:
     """
     対話履歴をフォーマットしてJSONファイルとして保存する
     
@@ -429,6 +429,9 @@ def save_dialogue(dialogue_history: list, dialogue_id: int, model_path: str = No
         dialogue_history (list): 対話履歴のリスト
         dialogue_id (int): 対話のID
         model_path (str, optional): 実際に使用されたモデルのパス
+    
+    Returns:
+        str: 保存したファイルの名前
     """
     # 保存先ディレクトリの作成
     os.makedirs(SAVE_DIR, exist_ok=True)
@@ -503,45 +506,32 @@ def save_dialogue(dialogue_history: list, dialogue_id: int, model_path: str = No
         json.dump(formatted_data, f, ensure_ascii=False, indent=2)
     
     logger.info(f"Saved formatted dialogue {dialogue_id} to {filepath}")
+    return filename  # ファイル名を返す
 
-IS_KAGGLE_SUBMISSION = os.path.exists('/kaggle/working')
-
-def load_questions():
-    """Load questions from JSON file"""
-    with open(QUESTIONS_JSON_PATH, 'r', encoding='utf-8') as f:
-        questions_data = json.load(f)
-    # Convert to dictionary for easier lookup
-    return {str(q['id']): q['content'] for q in questions_data['prompts']}
-
-def load_config():
-    """Load configuration from CSV file"""
-    df = pd.read_csv(CSV_CONFIG_PATH)
-    # QUESTION_IDを整数型に変換
-    df['QUESTION_ID'] = df['QUESTION_ID'].astype(int)
-    return df
-
-def update_csv(csv_path: str, question_id: str, dialogue_filename: str):
-    """Update CSV file with dialogue filename"""
-    # CSVファイルを文字列型として読み込む
-    df = pd.read_csv(csv_path, dtype={'dialogue': str})
+def update_csv(csv_path: str, question_id: int, model_version: str, checkpoint: str, dialogue_filename: str):
+    """
+    Update CSV file with dialogue filename
     
-    # 現在の行のmodel_versionとcheckpointを取得
-    current_row = df[df['QUESTION_ID'] == int(question_id)].iloc[0]
-    model_version = current_row['model_version']
-    checkpoint = current_row['checkpoint']
+    Args:
+        csv_path (str): CSVファイルのパス
+        question_id (int): 質問ID
+        model_version (str): モデルバージョン
+        checkpoint (str): チェックポイント
+        dialogue_filename (str): 保存した対話ファイルの名前
+    """
+    df = pd.read_csv(csv_path)
+    mask = (df['QUESTION_ID'] == question_id) & \
+           (df['model_version'] == model_version) & \
+           (df['checkpoint'] == checkpoint)
     
-    # タイムスタンプを生成
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
-    # 正しいファイル名を生成
-    if pd.isna(model_version) and pd.isna(checkpoint):
-        filename = f"dialogue_base_default_{question_id}_{timestamp}.json"
-    else:
-        filename = f"dialogue_{model_version}_{checkpoint}_{question_id}_{timestamp}.json"
-    
-    # 該当する行のdialogueカラムを更新
-    df.loc[df['QUESTION_ID'] == int(question_id), 'dialogue'] = filename
+    if not mask.any():
+        logger.warning(f"No matching row found for question_id={question_id}, "
+                      f"model_version={model_version}, checkpoint={checkpoint}")
+        return
+        
+    df.loc[mask, 'dialogue'] = dialogue_filename
     df.to_csv(csv_path, index=False)
+    logger.info(f"Updated CSV for question {question_id} with filename {dialogue_filename}")
 
 def main():
     """メイン実行関数"""
@@ -549,7 +539,7 @@ def main():
     config_df = load_config()
     
     for _, row in config_df.iterrows():
-        question_id = str(int(row['QUESTION_ID']))
+        question_id = int(row['QUESTION_ID'])
         chatai = None
         
         try:
@@ -665,12 +655,15 @@ def main():
                 utterance_count += 1
             
             # 対話終了後、対話履歴を保存（model_pathを渡す）
-            save_dialogue(dialogue_history, int(question_id), current_model_path)
+            dialogue_filename = save_dialogue(dialogue_history, question_id, current_model_path)
             
-            # Update CSV with the correct filename format
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"dialogue_{row['model_version']}_{row['checkpoint']}_{question_id}_{timestamp}.json"
-            update_csv(CSV_CONFIG_PATH, question_id, filename)
+            # Update CSV with the correct filename
+            if use_base_model:
+                update_csv(CSV_CONFIG_PATH, question_id, None, None, dialogue_filename)
+            else:
+                update_csv(CSV_CONFIG_PATH, question_id, 
+                          row['model_version'], row['checkpoint'], 
+                          dialogue_filename)
             
         except Exception as e:
             logger.error(f"Error processing question {question_id}: {str(e)}")

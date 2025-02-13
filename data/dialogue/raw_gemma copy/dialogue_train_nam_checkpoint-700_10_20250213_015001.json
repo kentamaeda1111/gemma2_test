@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 10,
+    "timestamp": "20250213_015001",
+    "model_version": "train_nam",
+    "checkpoint": "checkpoint-700",
+    "topic": "今日は「責任とは何か」について考えてみようと思うのだが、君はまず「責任」という言葉を聞いて、何を思い浮かべるかね？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "約束や義務を果たさなければならない重荷のような感覚を思い浮かべます。特に仕事や家庭での役割を全うすることですね。"
+      },
+      "gemma": {
+        "content": "そ、そうかもしれないね。でも、それによって、私たちが生きている今、どのような選択をするべきなのだろう？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "2",
+          "qualitative": "「〜かもしれないね」「〜だろう」は良いが、「そ、そうかもしれない」は老練さに欠ける"
+        },
+        "approach": {
+          "quantitative": "3",
+          "qualitative": "相手の発言を受け止めつつ、新たな思考を促す問いを投げかけている"
+        },
+        "format": {
+          "quantitative": "4",
+          "qualitative": "形式的な問題は一切ない"
+        },
+        "logic": {
+          "quantitative": "2",
+          "qualitative": "「そ、そう」という言い淀みが対話の流れを損なっている"
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "自分の行動が他者に影響を与えることを意識して、慎重に選択すべきだと考えます。ただ、重荷に押しつぶされすぎず、自分にできる範囲で誠実に対応することが大切だと思います。"
+      },
+      "gemma": {
+        "content": "なるほど。では、その「自分にできる範囲」と「誠実」の間にあるバランスを見つけることについて、君はどのように考えているのかね？"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "4",
+          "qualitative": "「なるほど」「〜のかね」という表現が非常にソクラテス的"
+        },
+        "approach": {
+          "quantitative": "4",
+          "qualitative": "相手の言葉を引用しながら、深い思考を促す問いを投げかけている"
+        },
+        "format": {
+          "quantitative": "4",
+          "qualitative": "形式的な問題は一切ない"
+        },
+        "logic": {
+          "quantitative": "4",
+          "qualitative": "相手の発言のキーワードを適切に拾い、論理的な問いかけができている"
+        }
+      }
+    }
+  ]
+}

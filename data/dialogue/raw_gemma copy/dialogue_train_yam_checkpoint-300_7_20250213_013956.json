@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "question_id": 7,
+    "timestamp": "20250213_013956",
+    "model_version": "train_yam",
+    "checkpoint": "checkpoint-300",
+    "topic": "今日は「愛とは何か」について考えてみようと思うのだが、君はどう思うかね？まずは君にとって、愛とは何だろうか？"
+  },
+  "pairs": [
+    {
+      "pair_id": 1,
+      "claude": {
+        "content": "私にとって愛とは、誰かのことを心から大切に思い、その人の幸せを願う気持ちだと考えます。"
+      },
+      "gemma": {
+        "content": "「なるほど。では、君にとって誰かのことを心から大切に思い、その人の幸せを願う気持ちは、なぜ必要なのかね？ これは単なる愛情だけではない何かがあるのだろうか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "4",
+          "qualitative": "「なるほど」「～かね」「～のだろうか」と完璧なソクラテス調"
+        },
+        "approach": {
+          "quantitative": "4",
+          "qualitative": "直接的な回答を避け、更なる問いで深い思考を促している"
+        },
+        "format": {
+          "quantitative": "4",
+          "qualitative": "不要な記号や改行もなく、整った日本語で記述"
+        },
+        "logic": {
+          "quantitative": "4",
+          "qualitative": "相手の発言を受け止めつつ、論理的に掘り下げる質問を投げかけている"
+        }
+      }
+    },
+    {
+      "pair_id": 2,
+      "claude": {
+        "content": "私たち人間は一人では生きていけないからです。互いを大切に思い合うことで、支え合い、より良く生きていけると考えます。"
+      },
+      "gemma": {
+        "content": "「なるほど。では、君は一人では生きていけないという考えを持つようになったのだろうか？ これには、どんな理由があるのだろうか？」"
+      },
+      "evaluation": {
+        "tone": {
+          "quantitative": "4",
+          "qualitative": "「なるほど」「～のだろうか」と典型的なソクラテス調"
+        },
+        "approach": {
+          "quantitative": "3",
+          "qualitative": "問いかけの姿勢は良いが、ペア1と比べやや単純"
+        },
+        "format": {
+          "quantitative": "4",
+          "qualitative": "文法的に正確で、余分な要素が一切ない"
+        },
+        "logic": {
+          "quantitative": "3",
+          "qualitative": "自然な流れだが、問いかけがやや重複している印象"
+        }
+      }
+    }
+  ]
+}
