@@ -8,22 +8,7 @@ https://www.kaggle.com/competitions/gemma-language-tuning
 
 """"""""""""""""""""""""""""""プラニングフェーズ"""""""""""""""""""""""
 
-■このコンペに着手をしようと思った経緯・理由
-私は去年の１２月の半ばころからこのコンペの課題に着手しはじめました。
-当時の私はbootcampを卒業するくらいのタイミングで、
-自分自身の腕試しをしたいと考えていました。
-それもchatgptに聞いてすぐ達成できるようなものではなく、
-ハードルの高そうなものを探していました。
-そんな中、以下のコンペに興味を持ちました。
-
-https://www.kaggle.com/competitions/gemma-language-tuning
-
-ちょうどLLMのファインチューニングはbootcampのスコープ外であったため且つ私自身もLLMのファインチューニングに興味があったため、
-そして何よりもデータ生成やモデルアーキテクチャの決定等のエンジニアリングのみならず、
-上流（企画）から下流（プレゼン資料作成）まで、一気通貫で担う必要があったため、
-まさに現実世界での取り組みに近い形で着手できるがしたため、
-この課題に着手しようと考えました。
-
+https://claude.ai/chat/6c38fe35-0a06-4c1e-be3c-6da3693ebadb
 ■着手したトピックおよびそのトピックを選んだ理由
 私が取り組むことにしたのはgemma-2をソクラテス風の口調にファインチューニングする、というものです。
 なぜこの方向性にしたかについて説明するためには、
@@ -246,11 +231,80 @@ For the AI evaluation stage, I established three criteria:
 - Assessment of logical consistency and natural flow on a 0-4 scale
 - Detailed comments on each dialogue (to help me verify the AI's evaluation process)
 （explanable AIの取り組み）
+
+■Evaluation Results
+Analysis of 3,256 dialogue pairs (296 conversations × 11 pairs each) revealed:
+
+**Updated Socratic Style Distribution**
+style_distribution = {
+    "Score 0 (Not Socratic at all)": {
+        "count": 0,
+        "percentage": "0.0%",
+        "characteristics": "No Socratic tone whatsoever"
+    },
+    "Score 1 (No Socratic Elements)": {
+        "count": 0,
+        "percentage": "0.0%",
+        "characteristics": "Lacks any recognizable Socratic elements"
+    },
+    "Score 2 (Slightly Socratic)": {
+        "count": 61,
+        "percentage": "1.9%",
+        "characteristics": "Not bad, but some noticeable issues"
+    },
+    "Score 3 (Quite Socratic)": {
+        "count": 2018,
+        "percentage": "62.0%",
+        "characteristics": "Feels generally Socratic in tone"
+    },
+    "Score 4 (Truly Socratic)": {
+        "count": 1177,
+        "percentage": "36.1%",
+        "characteristics": "Excellent Socratic style—near flawless"
+    }
+}
+
+**Updated Logical Consistency Distribution**
+logic_distribution = {
+    "Score 0 (Utterly Nonsensical)": {
+        "count": 0,
+        "percentage": "0.0%",
+        "characteristics": "Completely incoherent statements"
+    },
+    "Score 1 (Out of Sync)": {
+        "count": 0,
+        "percentage": "0.0%",
+        "characteristics": "Conversation appears disjointed"
+    },
+    "Score 2 (Minor Issues)": {
+        "count": 10,
+        "percentage": "0.3%",
+        "characteristics": "Overall okay, but a few logical gaps"
+    },
+    "Score 3 (Coherent)": {
+        "count": 1234,
+        "percentage": "37.9%",
+        "characteristics": "Natural, sensible flow"
+    },
+    "Score 4 (Excellent)": {
+        "count": 2012,
+        "percentage": "61.8%",
+        "characteristics": "Highly consistent, smooth dialogue"
+    }
+}
+
 The results of this quality assurance process were positive:
 - We achieved a good yield rate on first attempts
 - Upon review, even dialogues that received lower scores showed acceptable quality
 - Nevertheless, I decided to remove all dialogues flagged as low-quality by the AI
 - This process reduced our dialogue count from 296 to 242
+
+- **Strong Socratic Presence**: With 98.1% of dialogues at scores 3 or 4, most interactions successfully capture a Socratic tone, indicating the fine-tuning approach is largely effective.
+- **Robust Logic**: An even higher proportion (99.7%) of dialogues achieve top marks (scores 3 or 4) in logical consistency, reflecting coherent and natural conversational flow.
+- **Room for Refinement**: Although 36.1% of dialogues reach the highest Socratic style mark (score 4), there’s still an opportunity to further enhance the dialogue’s authentically “Socratic” qualities.
+- **Minimal Weak Points**: Very few instances of score 2 (1.9% for style and 0.3% for logic), and none at scores 0 or 1, imply that outright failures in either category are negligible.
+- **Stable Performance Across Lengths**: The consistent quality regardless of dialogue length suggests a strong and adaptable model foundation, poised for targeted improvements in style nuance if needed.
+
 
 ■System Prompt Integration
 This was a particularly challenging decision point. According to the official documentation（https://huggingface.co/google/gemma-2-2b/discussions/28ここにかいてあったこと、というかんじのほうがいいかと）, Gemma has a fundamental design philosophy that:
@@ -365,12 +419,32 @@ AIにけっこう頼っているので、もっと数値評価をするアプロ
 ・xtunerを使ったsystem promptを作ったトレイン等、モデルアーキテクチャの変更
 ・今回はcommunityに質問をしたり、をしなかったが、そういった手段は使ってもよかったかと
 
+■最後に
+
+
+
+■なぜそもそもコンペに着手をしようと思ったのかの経緯・理由
+私は去年の１２月の半ばころからこのコンペの課題に着手しはじめました。
+当時の私はbootcampを卒業するくらいのタイミングで、
+自分自身の腕試しをしたいと考えていました。
+それもchatgptに聞いてすぐ達成できるようなものではなく、
+ハードルの高そうなものを探していました。
+そんな中、以下のコンペに興味を持ちました。
+
+https://www.kaggle.com/competitions/gemma-language-tuning
+
+ちょうどLLMのファインチューニングはbootcampのスコープ外であったため且つ私自身もLLMのファインチューニングに興味があったため、
+そして何よりもデータ生成やモデルアーキテクチャの決定等のエンジニアリングのみならず、
+上流（企画）から下流（プレゼン資料作成）まで、一気通貫で担う必要があったため、
+まさに現実世界での取り組みに近い形で着手できるがしたため、
+この課題に着手しようと考えました。
+
 ■所感
 御覧になっていただいたらわかる通り、
 私は主に演繹的なアプローチではなく帰納的なアプローチで今回のタスクに取り組んでます。
 ただ、そういった背景が功を奏し、結果的に柔軟なアプローチができたのはないかと感じています。
 それが非常に短期間で高いアウトプットにつながったと要因だとかんじています。
 
-
+宮崎はやおのThe Boy and the Heronは邦題は君たちはどう生きるか、であるということも
 
 

@@ -65,7 +65,7 @@ class ChatAI:
     """
     def __init__(
         self,
-        model_path: str = "./model",
+        model_path: str = None,
         base_model: str = "google/gemma-2-2b-jpn-it",
         max_history: int = 5,
         hf_token: str = None
@@ -73,7 +73,7 @@ class ChatAI:
         """
         Constructor
         Args:
-            model_path (str): Path to the fine-tuned model
+            model_path (str, optional): Path to the fine-tuned model. If None, uses base model
             base_model (str): Base model path on Hugging Face
             max_history (int): Number of turns to store in the history
             hf_token (str): Hugging Face access token
@@ -91,39 +91,44 @@ class ChatAI:
                 trust_remote_code=True
             )
             
-            # Get configuration based on available hardware
             device = "cuda" if torch.cuda.is_available() else "cpu"
             logger.info(f"Using device: {device}")
             
-            # Load the base model with appropriate configuration
+            # Load configurationを修正
             load_config = {
                 "trust_remote_code": True,
                 "token": hf_token,
-                "low_cpu_mem_usage": True
+                "device_map": "auto",
+                "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
             }
             
-            # Adjust configuration based on device
             if device == "cuda":
-                load_config["device_map"] = "auto"
-                load_config["torch_dtype"] = torch.bfloat16
+                # GPUメモリの設定を追加
+                load_config.update({
+                    "max_memory": {0: "10GB"},  # GPU 0に10GBを割り当て
+                    "offload_folder": None  # オフロードを無効化
+                })
             else:
-                load_config["device_map"] = "auto"
-                load_config["torch_dtype"] = torch.float32
                 load_config["offload_folder"] = "offload_folder"
                 os.makedirs("offload_folder", exist_ok=True)
 
-            base_model_obj = AutoModelForCausalLM.from_pretrained(
-                base_model,
-                **load_config
-            )
+            # モデルのロード部分を修正
+            if model_path:
+                base_model_obj = AutoModelForCausalLM.from_pretrained(
+                    base_model,
+                    **load_config
+                ).to(device)
+                
+                self.model = PeftModel.from_pretrained(
+                    base_model_obj,
+                    model_path
+                ).to(device)
+            else:
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    base_model,
+                    **load_config
+                ).to(device)
             
-            # Load the PEFT model
-            self.model = PeftModel.from_pretrained(
-                base_model_obj,
-                model_path,
-                torch_dtype=load_config["torch_dtype"]
-            )
-
             logger.info(f"Model loaded successfully on {device}")
             
             self.generation_config = {
@@ -416,36 +421,42 @@ def create_dialogue_session(chatai: ChatAI, dialogue_id: int):
         logger.error(f"Error in dialogue {dialogue_id}: {str(e)}")
         logger.error("Failed to complete dialogue")
 
-def save_dialogue(dialogue_history: list, dialogue_id: int, model_path: str) -> None:
+def save_dialogue(dialogue_history: list, dialogue_id: int, model_path: str = None) -> None:
     """
     対話履歴をフォーマットしてJSONファイルとして保存する
     
     Args:
         dialogue_history (list): 対話履歴のリスト
         dialogue_id (int): 対話のID
-        model_path (str): 実際に使用されたモデルのパス
+        model_path (str, optional): 実際に使用されたモデルのパス
     """
     # 保存先ディレクトリの作成
     os.makedirs(SAVE_DIR, exist_ok=True)
     
-    # モデルパスから実際のバージョンとチェックポイントを抽出
-    try:
-        # パスをPosixPathに変換して解析
-        path = Path(model_path)
-        parts = path.parts
-        models_idx = parts.index('models')
-        if models_idx + 1 < len(parts):
-            model_version = parts[models_idx + 1]
-        else:
-            model_version = "unknown"
+    # モデルパスからバージョンとチェックポイントを設定
+    if model_path:
+        try:
+            # パスをPosixPathに変換して解析
+            path = Path(model_path)
+            parts = path.parts
+            models_idx = parts.index('models')
+            if models_idx + 1 < len(parts):
+                model_version = parts[models_idx + 1]
+            else:
+                model_version = "base"
+                
+            checkpoint = next((part for part in parts if part.startswith('checkpoint-')), "default")
             
-        checkpoint = next((part for part in parts if part.startswith('checkpoint-')), "unknown")
-        logger.info(f"Extracted model_version: {model_version}, checkpoint: {checkpoint}")
-        
-    except (ValueError, IndexError) as e:
-        logger.warning(f"Could not extract model version or checkpoint from path: {model_path}. Error: {str(e)}")
-        model_version = "unknown"
-        checkpoint = "unknown"
+        except (ValueError, IndexError) as e:
+            logger.warning(f"Could not extract model version or checkpoint from path: {model_path}. Error: {str(e)}")
+            model_version = "base"
+            checkpoint = "default"
+    else:
+        # ベースモデルの場合
+        model_version = "base"
+        checkpoint = "default"
+    
+    logger.info(f"Using model_version: {model_version}, checkpoint: {checkpoint}")
     
     # 新しいファイル名のフォーマット
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -511,7 +522,9 @@ def load_config():
 
 def update_csv(csv_path: str, question_id: str, dialogue_filename: str):
     """Update CSV file with dialogue filename"""
-    df = pd.read_csv(csv_path)
+    # CSVファイルを文字列型として読み込む
+    df = pd.read_csv(csv_path, dtype={'dialogue': str})
+    
     # 現在の行のmodel_versionとcheckpointを取得
     current_row = df[df['QUESTION_ID'] == int(question_id)].iloc[0]
     model_version = current_row['model_version']
@@ -521,7 +534,10 @@ def update_csv(csv_path: str, question_id: str, dialogue_filename: str):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     # 正しいファイル名を生成
-    filename = f"dialogue_{model_version}_{checkpoint}_{question_id}_{timestamp}.json"
+    if pd.isna(model_version) and pd.isna(checkpoint):
+        filename = f"dialogue_base_default_{question_id}_{timestamp}.json"
+    else:
+        filename = f"dialogue_{model_version}_{checkpoint}_{question_id}_{timestamp}.json"
     
     # 該当する行のdialogueカラムを更新
     df.loc[df['QUESTION_ID'] == int(question_id), 'dialogue'] = filename
@@ -541,17 +557,6 @@ def main():
             gc.collect()
             torch.cuda.empty_cache()
             
-            # Get model version and checkpoint from CSV
-            if pd.isna(row.get('model_version')) or pd.isna(row.get('checkpoint')):
-                logger.warning(f"Model version or checkpoint not specified for question {question_id}, skipping...")
-                continue
-                
-            model_version = row['model_version']
-            checkpoint = row['checkpoint']
-            
-            # Update MODEL_PATH for current iteration
-            current_model_path = os.path.join(ROOT_DIR, "models", model_version, "model", checkpoint)
-            
             # Skip if dialogue already exists
             if pd.notna(row['dialogue']):
                 logger.info(f"Dialogue already exists for question {question_id}, skipping...")
@@ -560,22 +565,26 @@ def main():
             if question_id not in questions:
                 logger.warning(f"Question ID {question_id} not found in questions.json")
                 continue
-                
-            logger.info(f"Processing question ID {question_id} with model {model_version} checkpoint {checkpoint}")
             
-            # 既存のモデルがある場合は解放
-            if chatai is not None:
-                del chatai
-                torch.cuda.empty_cache()
+            # Check if model_version and checkpoint are specified
+            use_base_model = pd.isna(row.get('model_version')) or pd.isna(row.get('checkpoint'))
             
-            # 新しいモデルをロード
+            if use_base_model:
+                logger.info(f"Using base model for question {question_id}")
+                current_model_path = None
+            else:
+                model_version = row['model_version']
+                checkpoint = row['checkpoint']
+                current_model_path = os.path.join(ROOT_DIR, "models", model_version, "model", checkpoint)
+                logger.info(f"Using fine-tuned model for question {question_id}: {current_model_path}")
+            
+            # Load the appropriate model
             chatai = ChatAI(
-                model_path=current_model_path,
+                model_path=current_model_path,  # None for base model
                 base_model=BASE_MODEL,
                 max_history=MAX_HISTORY,
                 hf_token=HF_TOKEN
             )
-            logger.info(f"Model loaded successfully for question {question_id}")
             
             # Get question content
             question_content = questions[question_id]
@@ -665,13 +674,13 @@ def main():
             
         except Exception as e:
             logger.error(f"Error processing question {question_id}: {str(e)}")
-            if chatai is not None:
+            if 'chatai' in locals() and chatai is not None:  # chataiが存在する場合のみ実行
                 del chatai
                 torch.cuda.empty_cache()
             continue
         
         finally:
-            if chatai is not None:
+            if 'chatai' in locals() and chatai is not None:  # chataiが存在する場合のみ実行
                 del chatai
             torch.cuda.empty_cache()
             gc.collect()
