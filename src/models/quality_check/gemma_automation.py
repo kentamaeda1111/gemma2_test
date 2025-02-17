@@ -515,15 +515,10 @@ def load_config():
     df = df.drop_duplicates(subset=['QUESTION_ID'], keep='first')
     return df
 
-def update_csv(csv_path: str, question_id: str, dialogue_filename: str):
+def update_csv(csv_path: str, question_id: str, model_version: str, checkpoint: str):
     """Update CSV file with dialogue filename"""
     # CSVファイルを文字列型として読み込む
     df = pd.read_csv(csv_path, dtype={'dialogue': str})
-    
-    # 現在の行のmodel_versionとcheckpointを取得
-    current_row = df[df['QUESTION_ID'] == int(question_id)].iloc[0]
-    model_version = current_row['model_version']
-    checkpoint = current_row['checkpoint']
     
     # タイムスタンプを生成
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -535,7 +530,10 @@ def update_csv(csv_path: str, question_id: str, dialogue_filename: str):
         filename = f"dialogue_{model_version}_{checkpoint}_{question_id}_{timestamp}.json"
     
     # 該当する行のdialogueカラムを更新
-    df.loc[df['QUESTION_ID'] == int(question_id), 'dialogue'] = filename
+    mask = (df['QUESTION_ID'] == int(question_id)) & \
+           (df['model_version'] == model_version) & \
+           (df['checkpoint'] == checkpoint)
+    df.loc[mask, 'dialogue'] = filename
     df.to_csv(csv_path, index=False)
 
 def main():
@@ -663,9 +661,12 @@ def main():
             save_dialogue(dialogue_history, int(question_id), current_model_path)
             
             # Update CSV with the correct filename format
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"dialogue_{row['model_version']}_{row['checkpoint']}_{question_id}_{timestamp}.json"
-            update_csv(CSV_CONFIG_PATH, question_id, filename)
+            update_csv(
+                CSV_CONFIG_PATH, 
+                question_id, 
+                row['model_version'], 
+                row['checkpoint']
+            )
             
         except Exception as e:
             logger.error(f"Error processing question {question_id}: {str(e)}")
