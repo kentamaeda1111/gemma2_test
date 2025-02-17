@@ -218,14 +218,7 @@ class ChatAI:
         return messages
 
     def generate_response(self, user_input: str, add_to_history: bool = True) -> str:
-        """
-        Generates a response from the model
-        Args:
-            user_input (str): The user's input text
-            add_to_history (bool): Whether to add this turn to the conversation history
-        Returns:
-            str: The model's generated response
-        """
+
         try:
             if add_to_history:
                 if self.message_history.qsize() == 0:  # 最初の入力の場合

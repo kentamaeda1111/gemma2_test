@@ -198,9 +198,9 @@ def plot_metric_comparisons(df: pd.DataFrame, output_dir: str):
     
     # Define colors for each model
     colors = {
-        'train_yam': '#FF6347',  # 朱色
-        'train_nam': '#DAA520',  # 黄土色
-        'base': '#4169E1'        # 青
+        'attention-tuned': '#FF6347',    # 朱色
+        'standard-tuned': '#DAA520',  # 黄土色
+        'base': '#4169E1'               # 青
     }
     
     metrics = ['approach', 'format', 'logic', 'tone']
@@ -209,7 +209,7 @@ def plot_metric_comparisons(df: pd.DataFrame, output_dir: str):
         ax = axes[idx]
         
         # Plot for each model
-        for model in ['train_yam', 'train_nam', 'base']:
+        for model in ['attention-tuned', 'standard-tuned', 'base']:
             model_data = df[df['model_version'] == model]
             if not model_data.empty:
                 means = model_data.groupby(['checkpoint_num', 'metric_type'])['score'].mean().unstack()
