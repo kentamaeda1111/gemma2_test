@@ -511,8 +511,19 @@ def load_config():
     df = pd.read_csv(CSV_CONFIG_PATH)
     # QUESTION_IDを整数型に変換
     df['QUESTION_ID'] = df['QUESTION_ID'].astype(int)
-    # 重複するQUESTION_IDの行を削除（最初の出現を保持）
-    df = df.drop_duplicates(subset=['QUESTION_ID'], keep='first')
+    
+    # 重複チェック（QUESTION_ID, model_version, checkpointの組み合わせ）
+    duplicates = df.duplicated(['QUESTION_ID', 'model_version', 'checkpoint'], keep=False)
+    if duplicates.any():
+        logger.warning("Found duplicate entries in config file:")
+        logger.warning(df[duplicates])
+    
+    # 重複を削除（QUESTION_ID, model_version, checkpointの組み合わせで判断）
+    df = df.drop_duplicates(
+        subset=['QUESTION_ID', 'model_version', 'checkpoint'],
+        keep='first'
+    )
+    
     return df
 
 def update_csv(csv_path: str, question_id: str, model_version: str, checkpoint: str):
